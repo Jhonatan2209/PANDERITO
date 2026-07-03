@@ -1,0 +1,31 @@
+## .NET / MAUI
+bin/
+obj/
+*.user
+*.suo
+.vs/
+.vscode/
+*.binlog
+
+## Bases de datos locales
+*.db
+*.db3
+*.db-shm
+*.db-wal
+
+## Secretos y firmas — NUNCA subir
+*.keystore
+*.jks
+*.pfx
+keystore.properties
+secrets.json
+
+## Artefactos de build
+artefactos/
+*.apk
+*.aab
+
+## Otros
+*.log
+.DS_Store
+Thumbs.db
