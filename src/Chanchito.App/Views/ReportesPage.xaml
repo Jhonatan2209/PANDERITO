@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="Chanchito.App.Views.ReportesPage"
+             Title="Reportes"
+             BackgroundColor="{AppThemeBinding Light={StaticResource Fondo}, Dark={StaticResource FondoDark}}">
+    <VerticalStackLayout Padding="16" Spacing="12">
+        <Label Text="Reportes" Style="{StaticResource TituloPantalla}" />
+        <Label Text="(Reportes en construcción — Fase 5)" Style="{StaticResource TextoSecundario}" />
+    </VerticalStackLayout>
+</ContentPage>

@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="Chanchito.App.Views.DashboardPage"
+             Title="Inicio"
+             BackgroundColor="{AppThemeBinding Light={StaticResource Fondo}, Dark={StaticResource FondoDark}}">
+    <ScrollView>
+        <VerticalStackLayout Padding="16" Spacing="12">
+            <Label Text="Inicio" Style="{StaticResource TituloPantalla}" />
+            <Label Text="(Dashboard en construcción — Fase 4)" Style="{StaticResource TextoSecundario}" />
+        </VerticalStackLayout>
+    </ScrollView>
+</ContentPage>

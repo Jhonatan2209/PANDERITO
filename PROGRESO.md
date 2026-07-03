@@ -15,7 +15,11 @@ Checklist de fases (ver CLAUDE.md sección 12). Se marca cada fase solo con `dot
   - [x] ServicioSaldos, ServicioPresupuestos (umbrales 80/100 %), ServicioPanderos (turnos + resumen), ServicioPrestamos (abonos + estados), ServicioMovimientos (filtros, dona, tendencia), ServicioRecurrentes.
   - [x] BaseViewModel (CommunityToolkit.Mvvm); los VMs concretos se crean junto a sus pantallas (fases 4–5).
   - [x] 34 pruebas en verde.
-- [ ] **Fase 3 — Shell + tema + estilos**
+- [x] **Fase 3 — Shell + tema + estilos** (2026-07-03)
+  - [x] Colors.xaml con paleta del prototipo Bolsillo (claro/oscuro) + EstilosChanchito.xaml (tarjetas, botones, chips, montos).
+  - [x] AppShell con TabBar de 5 tabs (Inicio · Movimientos · Registrar · Reportes · Más) e íconos SVG propios.
+  - [x] Converters: MonedaConverter (S/ es-PE), MontoConSignoConverter, ColorHexConverter. FormatoMoneda en Core con pruebas.
+  - [x] DI registrada en MauiProgram (BD, servicios, páginas).
 - [ ] **Fase 4 — Pantallas núcleo**
 - [ ] **Fase 5 — Módulos**
 - [ ] **Fase 6 — Pulido**
