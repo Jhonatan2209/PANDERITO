@@ -11,7 +11,10 @@ Checklist de fases (ver CLAUDE.md sección 12). Se marca cada fase solo con `dot
   - [x] 5 enums + 10 entidades en `Chanchito.Core/Models`.
   - [x] `ChanchitoDatabase` (SQLiteAsyncConnection, init perezosa, ruta inyectada), `Repository<T>`, `SembradorDatos` (11 categorías + cuenta Efectivo).
   - [x] 6 pruebas de datos en verde (CRUD de todas las entidades + seed idempotente).
-- [ ] **Fase 2 — Servicios y ViewModels**
+- [x] **Fase 2 — Servicios y ViewModels** (2026-07-03)
+  - [x] ServicioSaldos, ServicioPresupuestos (umbrales 80/100 %), ServicioPanderos (turnos + resumen), ServicioPrestamos (abonos + estados), ServicioMovimientos (filtros, dona, tendencia), ServicioRecurrentes.
+  - [x] BaseViewModel (CommunityToolkit.Mvvm); los VMs concretos se crean junto a sus pantallas (fases 4–5).
+  - [x] 34 pruebas en verde.
 - [ ] **Fase 3 — Shell + tema + estilos**
 - [ ] **Fase 4 — Pantallas núcleo**
 - [ ] **Fase 5 — Módulos**

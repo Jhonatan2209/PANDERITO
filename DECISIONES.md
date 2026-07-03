@@ -6,3 +6,7 @@ Registro de decisiones tomadas ante ambigüedades (siempre la opción más simpl
 2. **Advertencia NU1903 (SQLitePCLRaw.lib.e_sqlite3 2.1.11, GHSA-2m69-gcr7-jv3q)**: es la última versión publicada del bundle_green; la vulnerabilidad es del binario nativo de SQLite y no tiene fix publicado en NuGet aún. Se acepta y se documenta; app es local y de un solo usuario (riesgo bajo).
 3. **Diseño de referencia**: se usa el prototipo "Bolsillo" de Claude Design (extraído en `../CONTEXTO/diseno_chanchito/`) como guía visual: paleta violeta (#6C5CE7 aprox.), verde = ingreso, rojo/coral = gasto, tarjetas redondeadas, saludo + mes en el dashboard.
 4. **El nombre visible de la app es "Chanchito"** (el prototipo se llamaba "Bolsillo"); ApplicationId `pe.chanchito.app`.
+5. **Transferencias fuera del MVP**: el enum `TipoMovimiento.Transferencia` existe (para futuro), pero el modelo `Movimiento` de la spec no tiene cuenta destino, así que el registro rápido solo ofrece Gasto/Ingreso y las transferencias no afectan saldos.
+6. **ViewModels concretos se implementan junto a sus pantallas** (fases 4–5) para validarlos con la UI real; en Fase 2 queda `BaseViewModel` y toda la lógica de negocio en servicios testeados.
+7. **Períodos de presupuesto**: Semanal = lunes a domingo; Quincenal = día 1–15 y 16–fin de mes; Mensual = mes calendario.
+8. **Pandero**: "aportado" = cuota × turnos ya cobrados (marcados); "a recibir" = cuota × número de participantes. Fechas de turnos: +7 días (semanal), +15 días (quincenal), +1 mes (mensual) desde la fecha de inicio.
