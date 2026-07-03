@@ -1,9 +1,20 @@
+using Chanchito.Core.ViewModels;
+
 namespace Chanchito.App.Views;
 
 public partial class ReportesPage : ContentPage
 {
-    public ReportesPage()
+    private readonly ReportesViewModel _vm;
+
+    public ReportesPage(ReportesViewModel vm)
     {
         InitializeComponent();
+        BindingContext = _vm = vm;
+    }
+
+    protected override async void OnAppearing()
+    {
+        base.OnAppearing();
+        await _vm.CargarAsync();
     }
 }

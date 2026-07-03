@@ -1,4 +1,5 @@
-﻿using Microsoft.Extensions.DependencyInjection;
+﻿using Chanchito.App.Servicios;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace Chanchito.App;
 
@@ -7,6 +8,7 @@ public partial class App : Application
 	public App()
 	{
 		InitializeComponent();
+		AparienciaApp.AplicarTemaGuardado();
 	}
 
 	protected override Window CreateWindow(IActivationState? activationState)

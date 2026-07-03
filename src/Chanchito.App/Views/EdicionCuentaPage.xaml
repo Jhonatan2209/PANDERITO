@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:vm="clr-namespace:Chanchito.Core.ViewModels;assembly=Chanchito.Core"
+             x:Class="Chanchito.App.Views.EdicionCuentaPage"
+             x:DataType="vm:EdicionCuentaViewModel"
+             Title="Cuenta"
+             BackgroundColor="{AppThemeBinding Light={StaticResource Fondo}, Dark={StaticResource FondoDark}}">
+
+    <ScrollView>
+        <VerticalStackLayout Padding="16,20" Spacing="14">
+
+            <Border Style="{StaticResource Tarjeta}" Padding="12,8">
+                <VerticalStackLayout Spacing="2">
+                    <Label Text="Nombre" Style="{StaticResource TextoSecundario}" FontSize="11" />
+                    <Entry Text="{Binding Nombre}" Placeholder="Ej. Yape, BCP, Billetera…" />
+                </VerticalStackLayout>
+            </Border>
+
+            <Border Style="{StaticResource Tarjeta}" Padding="12,8">
+                <VerticalStackLayout Spacing="2">
+                    <Label Text="Tipo" Style="{StaticResource TextoSecundario}" FontSize="11" />
+                    <Picker ItemsSource="{Binding Tipos}" SelectedIndex="{Binding IndiceTipo}" FontAttributes="Bold" />
+                </VerticalStackLayout>
+            </Border>
+
+            <Border Style="{StaticResource Tarjeta}" Padding="12,8">
+                <VerticalStackLayout Spacing="2">
+                    <Label Text="Saldo inicial (S/)" Style="{StaticResource TextoSecundario}" FontSize="11" />
+                    <Entry Text="{Binding SaldoInicialTexto}" Placeholder="0.00" Keyboard="Numeric" />
+                </VerticalStackLayout>
+            </Border>
+
+            <Button Text="Guardar" Style="{StaticResource BotonPrimario}" Command="{Binding GuardarCommand}" />
+
+            <Button Text="🗑 Eliminar cuenta"
+                    IsVisible="{Binding EsEdicion}"
+                    Command="{Binding EliminarCommand}"
+                    BackgroundColor="{AppThemeBinding Light={StaticResource GastoSoft}, Dark={StaticResource GastoSoftDark}}"
+                    TextColor="{AppThemeBinding Light={StaticResource Gasto}, Dark={StaticResource GastoDark}}"
+                    FontAttributes="Bold" CornerRadius="16" HeightRequest="52" />
+
+        </VerticalStackLayout>
+    </ScrollView>
+</ContentPage>

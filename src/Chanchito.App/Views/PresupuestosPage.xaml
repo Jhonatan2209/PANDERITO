@@ -1,0 +1,80 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:vm="clr-namespace:Chanchito.Core.ViewModels;assembly=Chanchito.Core"
+             x:Class="Chanchito.App.Views.PresupuestosPage"
+             x:DataType="vm:PresupuestosViewModel"
+             Title="Presupuestos"
+             BackgroundColor="{AppThemeBinding Light={StaticResource Fondo}, Dark={StaticResource FondoDark}}">
+
+    <Grid RowDefinitions="*,Auto" Padding="16">
+        <ScrollView Grid.Row="0">
+            <VerticalStackLayout Spacing="8">
+                <Label Text="Sin presupuestos 📊&#10;Ponle un límite a tus categorías de gasto."
+                       Style="{StaticResource EtiquetaVacio}"
+                       IsVisible="{Binding HayPresupuestos, Converter={StaticResource InvertedBoolConverter}}" />
+                <VerticalStackLayout BindableLayout.ItemsSource="{Binding Presupuestos}" Spacing="8">
+                    <BindableLayout.ItemTemplate>
+                        <DataTemplate x:DataType="vm:PresupuestoItem">
+                            <Border Style="{StaticResource Tarjeta}" Padding="14">
+                                <Border.GestureRecognizers>
+                                    <TapGestureRecognizer
+                                        Command="{Binding EditarCommand, Source={RelativeSource AncestorType={x:Type vm:PresupuestosViewModel}}}"
+                                        CommandParameter="{Binding .}" />
+                                </Border.GestureRecognizers>
+                                <VerticalStackLayout Spacing="8">
+                                    <Grid ColumnDefinitions="*,Auto">
+                                        <HorizontalStackLayout Grid.Column="0" Spacing="8">
+                                            <Label Text="{Binding IconoCategoria}" FontSize="18" VerticalOptions="Center" />
+                                            <VerticalStackLayout Spacing="0" VerticalOptions="Center">
+                                                <Label Text="{Binding NombreCategoria}" FontAttributes="Bold" FontSize="15"
+                                                       TextColor="{AppThemeBinding Light={StaticResource Texto}, Dark={StaticResource TextoDark}}" />
+                                                <Label Text="{Binding PeriodoTexto}" Style="{StaticResource TextoSecundario}" FontSize="11" />
+                                            </VerticalStackLayout>
+                                        </HorizontalStackLayout>
+                                        <Label Grid.Column="1" Text="{Binding PorcentajeTexto}" FontAttributes="Bold" FontSize="16" VerticalOptions="Center">
+                                            <Label.Triggers>
+                                                <DataTrigger TargetType="Label" Binding="{Binding Excedido}" Value="True">
+                                                    <Setter Property="TextColor" Value="{AppThemeBinding Light={StaticResource Gasto}, Dark={StaticResource GastoDark}}" />
+                                                </DataTrigger>
+                                                <DataTrigger TargetType="Label" Binding="{Binding EnAlerta}" Value="True">
+                                                    <Setter Property="TextColor" Value="{AppThemeBinding Light={StaticResource Pendiente}, Dark={StaticResource PendienteDark}}" />
+                                                </DataTrigger>
+                                                <DataTrigger TargetType="Label" Binding="{Binding Normal}" Value="True">
+                                                    <Setter Property="TextColor" Value="{AppThemeBinding Light={StaticResource Ingreso}, Dark={StaticResource IngresoDark}}" />
+                                                </DataTrigger>
+                                            </Label.Triggers>
+                                        </Label>
+                                    </Grid>
+                                    <ProgressBar Progress="{Binding Fraccion}">
+                                        <ProgressBar.Triggers>
+                                            <DataTrigger TargetType="ProgressBar" Binding="{Binding Excedido}" Value="True">
+                                                <Setter Property="ProgressColor" Value="{AppThemeBinding Light={StaticResource Gasto}, Dark={StaticResource GastoDark}}" />
+                                            </DataTrigger>
+                                            <DataTrigger TargetType="ProgressBar" Binding="{Binding EnAlerta}" Value="True">
+                                                <Setter Property="ProgressColor" Value="{AppThemeBinding Light={StaticResource Pendiente}, Dark={StaticResource PendienteDark}}" />
+                                            </DataTrigger>
+                                            <DataTrigger TargetType="ProgressBar" Binding="{Binding Normal}" Value="True">
+                                                <Setter Property="ProgressColor" Value="{AppThemeBinding Light={StaticResource Ingreso}, Dark={StaticResource IngresoDark}}" />
+                                            </DataTrigger>
+                                        </ProgressBar.Triggers>
+                                    </ProgressBar>
+                                    <Label Text="{Binding DetalleTexto}" Style="{StaticResource TextoSecundario}" FontSize="12" />
+                                    <Label Text="⚠️ Superaste el 80% del presupuesto" FontSize="12" FontAttributes="Bold"
+                                           IsVisible="{Binding EnAlerta}"
+                                           TextColor="{AppThemeBinding Light={StaticResource Pendiente}, Dark={StaticResource PendienteDark}}" />
+                                    <Label Text="🚨 ¡Presupuesto excedido!" FontSize="12" FontAttributes="Bold"
+                                           IsVisible="{Binding Excedido}"
+                                           TextColor="{AppThemeBinding Light={StaticResource Gasto}, Dark={StaticResource GastoDark}}" />
+                                </VerticalStackLayout>
+                            </Border>
+                        </DataTemplate>
+                    </BindableLayout.ItemTemplate>
+                </VerticalStackLayout>
+            </VerticalStackLayout>
+        </ScrollView>
+
+        <Button Grid.Row="1" Text="＋ Nuevo presupuesto" Style="{StaticResource BotonPrimario}"
+                Command="{Binding NuevoCommand}" Margin="0,12,0,0" />
+    </Grid>
+</ContentPage>

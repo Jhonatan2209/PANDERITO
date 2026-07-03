@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:vm="clr-namespace:Chanchito.Core.ViewModels;assembly=Chanchito.Core"
+             xmlns:models="clr-namespace:Chanchito.Core.Models;assembly=Chanchito.Core"
+             x:Class="Chanchito.App.Views.EdicionPresupuestoPage"
+             x:DataType="vm:EdicionPresupuestoViewModel"
+             Title="Presupuesto"
+             BackgroundColor="{AppThemeBinding Light={StaticResource Fondo}, Dark={StaticResource FondoDark}}">
+
+    <ScrollView>
+        <VerticalStackLayout Padding="16,20" Spacing="14">
+
+            <Border Style="{StaticResource Tarjeta}" Padding="12,8">
+                <VerticalStackLayout Spacing="2">
+                    <Label Text="Categoría de gasto" Style="{StaticResource TextoSecundario}" FontSize="11" />
+                    <Picker ItemsSource="{Binding Categorias}"
+                            SelectedItem="{Binding CategoriaSeleccionada}"
+                            ItemDisplayBinding="{Binding Nombre, x:DataType=models:Categoria}"
+                            FontAttributes="Bold" />
+                </VerticalStackLayout>
+            </Border>
+
+            <Border Style="{StaticResource Tarjeta}" Padding="12,8">
+                <VerticalStackLayout Spacing="2">
+                    <Label Text="Límite (S/)" Style="{StaticResource TextoSecundario}" FontSize="11" />
+                    <Entry Text="{Binding MontoLimiteTexto}" Placeholder="400.00" Keyboard="Numeric" />
+                </VerticalStackLayout>
+            </Border>
+
+            <Border Style="{StaticResource Tarjeta}" Padding="12,8">
+                <VerticalStackLayout Spacing="2">
+                    <Label Text="Período" Style="{StaticResource TextoSecundario}" FontSize="11" />
+                    <Picker ItemsSource="{Binding Periodos}" SelectedIndex="{Binding IndicePeriodo}" />
+                </VerticalStackLayout>
+            </Border>
+
+            <Label Text="Te avisaremos cuando superes el 80 % y el 100 % del límite."
+                   Style="{StaticResource TextoSecundario}" FontSize="12" />
+
+            <Button Text="Guardar" Style="{StaticResource BotonPrimario}" Command="{Binding GuardarCommand}" />
+
+            <Button Text="🗑 Eliminar presupuesto"
+                    IsVisible="{Binding EsEdicion}"
+                    Command="{Binding EliminarCommand}"
+                    BackgroundColor="{AppThemeBinding Light={StaticResource GastoSoft}, Dark={StaticResource GastoSoftDark}}"
+                    TextColor="{AppThemeBinding Light={StaticResource Gasto}, Dark={StaticResource GastoDark}}"
+                    FontAttributes="Bold" CornerRadius="16" HeightRequest="52" />
+
+        </VerticalStackLayout>
+    </ScrollView>
+</ContentPage>

@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:vm="clr-namespace:Chanchito.Core.ViewModels;assembly=Chanchito.Core"
+             xmlns:models="clr-namespace:Chanchito.Core.Models;assembly=Chanchito.Core"
+             x:Class="Chanchito.App.Views.CategoriasPage"
+             x:DataType="vm:CategoriasViewModel"
+             Title="Categorías"
+             BackgroundColor="{AppThemeBinding Light={StaticResource Fondo}, Dark={StaticResource FondoDark}}">
+
+    <Grid RowDefinitions="Auto,*,Auto" Padding="16" RowSpacing="12">
+
+        <Border Grid.Row="0" StrokeThickness="0" StrokeShape="RoundRectangle 16"
+                BackgroundColor="{AppThemeBinding Light={StaticResource Superficie}, Dark={StaticResource SuperficieDark}}"
+                Padding="4">
+            <Grid ColumnDefinitions="*,*" ColumnSpacing="4">
+                <Button Grid.Column="0" Text="Gastos" FontAttributes="Bold" CornerRadius="12" HeightRequest="42"
+                        Command="{Binding VerGastosCommand}">
+                    <Button.Triggers>
+                        <DataTrigger TargetType="Button" Binding="{Binding IndiceTipo}" Value="0">
+                            <Setter Property="BackgroundColor" Value="{AppThemeBinding Light={StaticResource GastoSoft}, Dark={StaticResource GastoSoftDark}}" />
+                            <Setter Property="TextColor" Value="{AppThemeBinding Light={StaticResource Gasto}, Dark={StaticResource GastoDark}}" />
+                        </DataTrigger>
+                        <DataTrigger TargetType="Button" Binding="{Binding IndiceTipo}" Value="1">
+                            <Setter Property="BackgroundColor" Value="Transparent" />
+                            <Setter Property="TextColor" Value="{AppThemeBinding Light={StaticResource TextoSuave}, Dark={StaticResource TextoSuaveDark}}" />
+                        </DataTrigger>
+                    </Button.Triggers>
+                </Button>
+                <Button Grid.Column="1" Text="Ingresos" FontAttributes="Bold" CornerRadius="12" HeightRequest="42"
+                        Command="{Binding VerIngresosCommand}">
+                    <Button.Triggers>
+                        <DataTrigger TargetType="Button" Binding="{Binding IndiceTipo}" Value="1">
+                            <Setter Property="BackgroundColor" Value="{AppThemeBinding Light={StaticResource IngresoSoft}, Dark={StaticResource IngresoSoftDark}}" />
+                            <Setter Property="TextColor" Value="{AppThemeBinding Light={StaticResource Ingreso}, Dark={StaticResource IngresoDark}}" />
+                        </DataTrigger>
+                        <DataTrigger TargetType="Button" Binding="{Binding IndiceTipo}" Value="0">
+                            <Setter Property="BackgroundColor" Value="Transparent" />
+                            <Setter Property="TextColor" Value="{AppThemeBinding Light={StaticResource TextoSuave}, Dark={StaticResource TextoSuaveDark}}" />
+                        </DataTrigger>
+                    </Button.Triggers>
+                </Button>
+            </Grid>
+        </Border>
+
+        <ScrollView Grid.Row="1">
+            <VerticalStackLayout BindableLayout.ItemsSource="{Binding Categorias}" Spacing="8">
+                <BindableLayout.ItemTemplate>
+                    <DataTemplate x:DataType="models:Categoria">
+                        <Border Style="{StaticResource Tarjeta}" Padding="12">
+                            <Border.GestureRecognizers>
+                                <TapGestureRecognizer
+                                    Command="{Binding EditarCommand, Source={RelativeSource AncestorType={x:Type vm:CategoriasViewModel}}}"
+                                    CommandParameter="{Binding .}" />
+                            </Border.GestureRecognizers>
+                            <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="12">
+                                <Border Grid.Column="0" StrokeThickness="0" StrokeShape="RoundRectangle 12"
+                                        BackgroundColor="{Binding ColorHex, Converter={StaticResource ColorHexConverter}}"
+                                        WidthRequest="42" HeightRequest="42">
+                                    <Label Text="{Binding Icono}" FontSize="18" HorizontalOptions="Center" VerticalOptions="Center" />
+                                </Border>
+                                <Label Grid.Column="1" Text="{Binding Nombre}" FontAttributes="Bold" FontSize="15" VerticalOptions="Center"
+                                       TextColor="{AppThemeBinding Light={StaticResource Texto}, Dark={StaticResource TextoDark}}" />
+                                <Label Grid.Column="2" Text="✏️" FontSize="16" VerticalOptions="Center" />
+                            </Grid>
+                        </Border>
+                    </DataTemplate>
+                </BindableLayout.ItemTemplate>
+            </VerticalStackLayout>
+        </ScrollView>
+
+        <Button Grid.Row="2" Text="＋ Nueva categoría" Style="{StaticResource BotonPrimario}"
+                Command="{Binding NuevaCommand}" />
+    </Grid>
+</ContentPage>

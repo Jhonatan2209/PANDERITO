@@ -26,7 +26,16 @@ Checklist de fases (ver CLAUDE.md sección 12). Se marca cada fase solo con `dot
   - [x] Historial: búsqueda por nota, chips Todos/Gastos/Ingresos, filtros por categoría y cuenta, estado vacío.
   - [x] Detalle de movimiento con eliminación (confirmación previa). Ruta `detalleMovimiento` registrada.
   - [x] INavegador (Core) + NavegadorShell (App). ViewModels: Dashboard, RegistroMovimiento, Historial, DetalleMovimiento.
-- [ ] **Fase 5 — Módulos**
+- [x] **Fase 5 — Módulos** (2026-07-03)
+  - [x] Cuentas: lista con saldo calculado + crear/editar/eliminar (se ocultan si tienen movimientos).
+  - [x] Préstamos: vistas Me deben/Debo, total pendiente, nuevo, detalle con abonos parciales, marcar pagado, eliminar.
+  - [x] Panderos: crear con turnos automáticos, detalle estilo mockup ("cuándo me toca", aportado vs pozo), marcar cobrado, eliminar.
+  - [x] Metas: lista con barra y %, crear/editar, abonar, "¡Lograda! 🎉".
+  - [x] Recurrentes: próximos pagos ordenados, "vence en X días", registrar pago (crea movimiento y avanza fecha).
+  - [x] Presupuestos: barra con colores por nivel, alertas 80 %/100 %, un presupuesto por categoría.
+  - [x] Reportes: navegación por mes, gasto vs mes anterior, ahorro del mes, barras 6 meses, gasto por categoría con %.
+  - [x] Categorías: CRUD con selector de ícono y color; protegidas si tienen movimientos.
+  - [x] Ajustes: tema claro/oscuro/sistema persistido; menú "Más" completo.
 - [ ] **Fase 6 — Pulido**
 - [ ] **Fase 7 — Build + validación**
 

@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:vm="clr-namespace:Chanchito.Core.ViewModels;assembly=Chanchito.Core"
+             xmlns:sys="clr-namespace:System;assembly=System.Runtime"
+             x:Class="Chanchito.App.Views.EdicionCategoriaPage"
+             x:DataType="vm:EdicionCategoriaViewModel"
+             Title="Categoría"
+             BackgroundColor="{AppThemeBinding Light={StaticResource Fondo}, Dark={StaticResource FondoDark}}">
+
+    <ScrollView>
+        <VerticalStackLayout Padding="16,20" Spacing="14">
+
+            <!-- Vista previa -->
+            <Border StrokeThickness="0" StrokeShape="RoundRectangle 18"
+                    BackgroundColor="{Binding ColorSeleccionado, Converter={StaticResource ColorHexConverter}}"
+                    WidthRequest="64" HeightRequest="64" HorizontalOptions="Center">
+                <Label Text="{Binding IconoSeleccionado}" FontSize="28" HorizontalOptions="Center" VerticalOptions="Center" />
+            </Border>
+
+            <Border Style="{StaticResource Tarjeta}" Padding="12,8">
+                <VerticalStackLayout Spacing="2">
+                    <Label Text="Nombre" Style="{StaticResource TextoSecundario}" FontSize="11" />
+                    <Entry Text="{Binding Nombre}" Placeholder="Ej. Mascotas" />
+                </VerticalStackLayout>
+            </Border>
+
+            <!-- Íconos -->
+            <Border Style="{StaticResource Tarjeta}">
+                <VerticalStackLayout Spacing="8">
+                    <Label Text="Ícono" Style="{StaticResource TextoSecundario}" FontSize="11" />
+                    <FlexLayout BindableLayout.ItemsSource="{Binding Iconos}" Wrap="Wrap" JustifyContent="Start">
+                        <BindableLayout.ItemTemplate>
+                            <DataTemplate x:DataType="sys:String">
+                                <Button Text="{Binding .}" FontSize="20" WidthRequest="48" HeightRequest="48"
+                                        Padding="0" CornerRadius="12" Margin="3"
+                                        BackgroundColor="{AppThemeBinding Light={StaticResource Fondo}, Dark={StaticResource FondoDark}}"
+                                        Command="{Binding ElegirIconoCommand, Source={RelativeSource AncestorType={x:Type vm:EdicionCategoriaViewModel}}}"
+                                        CommandParameter="{Binding .}" />
+                            </DataTemplate>
+                        </BindableLayout.ItemTemplate>
+                    </FlexLayout>
+                </VerticalStackLayout>
+            </Border>
+
+            <!-- Colores -->
+            <Border Style="{StaticResource Tarjeta}">
+                <VerticalStackLayout Spacing="8">
+                    <Label Text="Color" Style="{StaticResource TextoSecundario}" FontSize="11" />
+                    <FlexLayout BindableLayout.ItemsSource="{Binding Colores}" Wrap="Wrap" JustifyContent="Start">
+                        <BindableLayout.ItemTemplate>
+                            <DataTemplate x:DataType="sys:String">
+                                <Button WidthRequest="44" HeightRequest="44" CornerRadius="22" Margin="4" Padding="0"
+                                        BackgroundColor="{Binding ., Converter={StaticResource ColorHexConverter}}"
+                                        Command="{Binding ElegirColorCommand, Source={RelativeSource AncestorType={x:Type vm:EdicionCategoriaViewModel}}}"
+                                        CommandParameter="{Binding .}" />
+                            </DataTemplate>
+                        </BindableLayout.ItemTemplate>
+                    </FlexLayout>
+                </VerticalStackLayout>
+            </Border>
+
+            <Button Text="Guardar" Style="{StaticResource BotonPrimario}" Command="{Binding GuardarCommand}" />
+
+            <Button Text="🗑 Eliminar categoría"
+                    IsVisible="{Binding EsEdicion}"
+                    Command="{Binding EliminarCommand}"
+                    BackgroundColor="{AppThemeBinding Light={StaticResource GastoSoft}, Dark={StaticResource GastoSoftDark}}"
+                    TextColor="{AppThemeBinding Light={StaticResource Gasto}, Dark={StaticResource GastoDark}}"
+                    FontAttributes="Bold" CornerRadius="16" HeightRequest="52" />
+
+        </VerticalStackLayout>
+    </ScrollView>
+</ContentPage>

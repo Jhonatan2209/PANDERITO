@@ -1,0 +1,112 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:vm="clr-namespace:Chanchito.Core.ViewModels;assembly=Chanchito.Core"
+             x:Class="Chanchito.App.Views.DetallePanderoPage"
+             x:DataType="vm:DetallePanderoViewModel"
+             Title="{Binding NombreTexto}"
+             BackgroundColor="{AppThemeBinding Light={StaticResource Fondo}, Dark={StaticResource FondoDark}}">
+
+    <ScrollView>
+        <VerticalStackLayout Padding="16,20" Spacing="14">
+
+            <!-- Cuándo me toca (como el mockup) -->
+            <Border Style="{StaticResource TarjetaPrimaria}">
+                <VerticalStackLayout Spacing="10">
+                    <Label Text="Cuándo me toca cobrar" FontSize="13" Opacity="0.85"
+                           TextColor="{AppThemeBinding Light={StaticResource OnPrimary}, Dark={StaticResource OnPrimaryDark}}" />
+                    <Label Text="{Binding MiTurnoGrande}" FontSize="26" FontAttributes="Bold"
+                           TextColor="{AppThemeBinding Light={StaticResource OnPrimary}, Dark={StaticResource OnPrimaryDark}}" />
+                    <Grid ColumnDefinitions="*,*" ColumnSpacing="12">
+                        <Border Grid.Column="0" StrokeThickness="0" StrokeShape="RoundRectangle 14"
+                                BackgroundColor="#26FFFFFF" Padding="12">
+                            <VerticalStackLayout Spacing="2">
+                                <Label Text="He aportado" FontSize="12" Opacity="0.9"
+                                       TextColor="{AppThemeBinding Light={StaticResource OnPrimary}, Dark={StaticResource OnPrimaryDark}}" />
+                                <Label Text="{Binding AportadoTexto}" FontSize="18" FontAttributes="Bold"
+                                       TextColor="{AppThemeBinding Light={StaticResource OnPrimary}, Dark={StaticResource OnPrimaryDark}}" />
+                                <Label Text="{Binding CuotasTexto}" FontSize="11" Opacity="0.85"
+                                       TextColor="{AppThemeBinding Light={StaticResource OnPrimary}, Dark={StaticResource OnPrimaryDark}}" />
+                            </VerticalStackLayout>
+                        </Border>
+                        <Border Grid.Column="1" StrokeThickness="0" StrokeShape="RoundRectangle 14"
+                                BackgroundColor="#26FFFFFF" Padding="12">
+                            <VerticalStackLayout Spacing="2">
+                                <Label Text="Recibiré el pozo" FontSize="12" Opacity="0.9"
+                                       TextColor="{AppThemeBinding Light={StaticResource OnPrimary}, Dark={StaticResource OnPrimaryDark}}" />
+                                <Label Text="{Binding RecibireTexto}" FontSize="18" FontAttributes="Bold"
+                                       TextColor="{AppThemeBinding Light={StaticResource OnPrimary}, Dark={StaticResource OnPrimaryDark}}" />
+                                <Label Text="{Binding DetallePozoTexto}" FontSize="11" Opacity="0.85"
+                                       TextColor="{AppThemeBinding Light={StaticResource OnPrimary}, Dark={StaticResource OnPrimaryDark}}" />
+                            </VerticalStackLayout>
+                        </Border>
+                    </Grid>
+                </VerticalStackLayout>
+            </Border>
+
+            <!-- Avance -->
+            <Border Style="{StaticResource Tarjeta}">
+                <VerticalStackLayout Spacing="8">
+                    <Grid ColumnDefinitions="*,Auto">
+                        <Label Grid.Column="0" Text="Avance del pandero" Style="{StaticResource Subtitulo}" />
+                        <Label Grid.Column="1" Text="{Binding AvanceTexto}" FontAttributes="Bold"
+                               TextColor="{AppThemeBinding Light={StaticResource PrimaryInk}, Dark={StaticResource PrimaryInkDark}}" />
+                    </Grid>
+                    <ProgressBar Progress="{Binding Avance}"
+                                 ProgressColor="{AppThemeBinding Light={StaticResource Primary}, Dark={StaticResource PrimaryDark}}" />
+                </VerticalStackLayout>
+            </Border>
+
+            <!-- Turnos -->
+            <Label Text="A quién le toca cada turno" Style="{StaticResource Subtitulo}" />
+            <Label Text="Toca un turno para marcarlo como cobrado ✓" Style="{StaticResource TextoSecundario}" FontSize="12" />
+
+            <VerticalStackLayout BindableLayout.ItemsSource="{Binding Turnos}" Spacing="6">
+                <BindableLayout.ItemTemplate>
+                    <DataTemplate x:DataType="vm:TurnoItem">
+                        <Border Style="{StaticResource Tarjeta}" Padding="12,10">
+                            <Border.GestureRecognizers>
+                                <TapGestureRecognizer
+                                    Command="{Binding AlternarCobradoCommand, Source={RelativeSource AncestorType={x:Type vm:DetallePanderoViewModel}}}"
+                                    CommandParameter="{Binding .}" />
+                            </Border.GestureRecognizers>
+                            <Border.Triggers>
+                                <DataTrigger TargetType="Border" Binding="{Binding EsMiTurno}" Value="True">
+                                    <Setter Property="Stroke" Value="{AppThemeBinding Light={StaticResource Primary}, Dark={StaticResource PrimaryDark}}" />
+                                    <Setter Property="StrokeThickness" Value="2" />
+                                </DataTrigger>
+                            </Border.Triggers>
+                            <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="12">
+                                <Border Grid.Column="0" StrokeThickness="0" StrokeShape="RoundRectangle 10"
+                                        BackgroundColor="{AppThemeBinding Light={StaticResource PrimarySoft}, Dark={StaticResource PrimarySoftDark}}"
+                                        WidthRequest="34" HeightRequest="34">
+                                    <Label Text="{Binding NumeroTexto}" FontAttributes="Bold"
+                                           TextColor="{AppThemeBinding Light={StaticResource PrimaryInk}, Dark={StaticResource PrimaryInkDark}}"
+                                           HorizontalOptions="Center" VerticalOptions="Center" />
+                                </Border>
+                                <VerticalStackLayout Grid.Column="1" Spacing="1" VerticalOptions="Center">
+                                    <Label Text="{Binding Nombre}" FontAttributes="Bold" FontSize="14"
+                                           TextColor="{AppThemeBinding Light={StaticResource Texto}, Dark={StaticResource TextoDark}}" />
+                                    <Label Text="{Binding FechaTexto}" Style="{StaticResource TextoSecundario}" FontSize="12" />
+                                </VerticalStackLayout>
+                                <Border Grid.Column="2" Style="{StaticResource Chip}" VerticalOptions="Center"
+                                        IsVisible="{Binding Cobrado}"
+                                        BackgroundColor="{AppThemeBinding Light={StaticResource IngresoSoft}, Dark={StaticResource IngresoSoftDark}}">
+                                    <Label Text="Cobró" FontSize="11" FontAttributes="Bold"
+                                           TextColor="{AppThemeBinding Light={StaticResource Ingreso}, Dark={StaticResource IngresoDark}}" />
+                                </Border>
+                            </Grid>
+                        </Border>
+                    </DataTemplate>
+                </BindableLayout.ItemTemplate>
+            </VerticalStackLayout>
+
+            <Button Text="🗑 Eliminar pandero"
+                    Command="{Binding EliminarCommand}"
+                    BackgroundColor="{AppThemeBinding Light={StaticResource GastoSoft}, Dark={StaticResource GastoSoftDark}}"
+                    TextColor="{AppThemeBinding Light={StaticResource Gasto}, Dark={StaticResource GastoDark}}"
+                    FontAttributes="Bold" CornerRadius="16" HeightRequest="52" />
+
+        </VerticalStackLayout>
+    </ScrollView>
+</ContentPage>
