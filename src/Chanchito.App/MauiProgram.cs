@@ -1,6 +1,8 @@
+using Chanchito.App.Servicios;
 using Chanchito.App.Views;
 using Chanchito.Core.Data;
 using Chanchito.Core.Services;
+using Chanchito.Core.ViewModels;
 using CommunityToolkit.Maui;
 using Microsoft.Extensions.Logging;
 
@@ -44,11 +46,21 @@ public static class MauiProgram
 		servicios.AddSingleton<ServicioPrestamos>();
 		servicios.AddSingleton<ServicioRecurrentes>();
 
-		// Páginas (los ViewModels se registran junto a cada pantalla en fases 4-5)
+		// Navegación
+		servicios.AddSingleton<INavegador, NavegadorShell>();
+
+		// ViewModels
+		servicios.AddTransient<DashboardViewModel>();
+		servicios.AddTransient<RegistroMovimientoViewModel>();
+		servicios.AddTransient<HistorialViewModel>();
+		servicios.AddTransient<DetalleMovimientoViewModel>();
+
+		// Páginas
 		servicios.AddTransient<DashboardPage>();
 		servicios.AddTransient<HistorialPage>();
 		servicios.AddTransient<RegistroPage>();
 		servicios.AddTransient<ReportesPage>();
 		servicios.AddTransient<MasPage>();
+		servicios.AddTransient<DetalleMovimientoPage>();
 	}
 }

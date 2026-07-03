@@ -1,9 +1,20 @@
+using Chanchito.Core.ViewModels;
+
 namespace Chanchito.App.Views;
 
 public partial class HistorialPage : ContentPage
 {
-    public HistorialPage()
+    private readonly HistorialViewModel _vm;
+
+    public HistorialPage(HistorialViewModel vm)
     {
         InitializeComponent();
+        BindingContext = _vm = vm;
+    }
+
+    protected override async void OnAppearing()
+    {
+        base.OnAppearing();
+        await _vm.CargarAsync();
     }
 }

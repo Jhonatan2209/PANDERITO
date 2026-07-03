@@ -1,11 +1,141 @@
 <?xml version="1.0" encoding="utf-8" ?>
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:vm="clr-namespace:Chanchito.Core.ViewModels;assembly=Chanchito.Core"
+             xmlns:svc="clr-namespace:Chanchito.Core.Services;assembly=Chanchito.Core"
+             xmlns:models="clr-namespace:Chanchito.Core.Models;assembly=Chanchito.Core"
              x:Class="Chanchito.App.Views.HistorialPage"
-             Title="Movimientos"
+             x:DataType="vm:HistorialViewModel"
+             Shell.NavBarIsVisible="False"
              BackgroundColor="{AppThemeBinding Light={StaticResource Fondo}, Dark={StaticResource FondoDark}}">
-    <VerticalStackLayout Padding="16" Spacing="12">
-        <Label Text="Movimientos" Style="{StaticResource TituloPantalla}" />
-        <Label Text="(Historial en construcción — Fase 4)" Style="{StaticResource TextoSecundario}" />
-    </VerticalStackLayout>
+
+    <Grid RowDefinitions="Auto,Auto,Auto,*" Padding="16,24,16,0" RowSpacing="12">
+
+        <Label Grid.Row="0" Text="Movimientos" Style="{StaticResource TituloPantalla}" />
+
+        <!-- Búsqueda -->
+        <Border Grid.Row="1" Style="{StaticResource Tarjeta}" Padding="12,4">
+            <SearchBar Text="{Binding TextoBusqueda}"
+                       Placeholder="Buscar por nota…"
+                       BackgroundColor="Transparent" />
+        </Border>
+
+        <!-- Filtros -->
+        <VerticalStackLayout Grid.Row="2" Spacing="8">
+            <Grid ColumnDefinitions="*,*,*" ColumnSpacing="8">
+                <Button Grid.Column="0" Text="Todos" FontSize="13" HeightRequest="38" CornerRadius="12"
+                        Command="{Binding LimpiarFiltrosCommand}">
+                    <Button.Triggers>
+                        <DataTrigger TargetType="Button" Binding="{Binding IndiceTipo}" Value="0">
+                            <Setter Property="BackgroundColor" Value="{AppThemeBinding Light={StaticResource Primary}, Dark={StaticResource PrimaryDark}}" />
+                            <Setter Property="TextColor" Value="{AppThemeBinding Light={StaticResource OnPrimary}, Dark={StaticResource OnPrimaryDark}}" />
+                        </DataTrigger>
+                    </Button.Triggers>
+                    <Button.Style>
+                        <Style TargetType="Button">
+                            <Setter Property="BackgroundColor" Value="{AppThemeBinding Light={StaticResource Superficie}, Dark={StaticResource SuperficieDark}}" />
+                            <Setter Property="TextColor" Value="{AppThemeBinding Light={StaticResource TextoSuave}, Dark={StaticResource TextoSuaveDark}}" />
+                        </Style>
+                    </Button.Style>
+                </Button>
+                <Button Grid.Column="1" Text="Gastos" FontSize="13" HeightRequest="38" CornerRadius="12"
+                        Command="{Binding FiltrarGastosCommand}">
+                    <Button.Triggers>
+                        <DataTrigger TargetType="Button" Binding="{Binding IndiceTipo}" Value="1">
+                            <Setter Property="BackgroundColor" Value="{AppThemeBinding Light={StaticResource Gasto}, Dark={StaticResource GastoDark}}" />
+                            <Setter Property="TextColor" Value="White" />
+                        </DataTrigger>
+                    </Button.Triggers>
+                    <Button.Style>
+                        <Style TargetType="Button">
+                            <Setter Property="BackgroundColor" Value="{AppThemeBinding Light={StaticResource Superficie}, Dark={StaticResource SuperficieDark}}" />
+                            <Setter Property="TextColor" Value="{AppThemeBinding Light={StaticResource TextoSuave}, Dark={StaticResource TextoSuaveDark}}" />
+                        </Style>
+                    </Button.Style>
+                </Button>
+                <Button Grid.Column="2" Text="Ingresos" FontSize="13" HeightRequest="38" CornerRadius="12"
+                        Command="{Binding FiltrarIngresosCommand}">
+                    <Button.Triggers>
+                        <DataTrigger TargetType="Button" Binding="{Binding IndiceTipo}" Value="2">
+                            <Setter Property="BackgroundColor" Value="{AppThemeBinding Light={StaticResource Ingreso}, Dark={StaticResource IngresoDark}}" />
+                            <Setter Property="TextColor" Value="White" />
+                        </DataTrigger>
+                    </Button.Triggers>
+                    <Button.Style>
+                        <Style TargetType="Button">
+                            <Setter Property="BackgroundColor" Value="{AppThemeBinding Light={StaticResource Superficie}, Dark={StaticResource SuperficieDark}}" />
+                            <Setter Property="TextColor" Value="{AppThemeBinding Light={StaticResource TextoSuave}, Dark={StaticResource TextoSuaveDark}}" />
+                        </Style>
+                    </Button.Style>
+                </Button>
+            </Grid>
+
+            <Grid ColumnDefinitions="*,*" ColumnSpacing="8">
+                <Border Grid.Column="0" Style="{StaticResource Tarjeta}" Padding="12,2">
+                    <Picker Title="Categoría"
+                            ItemsSource="{Binding Categorias}"
+                            SelectedItem="{Binding CategoriaFiltro}"
+                            ItemDisplayBinding="{Binding Nombre, x:DataType=models:Categoria}"
+                            FontSize="13" />
+                </Border>
+                <Border Grid.Column="1" Style="{StaticResource Tarjeta}" Padding="12,2">
+                    <Picker Title="Cuenta"
+                            ItemsSource="{Binding Cuentas}"
+                            SelectedItem="{Binding CuentaFiltro}"
+                            ItemDisplayBinding="{Binding Nombre, x:DataType=models:Cuenta}"
+                            FontSize="13" />
+                </Border>
+            </Grid>
+        </VerticalStackLayout>
+
+        <!-- Lista -->
+        <CollectionView Grid.Row="3"
+                        ItemsSource="{Binding Movimientos}"
+                        Margin="0,4,0,0">
+            <CollectionView.EmptyView>
+                <Label Text="No hay movimientos con esos filtros 🔍"
+                       Style="{StaticResource EtiquetaVacio}" />
+            </CollectionView.EmptyView>
+            <CollectionView.ItemTemplate>
+                <DataTemplate x:DataType="svc:MovimientoDetalle">
+                    <Grid Padding="0,4">
+                        <Border Style="{StaticResource Tarjeta}" Padding="12">
+                            <Border.GestureRecognizers>
+                                <TapGestureRecognizer
+                                    Command="{Binding AbrirDetalleCommand, Source={RelativeSource AncestorType={x:Type vm:HistorialViewModel}}}"
+                                    CommandParameter="{Binding .}" />
+                            </Border.GestureRecognizers>
+                            <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="12">
+                                <Border Grid.Column="0" StrokeThickness="0" StrokeShape="RoundRectangle 12"
+                                        BackgroundColor="{Binding ColorCategoria, Converter={StaticResource ColorHexConverter}}"
+                                        WidthRequest="42" HeightRequest="42">
+                                    <Label Text="{Binding IconoCategoria}" FontSize="18"
+                                           HorizontalOptions="Center" VerticalOptions="Center" />
+                                </Border>
+                                <VerticalStackLayout Grid.Column="1" Spacing="2" VerticalOptions="Center">
+                                    <Label Text="{Binding NombreCategoria}" FontAttributes="Bold" FontSize="15"
+                                           TextColor="{AppThemeBinding Light={StaticResource Texto}, Dark={StaticResource TextoDark}}" />
+                                    <HorizontalStackLayout Spacing="6">
+                                        <Label Text="{Binding NombreCuenta}" Style="{StaticResource TextoSecundario}" FontSize="12" />
+                                        <Label Text="·" Style="{StaticResource TextoSecundario}" FontSize="12" />
+                                        <Label Text="{Binding FechaTexto}" Style="{StaticResource TextoSecundario}" FontSize="12" />
+                                    </HorizontalStackLayout>
+                                </VerticalStackLayout>
+                                <Label Grid.Column="2" Text="{Binding MontoTexto}" VerticalOptions="Center" FontSize="15" FontAttributes="Bold">
+                                    <Label.Triggers>
+                                        <DataTrigger TargetType="Label" Binding="{Binding EsGasto}" Value="True">
+                                            <Setter Property="TextColor" Value="{AppThemeBinding Light={StaticResource Gasto}, Dark={StaticResource GastoDark}}" />
+                                        </DataTrigger>
+                                        <DataTrigger TargetType="Label" Binding="{Binding EsGasto}" Value="False">
+                                            <Setter Property="TextColor" Value="{AppThemeBinding Light={StaticResource Ingreso}, Dark={StaticResource IngresoDark}}" />
+                                        </DataTrigger>
+                                    </Label.Triggers>
+                                </Label>
+                            </Grid>
+                        </Border>
+                    </Grid>
+                </DataTemplate>
+            </CollectionView.ItemTemplate>
+        </CollectionView>
+    </Grid>
 </ContentPage>

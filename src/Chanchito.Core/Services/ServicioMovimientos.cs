@@ -5,6 +5,18 @@ namespace Chanchito.Core.Services;
 
 public record GastoPorCategoria(int CategoriaId, string Nombre, string Icono, string ColorHex, decimal Total);
 
+/// <summary>Movimiento con su categoría y cuenta ya resueltas, listo para mostrar en la UI.</summary>
+public record MovimientoDetalle(Movimiento Movimiento, Categoria? Categoria, Cuenta? Cuenta)
+{
+    public string NombreCategoria => Categoria?.Nombre ?? "Sin categoría";
+    public string IconoCategoria => Categoria?.Icono ?? "🏷️";
+    public string ColorCategoria => Categoria?.ColorHex ?? "#6B7280";
+    public string NombreCuenta => Cuenta?.Nombre ?? "—";
+    public bool EsGasto => Movimiento.Tipo == TipoMovimiento.Gasto;
+    public string MontoTexto => FormatoMoneda.ConSigno(Movimiento.Monto, EsGasto);
+    public string FechaTexto => Movimiento.Fecha.ToString("dd MMM yyyy · HH:mm", FormatoMoneda.CulturaPeru);
+}
+
 public record FiltroMovimientos(
     DateTime? Desde = null,
     DateTime? Hasta = null,
@@ -21,6 +33,47 @@ public class ServicioMovimientos
     public ServicioMovimientos(ChanchitoDatabase db)
     {
         _db = db;
+    }
+
+    public async Task GuardarAsync(Movimiento movimiento)
+    {
+        await _db.InicializarAsync();
+        if (movimiento.Id == 0)
+            await _db.Connection.InsertAsync(movimiento);
+        else
+            await _db.Connection.UpdateAsync(movimiento);
+    }
+
+    public async Task EliminarAsync(Movimiento movimiento)
+    {
+        await _db.InicializarAsync();
+        await _db.Connection.DeleteAsync(movimiento);
+    }
+
+    public async Task<MovimientoDetalle?> ObtenerDetalleAsync(int id)
+    {
+        await _db.InicializarAsync();
+        var movimiento = await _db.Connection.FindAsync<Movimiento>(id);
+        if (movimiento is null) return null;
+        return (await ConDetalleAsync(new List<Movimiento> { movimiento }))[0];
+    }
+
+    public async Task<List<MovimientoDetalle>> RecientesConDetalleAsync(int cantidad = 10) =>
+        await ConDetalleAsync(await ObtenerRecientesAsync(cantidad));
+
+    public async Task<List<MovimientoDetalle>> BuscarConDetalleAsync(FiltroMovimientos filtro) =>
+        await ConDetalleAsync(await BuscarAsync(filtro));
+
+    private async Task<List<MovimientoDetalle>> ConDetalleAsync(List<Movimiento> movimientos)
+    {
+        var categorias = await _db.Connection.Table<Categoria>().ToListAsync();
+        var cuentas = await _db.Connection.Table<Cuenta>().ToListAsync();
+        return movimientos
+            .Select(m => new MovimientoDetalle(
+                m,
+                categorias.FirstOrDefault(c => c.Id == m.CategoriaId),
+                cuentas.FirstOrDefault(c => c.Id == m.CuentaId)))
+            .ToList();
     }
 
     public async Task<List<Movimiento>> ObtenerRecientesAsync(int cantidad = 10)

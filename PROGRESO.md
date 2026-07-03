@@ -20,7 +20,12 @@ Checklist de fases (ver CLAUDE.md sección 12). Se marca cada fase solo con `dot
   - [x] AppShell con TabBar de 5 tabs (Inicio · Movimientos · Registrar · Reportes · Más) e íconos SVG propios.
   - [x] Converters: MonedaConverter (S/ es-PE), MontoConSignoConverter, ColorHexConverter. FormatoMoneda en Core con pruebas.
   - [x] DI registrada en MauiProgram (BD, servicios, páginas).
-- [ ] **Fase 4 — Pantallas núcleo**
+- [x] **Fase 4 — Pantallas núcleo** (2026-07-03)
+  - [x] Dashboard: saludo + mes, tarjeta de saldo total, ingresos vs gastos del mes, últimos movimientos, acceso rápido a registrar.
+  - [x] Registro rápido: toggle Gasto/Ingreso, monto protagonista, categoría/cuenta/fecha/nota, validaciones.
+  - [x] Historial: búsqueda por nota, chips Todos/Gastos/Ingresos, filtros por categoría y cuenta, estado vacío.
+  - [x] Detalle de movimiento con eliminación (confirmación previa). Ruta `detalleMovimiento` registrada.
+  - [x] INavegador (Core) + NavegadorShell (App). ViewModels: Dashboard, RegistroMovimiento, Historial, DetalleMovimiento.
 - [ ] **Fase 5 — Módulos**
 - [ ] **Fase 6 — Pulido**
 - [ ] **Fase 7 — Build + validación**
