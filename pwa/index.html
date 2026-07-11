@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="es-PE">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=1" />
+  <title>Panderito — Tus finanzas, tu junta</title>
+  <meta name="description" content="Finanzas personales con panderos (juntas de ahorro). Funciona sin internet." />
+  <meta name="theme-color" content="#6D5AE6" />
+  <link rel="manifest" href="manifest.webmanifest" />
+  <link rel="icon" type="image/svg+xml" href="icons/panderito-icon.svg" />
+  <link rel="apple-touch-icon" href="icons/panderito-icon.svg" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+  <meta name="apple-mobile-web-app-title" content="Panderito" />
+  <link rel="stylesheet" href="css/estilos.css" />
+</head>
+<body>
+  <main id="app"><!-- Las vistas se renderizan aquí --></main>
+
+  <nav class="tabbar" id="tabbar">
+    <button class="tab" data-ruta="inicio"><span class="ic">🏠</span><span>Inicio</span></button>
+    <button class="tab" data-ruta="movimientos"><span class="ic">📋</span><span>Movim.</span></button>
+    <button class="tab tab-registrar" data-ruta="registrar"><span class="ic">＋</span></button>
+    <button class="tab" data-ruta="reportes"><span class="ic">📊</span><span>Reportes</span></button>
+    <button class="tab" data-ruta="mas"><span class="ic">⋯</span><span>Más</span></button>
+  </nav>
+
+  <div id="toast"></div>
+
+  <script src="js/datos.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>
