@@ -1,0 +1,16 @@
+{
+  "name": "panderito-bot-telegram",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Bot de Telegram que lee fotos de yapeos/boletas/facturas con IA (Claude) y registra el movimiento en Panderito.",
+  "type": "commonjs",
+  "main": "src/index.js",
+  "scripts": {
+    "start": "node src/index.js"
+  },
+  "dependencies": {
+    "@anthropic-ai/sdk": "^0.70.0",
+    "dotenv": "^16.4.5",
+    "node-telegram-bot-api": "^0.66.0"
+  }
+}
