@@ -1,0 +1,38 @@
+Windows PowerShell
+Copyright (C) Microsoft Corporation. Todos los derechos reservados.
+
+Prueba la nueva tecnología PowerShell multiplataforma https://aka.ms/pscore6
+
+PS C:\WINDOWS\system32> ssh-keygen -t ed25519 -C "github-actions-biblioteca" -f "$HOME\.ssh\biblioteca_deploy"
+Generating public/private ed25519 key pair.
+Enter passphrase (empty for no passphrase):
+Enter same passphrase again:
+Your identification has been saved in C:\Users\virgo\.ssh\biblioteca_deploy
+Your public key has been saved in C:\Users\virgo\.ssh\biblioteca_deploy.pub
+The key fingerprint is:
+SHA256:u5xQ2LLfKMX6SuO9U8RmOpXs4rWBRqcYOrpz4DQoFJk github-actions-biblioteca
+The key's randomart image is:
++--[ED25519 256]--+
+|  o              |
+| E               |
+|  .      o .     |
+| .    .o. X      |
+|..   .o=S@       |
+|o + o .+X.=      |
+|.o + .==.= o     |
+|  + .oo*o=.      |
+|  .+  o+Xo.      |
++----[SHA256]-----+
+PS C:\WINDOWS\system32> type "$HOME\.ssh\biblioteca_deploy.pub"
+ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAILT3cmh7fJv9NNeHLnUEXEYC3Ojh+Tja/W+/goVXXznA github-actions-biblioteca
+PS C:\WINDOWS\system32> type "$HOME\.ssh\biblioteca_deploy"
+-----BEGIN OPENSSH PRIVATE KEY-----
+b3BlbnNzaC1rZXktdjEAAAAABG5vbmUAAAAEbm9uZQAAAAAAAAABAAAAMwAAAAtzc2gtZW
+QyNTUxOQAAACC093Joe3yb/TTXhy51BFxGAtzo4fk42v1vv4KFV185wAAAAKCApqNXgKaj
+VwAAAAtzc2gtZWQyNTUxOQAAACC093Joe3yb/TTXhy51BFxGAtzo4fk42v1vv4KFV185wA
+AAAEAGJc6/dUTaOtEksQQW7d+3XVaRXiJ+H0I4VNKbYI+jtLT3cmh7fJv9NNeHLnUEXEYC
+3Ojh+Tja/W+/goVXXznAAAAAGWdpdGh1Yi1hY3Rpb25zLWJpYmxpb3RlY2EBAgME
+-----END OPENSSH PRIVATE KEY-----
+PS C:\WINDOWS\system32>
+
+

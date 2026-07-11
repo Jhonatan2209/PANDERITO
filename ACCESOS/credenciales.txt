@@ -1,0 +1,21 @@
+CREDENCIALES SISTEMA Y SQL FONDOEDITORIALUNAS:**************************************************************************************
+verificar el puerto para acceder a la bd del servidor:
+ss -tlnp | grep 14333
+INGRESAR A LA BD DESDE SQL SERVER 2022:
+Server type:     Database Engine
+Server name:     192.168.10.5,14333
+                 ⚠️ IMPORTANTE: usa COMA antes del puerto,
+                    no dos puntos
+Authentication:  SQL Server Authentication
+Login:           sa
+Password:        BibliotecaUNAS_2026Secure
+*********************************************************************************************************************************
+CONECTARSE A LA MAQUINA VIRTUAL BIBLIOTECA_UNAS:
+conectarse vm biblioteca-mv
+ssh -p 2226 root@192.168.10.5
+Biblioteca123
+*********************************************************************************************************************************
+CONTRASEÑA SERVIDOR LINUX LOCAL VIRTUAL BOX
+login: adminunas
+password: Jhonatan1219
+****************************************************************************************************************************************************************************

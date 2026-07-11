@@ -1,0 +1,228 @@
+https://dgroups.org/fao/agrovoc
+user: biblioteca@unas.edu.pe
+passw: bibliotecaapps987$A
+
+jpaucar--> JPauc4r$
+RANGO DE IP BIB
+---------------
+172.16.3.1-172.16.3.45 (utilizado del .3-.21)
+172.16.3.185-172.16.3.215
+SALESFORCE
+----------
+url:https://exlidp.exlibrisgroup.com/
+Username: rannoverng.yanac
+Password: Newuser123!
+
+URL: https://bibliotecaunassp.ebookcentral.proquest.com/libCentral/
+Usuario: edinson.perez@unas.edu.pe
+Clave: Unas123$a
+
+
+ROUTER MIKROTICK: 192.168.250.1
+CONTRASEÑA: Bibli0tec42024$A
+
+
+UDMPRO:
+192.168.1.1 - user: adminbiblioUNAS - password: Bibli0tec42024$A
+
+http://192.168.126.1/ - #B01C42@44BD56* - biblioteca123$A - epbFIIS19. BCunas2022%
+http://192.168.127.1/ - #B01C41@44B253* - biblioteca123$A - epbFIIS19. BCunas2022%
+
+
+*Please note that the process may take up to 24 hours to be completed.
+To connect, do the following:
+Go to: https://exlidp.exlibrisgroup.com/
+-----------------------------------------------
+
+https://www.google.com/settings/security/lesssecureapps.
+base de datos : 192.168.10.4
+usuario:postgres
+password: Postprueba15
+----------------------------
+USER: appepg
+PASSW: cqc6icixYXGdk7wNiV7e
+IP: 192.168.10.4
+----------------------------
+
+ACCESO OCDA COMO FUNCIONARIO
+----------------------------
+JDCONTA
+Conta752fde
+-----------------------------
+ACCESO REMOTO BASE DE DATOS EPG-CTIC
+usuario: appegg  Password: $epg123%ctic$
+
+sppp
+admin
+*.@dm1n.*
+
+-----------
+mvn install:install-file -Dfile=E:\EPG1.2\EpgThread\lib\javadbf-0.4.0.jar -DgroupId=com.dbf -DartifactId=dbf4 -Dversion=4.0 -Dpackaging=jar
+
+-----------------
+mvn install:install-file -Dfile=E:\ojdbc14.jar -DgroupId=com.oracle -DartifactId=ojdbc6 -Dversion=11.2.0 -Dpackaging=jar
+---------------------
+Servidor glassfish
+Admin
+#G!@$$Fi$h%2016%#
+Servidor linux
+root
+:r8Dhy,TR?
+Biblioteca4lephCENTRAL%
+BibliotecaK0h4CENTRAL%
+
+---------
+appbook
+#bibliotec@$b00k#
+es osn tus credenciales para book
+base de datos
+
+------------------------
+ARC
+----
+ARC-UNAS
+http://200.37.135.94:8081
+USUARIO:author1unsr0
+CLAVE:Unas01aut!
+-------------
+CREDENCIALES WEB BIBLIOTECA
+IP SERVER WEB: 192.168.10.3
+user: biblioteca
+password: WoobdaHwe-JnkBmrGBqE
+
+------------------------
+COPIA DE SEGURIDAD
+
+IP:192.168.10.5
+USER:martinaleph
+PASS:martinaleph
+
+stos son los directorios que deben respaldar:
+UNS00: /exlibris/aleph/u22_1/uns00/files/uns00.export.gz_aa
+UNS01: /exlibris/aleph/u22_1/uns01/files/uns01.export.gz_aa
+UNS10: /exlibris/aleph/u22_1/uns10/files/uns10.export.gz_aa
+UNS50: /exlibris/aleph/u22_1/uns50/files/uns50.export.gz_aa
+UNS60: /exlibris/aleph/u22_1/uns60/files/uns60.export.gz_aa
+
+MIKROTIK
+--------
+Grande:BibCRAI16.  	user: bc-soporte-unas clave: epbFIIS19. BCunas2022%
+Pequeño:BiblioUNAS16. 	epbFIIS19. 
+
+AP
+--
+Clave: Biblioteca2016$
+chiclayo
+
+AP-BCPROCESOS - ANTIGUO
+--
+Cuser: bcsoporteunas clave: epbFIIS19 
+
+PC LABORATORIO
+--------------
+Clave:Biblioteca2015$
+Clave2:Biblioteca2015%
+
+MODEM INTERNET
+---------------------
+admin#57348B@60C011*
+#57348A@602815*
+
+SERVIDOR WEB: (intranet biblioteca)                           
+	IP		:192.168.10.3
+	PUERTO		:21
+	CARPETA		: biblioteca_intranet
+	USUARIO		: intranetb
+	CONTRASEÑA	: %Bib1ntranet%
+------------------------------------------------------------------------
+SERVIDOR BASE DE DATOS: (base de datos intranet biblioteca)
+	HOST: 172.16.3.165
+	USUARIO		: biblioteca
+	nombre base de datos:biblioteca
+	CONTRASEÑA: $Biblioteca%Port@l$
+			pasw0rd$2015
+------------------------------------------------------------------------
+Servidor web:(sitio web)
+	IP		:192.168.10.3
+	PUERTO		:21
+	CARPETA		: biblioteca
+	USUARIO		: biblioteca
+	CONTRASEÑA	: P@$$Bib%Port@l
+------------------------------------------------------------------------
+Base de datos: (base de datos sitio web)
+	HOST		: 172.16.3.165
+	nombre base de datos: bibliotecav1
+	USUARIO		: biblioteca
+	CONTRASEÑA	: $Biblioteca%Port@l$
+
+------------------------------------------------------------------------
+Url: www.unas.edu.pe/biblioteca
+el de ingreso: www.unas.edu.pe/biblioteca/user
+Usuario: admin	
+Contraseña: Biblioteca2016$
+contraseña2:%Biblioteca2017$
+contraseña3:@Bib8102UN@S@
+-------------------------------
+correo lab.biblioteca1@unas.edu.pe:Uni$$1100$$ -- lab.biblio1@unas.edu.pe: Bibli0tec42023$A
+correo lab.biblioteca2@unas.edu.pe:Uni$$1100$$:-- lab.biblio2@unas.edu.pe: Bibli0tec42023$A
+correo lab.biblioteca3@unas.edu.pe:Uni$$1100$$ : Bibli0tec42023$A
+correo lab.biblioteca4@unas.edu.pe:Uni$$1100$$: Bibli0tec42023$A
+correo lab.biblioteca5@unas.edu.pe:Uni$$1100$$: Bibli0tec42023$A
+correo lab.biblioteca6@unas.edu.pe:Uni$$1100$$: Bibli0tec42023$A
+lab.biblio1@unas.edu.pe:Unas2020@
+correo biblioteca@unas.edu.pe:Bibli0teca2016$%
+correo biblioteca.CRAI.UNAS@gmail.com:Bibli0teca2016$%
+facebook: Bibli0teca2016$
+twitter: Bibli0teca2016$
+correo: bibliotecaunas@outlook.com
+clave: Bibli0tec42016$%
+-------------------------------------------------------------
+-------------------------------
+cuentas myloft
+lab.biblio1@unas.edu.pe:Bibli0tecaApps2023$A
+lab.biblio2@unas.edu.pe:Bibli0tecaApps2023$A
+lab.biblio3@unas.edu.pe:Bibli0tecaApps2023$A
+lab.biblio4@unas.edu.pe:Bibli0tecaApps2023$A
+lab.biblio5@unas.edu.pe:Bibli0tecaApps2023$A
+lab.biblio6@unas.edu.pe:Bibli0tecaApps2023$A
+-------------------------------------------------------------
+http://192.168.10.5:8081 ó http://200.37.135.94:8081 -190.216.179.4 
+usuario:	author1unsr0
+clave:		Unas01aut!
+-------------------------------------
+https://exlidp.exlibrisgroup.com/
+USER ID:rannoverng.yanac
+password:Newuser123!
+------------------------------------------
+VIGILANCIA
+192.168.2.200	-> admin   %unas2017%
+-------------------------------------
+https://cway.cisco.com/mydevices/devices?new=true
+USER ID:biblioteca@unas.edu.pe
+password:biblioteca123$A
+
+juan.silupu@outlook.com
+
+VRITUAL PRO
+Usuario: estadisticas@unas.edu.pe
+Contraseña: unas123
+
+digitalia
+
+E-mail: unas@digitalia.us
+Password: unasperu
+
+ELIBRO
+Usuario: edinson.perez@unas.edu.pe
+
+Clave:  Biblioteca2019
+
+CUENTAS DE APPS (TURNITIN)
+CORREO: biblioteca@unas.edu.pe
+clave: bibliotecaapps987$A
+clave: BibliotecaApps987$A
+Turninting: Bibli0tec42025$A
+
+ADMIN KOHA: 
+user: adminbibliounas01
+passwd: AdminBCUNAS2023$A

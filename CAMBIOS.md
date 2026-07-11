@@ -38,8 +38,10 @@ Paleta tomada de `Colors.xaml`: violeta `#6D5AE6` + dorado `#FDB022→#F79009`.
 - La raíz del repositorio se movió de `Chanchito/` a la carpeta completa del proyecto, para incluir
   `CONTEXTO/`, `INSTRUCCIONES/`, `branding/` y el zip del diseño original. El historial previo
   (fases 0–5) se conserva intacto.
-- `.gitignore` movido a la raíz y ampliado con **`ACCESOS/`**: esa carpeta contiene credenciales
-  reales (SSH, SQL Server, Koha, Docker) y **queda fuera del repositorio a propósito**.
+- `.gitignore` movido a la raíz. `ACCESOS/` (credenciales personales) se excluyó inicialmente,
+  pero **el usuario pidió incluirla** por ser un repo privado al que solo él accede; se versiona
+  desde el mismo día. ⚠️ Por esta razón el repositorio **nunca debe hacerse público** sin antes
+  retirar esa carpeta y purgar el historial.
 - Documentación nueva: `README.md` (portada del repo), `CLAUDE.md` (guía rápida para Claude),
   `branding/README.md` y este `CAMBIOS.md`.
 
@@ -52,4 +54,4 @@ dotnet workload install maui-android   # si aún no está
 dotnet test tests/Panderito.Tests/Panderito.Tests.csproj
 ```
 
-Recuerda copiar la carpeta `ACCESOS/` por un medio seguro (USB, etc.) — no viaja con el repo.
+La carpeta `ACCESOS/` viaja dentro del repo (decisión del usuario, repo privado).

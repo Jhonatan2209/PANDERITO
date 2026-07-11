@@ -1,0 +1,38 @@
+CODIGOS PUTTY MAQUINAS VBoxManage:
+-VBoxManage list vms
+-VBoxManage list runningvms
+
+
+conectarse a la VM BibliotecaUNAS:
+ssh -p 2226 root@192.168.10.5
+Biblioteca123
+
+entramos a la carpeta github que esta en /home
+luego buscamos ah svc.sh
+y lo instalamos para que escuche el servidor
+
+github subir cambios a la rama alternativa de PRUEBAS llamada ordenar-revistas:
+git push --set-upstream origin feature/ordenar-revistas
+
+
+
+Enviar cambios al servidor produccion directa:
+1. Editas código en Visual Studio (tu PC)
+2. git add . && git commit -m "cambios"
+3. git push
+4. ☕ Esperas ~1 minuto
+5. ✅ Cambios en vivo en fondoeditorial.unas.edu.pe
+
+
+verificar el puerto para acceder a la bd del servidor:
+ss -tlnp | grep 14333
+INGRESAR A LA BD DESDE SQL SERVER 2022:
+Server type:     Database Engine
+Server name:     192.168.10.5,14333
+                 ⚠️ IMPORTANTE: usa COMA antes del puerto,
+                    no dos puntos
+Authentication:  SQL Server Authentication
+Login:           sa
+Password:        BibliotecaUNAS_2026Secure
+
+

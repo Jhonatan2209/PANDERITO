@@ -1,0 +1,71 @@
+============================================================================
+ ACCESOS Y CREDENCIALES DEL PROYECTO SACD (carnet digital Biblioteca UNAS)
+ Archivo mantenido por el agente Claude. Actualizado: 03/07/2026
+ Cada entrada indica: QUÉ es, PARA QUÉ sirve, LINK y CÓMO ingresar.
+============================================================================
+
+----------------------------------------------------------------------------
+1) CONECTOR SACD ↔ KOHA REAL (VM de prueba) — AUTENTICACIÓN BASIC (ACTIVA)
+----------------------------------------------------------------------------
+Qué es      : Credenciales que usa la API del SACD (ConectorApi) para hablar
+              con la API REST del KOHA 26.05 de la VM VirtualBox
+              "Koha-2605-Debian12" en modo real (ModoSimulacion=false).
+Para qué    : Probar el registro/login/validación de usuarios contra el
+              KOHA real antes de pasar a producción.
+Link        : http://localhost:8081/api/v1/   (API REST del Staff)
+Credenciales: usuario adminbibliounas01 / clave AdminBCUNAS2023$A
+              (cuenta staff superlibrarian ya existente del KOHA migrado;
+              ver ACCESOS/bibliotecaUNAS.txt "ADMIN KOHA")
+Cómo ingresar:
+  - La config vive en: sacd-proyecto\src\ConectorApi\appsettings.KohaVM.json
+    (archivo LOCAL, está en .gitignore, NO se sube a GitHub).
+  - Arrancar la API contra el KOHA real (PowerShell):
+        cd sacd-proyecto\src\ConectorApi
+        $env:ASPNETCORE_ENVIRONMENT = "KohaVM"
+        dotnet run --no-launch-profile --urls http://localhost:5080
+  - Verificado el 03/07/2026: validate-dni y login funcionan contra el
+    KOHA real (patron borrower 1 autenticado con éxito).
+
+----------------------------------------------------------------------------
+2) CONECTOR SACD ↔ KOHA — OAUTH2 CLIENT CREDENTIALS (PENDIENTE DE GENERAR)
+----------------------------------------------------------------------------
+Qué es      : API key (CLIENT_ID + CLIENT_SECRET) de KOHA para que el
+              conector use OAuth2 en lugar de Basic (lo recomendado para
+              producción).
+Para qué    : Autenticación del conector sin exponer usuario/clave de staff.
+Cómo generar: Ejecutar UNA VEZ el script preparado (habilita el syspref
+              RESTOAuth2ClientCredentials, crea la categoría PENDIENTE y
+              genera el API key). Desde PowerShell en la raíz del proyecto:
+
+    Get-Content sacd-proyecto\scripts\preparar_koha_vm_oauth2.sh -Raw |
+      & "C:\Program Files\PuTTY\plink.exe" -batch -ssh -P 2222 -l root -pw Koha2026 `
+        -hostkey "SHA256:5k9CzL7vO283XRQDBsE+K2HGwyjiIKeWX/fQMbrhu6Y" 127.0.0.1 "tr -d '\r' | bash"
+
+              ⚠ GUARDAR el CLIENT_SECRET impreso (no se puede recuperar) y
+              anotarlo AQUÍ y en appsettings.KohaVM.json (ClientId/ClientSecret,
+              TipoAutenticacion="OAuth2").
+CLIENT_ID    : (pendiente)
+CLIENT_SECRET: (pendiente)
+
+----------------------------------------------------------------------------
+3) VM KOHA DE PRUEBA — ACCESO SSH (ya existente, documentado por referencia)
+----------------------------------------------------------------------------
+Qué es      : VM VirtualBox "Koha-2605-Debian12" con el KOHA 26.05 migrado.
+Para qué    : Entorno de PRUEBA del equipo (NO producción).
+Links       : Staff  http://localhost:8081   |  OPAC http://localhost:8089
+              (desde otra PC de la red: 192.168.250.75)
+Cómo ingresar: ssh root@127.0.0.1 -p 2222   (clave: Koha2026 — solo prueba)
+              Instancia koha: biblioteca_central_unas
+              BD: koha-mysql biblioteca_central_unas
+
+----------------------------------------------------------------------------
+4) JWT DEL CONECTOR SACD (clave de desarrollo)
+----------------------------------------------------------------------------
+Qué es      : Clave HMAC-SHA256 con la que la API SACD firma los tokens de
+              sesión y los QR de los carnets.
+Para qué    : Solo DESARROLLO. En producción hay que generar una clave larga
+              aleatoria y ponerla en variable de entorno Jwt__ClaveSecreta
+              (NUNCA en el repo).
+Dónde vive  : sacd-proyecto\src\ConectorApi\appsettings.json → Jwt:ClaveSecreta
+Usuarios demo del modo simulado: 12345678/demo123 y 87654321/demo123
+============================================================================

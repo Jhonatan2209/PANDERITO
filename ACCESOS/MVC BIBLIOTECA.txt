@@ -1,0 +1,11 @@
+CONTRASEÑA SERVIDOR LINUX LOCAL VIRTUAL BOX
+login: adminunas
+password: Jhonatan1219
+--------------------------aqui en este servidor haremos pruebas locales esta corriendo la base de datos
+SQLserver en linux
+contraseña:
+conectarse vm biblioteca-mv
+ssh -p 2226 root@192.168.10.5
+Biblioteca123
+TOKEN GITHUB HACER COMMIT:
+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

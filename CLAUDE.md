@@ -20,7 +20,7 @@ Antes se llamaba **Chanchito**; el 2026-07-10 se renombró a **Panderito** (ver 
 ├── branding/                   # Logo SVG y variaciones (ver branding/README.md)
 ├── CONTEXTO/                   # Prototipo de diseño "Bolsillo" (referencia visual)
 ├── INSTRUCCIONES/              # CLAUDE.md maestro
-└── ACCESOS/                    # ⚠️ Credenciales personales — está en .gitignore, NUNCA subirla ni leerla salvo pedido explícito
+└── ACCESOS/                    # ⚠️ Credenciales personales del usuario — incluida en el repo por decisión suya (repo PRIVADO); no leerla salvo pedido explícito y el repo jamás debe hacerse público sin vaciarla
 ```
 
 ## Datos clave
@@ -43,4 +43,4 @@ dotnet build src/Panderito.App/Panderito.App.csproj -f net10.0-android # build d
 - Commits pequeños, en español, con prefijos `feat:` / `fix:` / `test:` / `chore:`.
 - No avanzar de fase con build o pruebas en rojo.
 - Toda decisión ambigua → la opción más simple y estándar, anotada en `DECISIONES.md`.
-- Nunca subir secretos (keystore, contraseñas, `ACCESOS/`).
+- Nunca subir secretos de firma (keystore, contraseñas de firma). Excepción decidida por el usuario: `ACCESOS/` sí se versiona porque el repo es privado y solo él tiene acceso; por eso el repo **no debe hacerse público**.

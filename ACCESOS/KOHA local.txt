@@ -1,0 +1,10 @@
+IP de la PC del administrador	192.168.250.75  (puede cambiar; ver Solución de problemas)
+Acceso SSH a la VM	ssh root@192.168.250.75 -p 2222   (clave: Koha2026)
+Usuario para administrar	root  (clave: Koha2026)
+OPAC (catálogo) en navegador	http://192.168.250.75:8089
+Staff (intranet) en navegador	http://192.168.250.75:8081
+Repositorio GitHub (privado)	github.com/Jhonatan2209/koha-unas-migracion
+Instancia Koha	biblioteca_central_unas
+
+CONTRSEÑA MICROSOFT OUTLOOK biblioteca@unas.edu.pe
+CONTRASEÑA : Bibli0tec42023$A

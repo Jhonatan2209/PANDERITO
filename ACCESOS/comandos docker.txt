@@ -1,0 +1,5 @@
+comandos docker:
+docker images ver imagenes generadas
+docker ps ver contenedores corriendo
+docker ps -a ver todos los contenedores los finalizados y activos
+docker system df ver cuanto espacio usa docker en la pc
