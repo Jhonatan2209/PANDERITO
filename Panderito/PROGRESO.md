@@ -36,6 +36,10 @@ Checklist de fases (ver CLAUDE.md sección 12). Se marca cada fase solo con `dot
   - [x] Reportes: navegación por mes, gasto vs mes anterior, ahorro del mes, barras 6 meses, gasto por categoría con %.
   - [x] Categorías: CRUD con selector de ícono y color; protegidas si tienen movimientos.
   - [x] Ajustes: tema claro/oscuro/sistema persistido; menú "Más" completo.
+- [x] **Rebranding — Chanchito → Panderito** (2026-07-10)
+  - [x] Renombrado total: proyectos, namespaces, archivos, `ApplicationId` `pe.panderito.app`. 42/42 pruebas en verde tras el cambio.
+  - [x] Nuevo logo (moneda P + ronda del pandero): `branding/` con 6 variaciones SVG; ícono adaptativo y splash reemplazados.
+  - [x] Repo privado en GitHub (`Jhonatan2209/PANDERITO`) con raíz en la carpeta del proyecto; `ACCESOS/` excluida. Ver `CAMBIOS.md`.
 - [ ] **Fase 6 — Pulido**
 - [ ] **Fase 7 — Build + validación**
 

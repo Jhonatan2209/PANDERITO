@@ -40,10 +40,12 @@
 	</PropertyGroup>
 
 	<ItemGroup>
-		<!-- App Icon -->
+		<!-- Ícono adaptativo de Panderito: fondo violeta (appicon.svg) + glifo moneda-P con la ronda
+		     del pandero (appiconfg.svg). El Color debe coincidir con "Primary" (#6D5AE6) de Colors.xaml.
+		     Fuentes editables del logo y sus variaciones: /branding (ver branding/README.md). -->
 		<MauiIcon Include="Resources\AppIcon\appicon.svg" ForegroundFile="Resources\AppIcon\appiconfg.svg" Color="#6D5AE6" />
 
-		<!-- Splash Screen -->
+		<!-- Splash: mismo glifo del logo sobre fondo violeta de marca -->
 		<MauiSplashScreen Include="Resources\Splash\splash.svg" Color="#6D5AE6" BaseSize="192,192" />
 
 		<!-- Images -->
