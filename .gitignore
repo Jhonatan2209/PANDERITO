@@ -29,3 +29,6 @@ artefactos/
 *.log
 .DS_Store
 Thumbs.db
+
+## Credenciales personales — NUNCA subir al repositorio
+ACCESOS/

@@ -1,9 +1,0 @@
-<Solution>
-  <Folder Name="/src/">
-    <Project Path="src/Chanchito.App/Chanchito.App.csproj" />
-    <Project Path="src/Chanchito.Core/Chanchito.Core.csproj" />
-  </Folder>
-  <Folder Name="/tests/">
-    <Project Path="tests/Chanchito.Tests/Chanchito.Tests.csproj" />
-  </Folder>
-</Solution>

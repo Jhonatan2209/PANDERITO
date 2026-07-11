@@ -1,0 +1,1132 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  body { margin: 0; }
+  :root{
+    --bg:#EDEFF6; --canvas:#E4E7F1; --surface:#FFFFFF; --surface2:#F5F6FA; --raise:#FFFFFF;
+    --text:#14151A; --muted:#6C7280; --faint:#9AA0AE; --border:#ECEDF2; --line:#F0F1F5;
+    --primary:#6D5AE6; --primary-ink:#4A3FB8; --primary-soft:#EDEAFB; --on-primary:#FFFFFF;
+    --income:#12B76A; --income-soft:#E6F7EF; --expense:#F04438; --expense-soft:#FDECEA;
+    --pending:#F79009; --pending-soft:#FEF2E2; --info:#2E90FA; --info-soft:#E7F1FE;
+    --shadow:0 6px 22px rgba(20,21,26,.07); --shadow-lg:0 14px 40px rgba(20,21,26,.12);
+  }
+  [data-theme="dark"]{
+    --bg:#0A0B10; --canvas:#070810; --surface:#15171F; --surface2:#1D2029; --raise:#1B1E28;
+    --text:#F2F3F7; --muted:#9AA0AE; --faint:#6B7280; --border:#282C38; --line:#22252F;
+    --primary:#8C7CF0; --primary-ink:#B7ADF7; --primary-soft:#241F3A; --on-primary:#0A0B10;
+    --income:#3DDC97; --income-soft:#112A20; --expense:#FF6B5E; --expense-soft:#2E1613;
+    --pending:#FDB022; --pending-soft:#2E2210; --info:#5AA8FF; --info-soft:#0E2033;
+    --shadow:0 8px 26px rgba(0,0,0,.5); --shadow-lg:0 16px 44px rgba(0,0,0,.6);
+  }
+  #bx-scroll::-webkit-scrollbar, .bx-h::-webkit-scrollbar{ width:0; height:0; }
+  @keyframes bxUp{ from{ transform:translateY(100%);} to{ transform:translateY(0);} }
+  @keyframes bxFade{ from{ opacity:0;} to{ opacity:1;} }
+  @keyframes bxPop{ from{ transform:scale(.9); opacity:0;} to{ transform:scale(1); opacity:1;} }
+</style>
+</helmet>
+
+<div data-theme="{{ theme }}" style="min-height:100vh; width:100%; background:var(--canvas); display:flex; align-items:flex-start; justify-content:center; gap:34px; padding:38px 28px 60px; font-family:'Plus Jakarta Sans',system-ui,sans-serif; color:var(--text);">
+
+  <!-- ===== REVIEWER PANEL ===== -->
+  <div style="width:216px; position:sticky; top:38px; display:flex; flex-direction:column; gap:14px;">
+    <div style="display:flex; align-items:center; gap:10px;">
+      <div style="width:38px; height:38px; border-radius:12px; background:var(--primary); display:flex; align-items:center; justify-content:center; box-shadow:var(--shadow);">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none"><path d="M4 12c0-3 2.6-5.2 6-5.2 1.4 0 2.4.3 3.4.9.5-.9 1.4-1.5 2.4-1.5.3 0 .5.2.5.5 0 .8-.4 1.5-.9 2 .8.9 1.3 2 1.4 3.3h.9c.3 0 .5.2.5.5v2c0 .3-.2.5-.5.5H19c-.5 1-1.3 1.9-2.3 2.5V20a.5.5 0 0 1-.5.5h-1.6a.5.5 0 0 1-.5-.5v-.9c-.5.1-1 .1-1.6.1s-1.1 0-1.6-.1V20a.5.5 0 0 1-.5.5H8.3a.5.5 0 0 1-.5-.5v-1.4C5.5 17.3 4 14.9 4 12Z" fill="var(--on-primary)"/><circle cx="8.6" cy="11.2" r="1" fill="var(--primary)"/></svg>
+      </div>
+      <div>
+        <div style="font-size:17px; font-weight:800; letter-spacing:-.3px;">Bolsillo</div>
+        <div style="font-size:11px; color:var(--muted); margin-top:1px;">Prototipo UI/UX</div>
+      </div>
+    </div>
+
+    <button onClick="{{ toggleTheme }}" style="display:flex; align-items:center; justify-content:space-between; padding:11px 13px; border:1px solid var(--border); background:var(--surface); border-radius:13px; cursor:pointer; color:var(--text); font-family:inherit; box-shadow:var(--shadow);">
+      <span style="font-size:12.5px; font-weight:700;">{{ themeLabel }}</span>
+      <span style="font-size:16px;">{{ themeIcon }}</span>
+    </button>
+
+    <div style="font-size:10.5px; font-weight:700; letter-spacing:.6px; color:var(--faint); text-transform:uppercase; margin-top:2px; padding-left:2px;">Pantallas</div>
+    <div style="display:flex; flex-direction:column; gap:5px;">
+      <sc-for list="{{ jumper }}" as="j" hint-placeholder-count="14">
+        <button onClick="{{ j.onClick }}" style="{{ j.style }}" style-hover="border-color:var(--primary);">{{ j.label }}</button>
+      </sc-for>
+    </div>
+    <div style="font-size:11px; color:var(--faint); line-height:1.5; padding:2px; margin-top:4px;">Toca el FAB, las tarjetas y la barra inferior para navegar como en la app real.</div>
+  </div>
+
+  <!-- ===== PHONE ===== -->
+  <div style="position:relative; width:390px; height:844px; flex:0 0 auto; border-radius:52px; background:#0c0d12; padding:11px; box-shadow:0 40px 90px rgba(20,21,40,.34), 0 8px 20px rgba(20,21,40,.2);">
+    <div style="position:relative; width:100%; height:100%; border-radius:42px; overflow:hidden; background:var(--bg);">
+
+      <!-- status bar -->
+      <div style="position:absolute; top:0; left:0; right:0; height:46px; z-index:40; display:flex; align-items:center; justify-content:space-between; padding:0 26px; font-size:13.5px; font-weight:700; color:var(--text); pointer-events:none;">
+        <span style="font-variant-numeric:tabular-nums;">9:41</span>
+        <div style="display:flex; align-items:center; gap:6px;">
+          <svg width="17" height="12" viewBox="0 0 17 12" fill="none"><rect x="0" y="7" width="3" height="5" rx="1" fill="var(--text)"/><rect x="4.5" y="4.5" width="3" height="7.5" rx="1" fill="var(--text)"/><rect x="9" y="2" width="3" height="10" rx="1" fill="var(--text)"/><rect x="13.5" y="0" width="3" height="12" rx="1" fill="var(--text)" opacity=".35"/></svg>
+          <svg width="16" height="12" viewBox="0 0 16 12" fill="none"><path d="M8 2.4c2 0 3.9.8 5.3 2.1l1.1-1.2A9.4 9.4 0 0 0 8 .8 9.4 9.4 0 0 0 1.6 3.3l1.1 1.2A7.6 7.6 0 0 1 8 2.4Zm0 3.1c1.2 0 2.3.5 3.1 1.3l1.1-1.2A6.2 6.2 0 0 0 8 4.9c-1.6 0-3.1.6-4.2 1.7l1.1 1.2A4.6 4.6 0 0 1 8 5.5Zm0 3c.6 0 1.2.3 1.6.7L8 11l-1.6-1.8c.4-.4 1-.7 1.6-.7Z" fill="var(--text)"/></svg>
+          <div style="display:flex; align-items:center; gap:2px;"><div style="width:22px; height:11px; border:1.4px solid var(--text); border-radius:3px; opacity:.85; padding:1.4px; display:flex;"><div style="width:74%; background:var(--text); border-radius:1px;"></div></div><div style="width:1.6px; height:4px; background:var(--text); border-radius:1px; opacity:.6;"></div></div>
+        </div>
+      </div>
+
+      <!-- SCROLL AREA -->
+      <div id="bx-scroll" style="position:absolute; inset:0; overflow-y:auto; overflow-x:hidden;">
+
+        <!-- ============ ONBOARDING ============ -->
+        <sc-if value="{{ isOnboarding }}" hint-placeholder-val="{{ false }}">
+          <div style="min-height:844px; padding:70px 26px 40px; display:flex; flex-direction:column; background:linear-gradient(180deg, var(--primary-soft), var(--bg) 42%);">
+            <div style="display:flex; justify-content:flex-end;">
+              <button onClick="{{ goHome }}" style="border:none; background:transparent; color:var(--muted); font-size:13.5px; font-weight:700; font-family:inherit; cursor:pointer; padding:6px;">Saltar</button>
+            </div>
+            <div style="flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center; text-align:center; gap:22px;">
+              <div style="width:132px; height:132px; border-radius:38px; background:var(--primary); display:flex; align-items:center; justify-content:center; box-shadow:var(--shadow-lg);">
+                <svg width="74" height="74" viewBox="0 0 24 24" fill="none"><path d="M4 12c0-3 2.6-5.2 6-5.2 1.4 0 2.4.3 3.4.9.5-.9 1.4-1.5 2.4-1.5.3 0 .5.2.5.5 0 .8-.4 1.5-.9 2 .8.9 1.3 2 1.4 3.3h.9c.3 0 .5.2.5.5v2c0 .3-.2.5-.5.5H19c-.5 1-1.3 1.9-2.3 2.5V20a.5.5 0 0 1-.5.5h-1.6a.5.5 0 0 1-.5-.5v-.9c-.5.1-1 .1-1.6.1s-1.1 0-1.6-.1V20a.5.5 0 0 1-.5.5H8.3a.5.5 0 0 1-.5-.5v-1.4C5.5 17.3 4 14.9 4 12Z" fill="var(--on-primary)"/><circle cx="8.6" cy="11.2" r="1.1" fill="var(--primary)"/></svg>
+              </div>
+              <div>
+                <div style="font-size:30px; font-weight:800; letter-spacing:-.6px;">Tu plata, clara</div>
+                <div style="font-size:15px; color:var(--muted); line-height:1.55; margin-top:10px; max-width:280px;">Anota gastos e ingresos en segundos. Controla préstamos y panderos. Todo funciona sin internet.</div>
+              </div>
+              <div style="display:flex; align-items:center; gap:8px; background:var(--surface); border:1px solid var(--border); padding:8px 14px; border-radius:999px; box-shadow:var(--shadow);">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none"><path d="M12 3l7 3v5c0 4.5-3 7.6-7 9-4-1.4-7-4.5-7-9V6l7-3Z" stroke="var(--income)" stroke-width="2" stroke-linejoin="round"/><path d="M9 12l2 2 4-4" stroke="var(--income)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                <span style="font-size:12.5px; font-weight:700; color:var(--income);">100% local · sin cuentas ni login</span>
+              </div>
+            </div>
+            <!-- currency + accounts preview card -->
+            <div style="background:var(--surface); border:1px solid var(--border); border-radius:22px; padding:16px; box-shadow:var(--shadow); margin-bottom:18px;">
+              <div style="font-size:12px; font-weight:700; color:var(--muted); margin-bottom:10px;">Empecemos con lo básico</div>
+              <div style="display:flex; gap:10px; margin-bottom:12px;">
+                <div style="flex:1; border:1.5px solid var(--primary); background:var(--primary-soft); border-radius:14px; padding:11px; text-align:center;">
+                  <div style="font-size:19px; font-weight:800; color:var(--primary-ink);">S/</div>
+                  <div style="font-size:11px; color:var(--muted); margin-top:2px;">Soles (PEN)</div>
+                </div>
+                <div style="flex:1; border:1px solid var(--border); border-radius:14px; padding:11px; text-align:center; opacity:.7;">
+                  <div style="font-size:19px; font-weight:800;">$</div>
+                  <div style="font-size:11px; color:var(--muted); margin-top:2px;">Dólares</div>
+                </div>
+              </div>
+              <div style="display:flex; gap:7px; flex-wrap:wrap;">
+                <span style="font-size:11.5px; font-weight:700; padding:6px 11px; border-radius:999px; background:var(--income-soft); color:var(--income);">＋ Efectivo</span>
+                <span style="font-size:11.5px; font-weight:700; padding:6px 11px; border-radius:999px; background:var(--primary-soft); color:var(--primary-ink);">＋ Yape</span>
+                <span style="font-size:11.5px; font-weight:700; padding:6px 11px; border-radius:999px; background:var(--info-soft); color:var(--info);">＋ Plin</span>
+                <span style="font-size:11.5px; font-weight:700; padding:6px 11px; border-radius:999px; background:var(--surface2); color:var(--muted);">＋ Banco</span>
+              </div>
+            </div>
+            <div style="display:flex; align-items:center; gap:14px;">
+              <div style="display:flex; gap:6px;">
+                <div style="width:22px; height:6px; border-radius:3px; background:var(--primary);"></div>
+                <div style="width:6px; height:6px; border-radius:3px; background:var(--border);"></div>
+                <div style="width:6px; height:6px; border-radius:3px; background:var(--border);"></div>
+              </div>
+              <button onClick="{{ goHome }}" style="flex:1; border:none; background:var(--primary); color:var(--on-primary); font-family:inherit; font-size:15.5px; font-weight:700; padding:15px; border-radius:16px; cursor:pointer; box-shadow:var(--shadow);">Empezar</button>
+            </div>
+          </div>
+        </sc-if>
+
+        <!-- ============ DASHBOARD ============ -->
+        <sc-if value="{{ isDashboard }}" hint-placeholder-val="{{ true }}">
+          <div data-screen-label="Inicio" style="padding:52px 16px 128px;">
+            <!-- header -->
+            <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:16px;">
+              <div>
+                <div style="font-size:13px; color:var(--muted); font-weight:600;">Hola, Andrea 👋</div>
+                <div style="font-size:22px; font-weight:800; letter-spacing:-.4px; margin-top:1px;">Julio 2026</div>
+              </div>
+              <div style="display:flex; gap:9px;">
+                <button onClick="{{ goReportes }}" style="width:40px; height:40px; border-radius:13px; border:1px solid var(--border); background:var(--surface); display:flex; align-items:center; justify-content:center; cursor:pointer; box-shadow:var(--shadow);">
+                  <svg width="19" height="19" viewBox="0 0 24 24" fill="none"><path d="M5 19V10M12 19V5M19 19v-6" stroke="var(--text)" stroke-width="2.2" stroke-linecap="round"/></svg>
+                </button>
+                <button onClick="{{ goAjustes }}" style="width:40px; height:40px; border-radius:13px; border:1px solid var(--border); background:var(--surface); display:flex; align-items:center; justify-content:center; cursor:pointer; box-shadow:var(--shadow);">
+                  <svg width="19" height="19" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="3.2" stroke="var(--text)" stroke-width="2"/><path d="M12 3v2.2M12 18.8V21M21 12h-2.2M5.2 12H3M18 6l-1.6 1.6M7.6 16.4 6 18M18 18l-1.6-1.6M7.6 7.6 6 6" stroke="var(--text)" stroke-width="2" stroke-linecap="round"/></svg>
+                </button>
+              </div>
+            </div>
+
+            <!-- balance hero -->
+            <div style="border-radius:26px; padding:22px; background:linear-gradient(150deg, var(--primary), var(--primary-ink)); box-shadow:var(--shadow-lg); position:relative; overflow:hidden;">
+              <div style="position:absolute; right:-40px; top:-40px; width:150px; height:150px; border-radius:50%; background:rgba(255,255,255,.09);"></div>
+              <div style="position:absolute; right:24px; bottom:-30px; width:90px; height:90px; border-radius:50%; background:rgba(255,255,255,.07);"></div>
+              <div style="display:flex; align-items:center; justify-content:space-between; position:relative;">
+                <span style="font-size:12.5px; color:rgba(255,255,255,.82); font-weight:600;">Saldo total</span>
+                <span style="display:inline-flex; align-items:center; gap:5px; font-size:10.5px; font-weight:700; color:#fff; background:rgba(255,255,255,.16); padding:4px 9px; border-radius:999px;">
+                  <svg width="11" height="11" viewBox="0 0 24 24" fill="none"><path d="M5 12.5 10 17l9-10" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg>Guardado local
+                </span>
+              </div>
+              <div style="font-size:38px; font-weight:800; color:#fff; letter-spacing:-1px; margin-top:6px; font-variant-numeric:tabular-nums;">S/ 3,175.50</div>
+              <div style="display:flex; gap:10px; margin-top:18px; position:relative;">
+                <div style="flex:1; background:rgba(255,255,255,.14); border-radius:15px; padding:11px 13px;">
+                  <div style="display:flex; align-items:center; gap:6px; font-size:11px; color:rgba(255,255,255,.82); font-weight:600;"><span style="width:7px; height:7px; border-radius:50%; background:#9BF3C8;"></span>Ingresos</div>
+                  <div style="font-size:17px; font-weight:800; color:#fff; margin-top:3px; font-variant-numeric:tabular-nums;">S/ 2,450</div>
+                </div>
+                <div style="flex:1; background:rgba(255,255,255,.14); border-radius:15px; padding:11px 13px;">
+                  <div style="display:flex; align-items:center; gap:6px; font-size:11px; color:rgba(255,255,255,.82); font-weight:600;"><span style="width:7px; height:7px; border-radius:50%; background:#FFB4AD;"></span>Gastos</div>
+                  <div style="font-size:17px; font-weight:800; color:#fff; margin-top:3px; font-variant-numeric:tabular-nums;">S/ 1,180</div>
+                </div>
+              </div>
+            </div>
+
+            <!-- quick actions -->
+            <div style="display:flex; gap:9px; margin-top:16px;">
+              <button onClick="{{ goPrestamos }}" style="flex:1; display:flex; flex-direction:column; align-items:center; gap:7px; padding:13px 6px; border:1px solid var(--border); background:var(--surface); border-radius:17px; cursor:pointer; box-shadow:var(--shadow);">
+                <span style="width:38px; height:38px; border-radius:12px; background:var(--pending-soft); display:flex; align-items:center; justify-content:center;"><svg width="19" height="19" viewBox="0 0 24 24" fill="none"><path d="M16 8h4M18 6v4" stroke="var(--pending)" stroke-width="2" stroke-linecap="round"/><path d="M7 12a3 3 0 1 0 0-6 3 3 0 0 0 0 6ZM3 20c0-2.8 1.8-4.5 4-4.5s4 1.7 4 4.5" stroke="var(--pending)" stroke-width="2" stroke-linecap="round"/></svg></span>
+                <span style="font-size:11.5px; font-weight:700; color:var(--text);">Préstamos</span>
+              </button>
+              <button onClick="{{ goPanderos }}" style="flex:1; display:flex; flex-direction:column; align-items:center; gap:7px; padding:13px 6px; border:1px solid var(--border); background:var(--surface); border-radius:17px; cursor:pointer; box-shadow:var(--shadow);">
+                <span style="width:38px; height:38px; border-radius:12px; background:var(--primary-soft); display:flex; align-items:center; justify-content:center;"><svg width="19" height="19" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="8" r="3" stroke="var(--primary)" stroke-width="2"/><path d="M6 20c0-3 2.7-5 6-5s6 2 6 5" stroke="var(--primary)" stroke-width="2" stroke-linecap="round"/><circle cx="4.5" cy="9.5" r="1.6" fill="var(--primary)"/><circle cx="19.5" cy="9.5" r="1.6" fill="var(--primary)"/></svg></span>
+                <span style="font-size:11.5px; font-weight:700; color:var(--text);">Panderos</span>
+              </button>
+              <button onClick="{{ goMetas }}" style="flex:1; display:flex; flex-direction:column; align-items:center; gap:7px; padding:13px 6px; border:1px solid var(--border); background:var(--surface); border-radius:17px; cursor:pointer; box-shadow:var(--shadow);">
+                <span style="width:38px; height:38px; border-radius:12px; background:var(--income-soft); display:flex; align-items:center; justify-content:center;"><svg width="19" height="19" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="8" stroke="var(--income)" stroke-width="2"/><circle cx="12" cy="12" r="3.4" stroke="var(--income)" stroke-width="2"/><path d="m17 7 3-3M20 4V7h-3" stroke="var(--income)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+                <span style="font-size:11.5px; font-weight:700; color:var(--text);">Metas</span>
+              </button>
+              <button onClick="{{ goPresupuestos }}" style="flex:1; display:flex; flex-direction:column; align-items:center; gap:7px; padding:13px 6px; border:1px solid var(--border); background:var(--surface); border-radius:17px; cursor:pointer; box-shadow:var(--shadow);">
+                <span style="width:38px; height:38px; border-radius:12px; background:var(--info-soft); display:flex; align-items:center; justify-content:center;"><svg width="19" height="19" viewBox="0 0 24 24" fill="none"><path d="M4 7h16M4 12h16M4 17h9" stroke="var(--info)" stroke-width="2" stroke-linecap="round"/></svg></span>
+                <span style="font-size:11.5px; font-weight:700; color:var(--text);">Presupuesto</span>
+              </button>
+            </div>
+
+            <!-- spending by category (donut) -->
+            <div style="margin-top:16px; background:var(--surface); border:1px solid var(--border); border-radius:22px; padding:18px; box-shadow:var(--shadow);">
+              <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:6px;">
+                <span style="font-size:15px; font-weight:800;">En qué se va la plata</span>
+                <button onClick="{{ goReportes }}" style="border:none; background:transparent; color:var(--primary); font-weight:700; font-size:12.5px; font-family:inherit; cursor:pointer;">Ver todo</button>
+              </div>
+              <div style="display:flex; align-items:center; gap:16px;">
+                <div style="position:relative; width:132px; height:132px; flex:0 0 auto;">
+                  <svg width="132" height="132" viewBox="0 0 180 180">
+                    <circle cx="90" cy="90" r="70" fill="none" stroke="var(--line)" stroke-width="24"/>
+                    <circle cx="90" cy="90" r="70" fill="none" stroke="var(--expense)" stroke-width="24" stroke-linecap="round" stroke-dasharray="149.5 439.8" stroke-dashoffset="0" transform="rotate(-90 90 90)"/>
+                    <circle cx="90" cy="90" r="70" fill="none" stroke="var(--income)" stroke-width="24" stroke-linecap="round" stroke-dasharray="96.8 439.8" stroke-dashoffset="-149.5" transform="rotate(-90 90 90)"/>
+                    <circle cx="90" cy="90" r="70" fill="none" stroke="var(--info)" stroke-width="24" stroke-linecap="round" stroke-dasharray="61.6 439.8" stroke-dashoffset="-246.3" transform="rotate(-90 90 90)"/>
+                    <circle cx="90" cy="90" r="70" fill="none" stroke="var(--pending)" stroke-width="24" stroke-linecap="round" stroke-dasharray="52.8 439.8" stroke-dashoffset="-307.9" transform="rotate(-90 90 90)"/>
+                    <circle cx="90" cy="90" r="70" fill="none" stroke="var(--primary)" stroke-width="24" stroke-linecap="round" stroke-dasharray="79.1 439.8" stroke-dashoffset="-360.7" transform="rotate(-90 90 90)"/>
+                  </svg>
+                  <div style="position:absolute; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:center;">
+                    <div style="font-size:10.5px; color:var(--muted); font-weight:600;">Gastado</div>
+                    <div style="font-size:19px; font-weight:800; letter-spacing:-.4px; font-variant-numeric:tabular-nums;">S/1,180</div>
+                  </div>
+                </div>
+                <div style="flex:1; display:flex; flex-direction:column; gap:9px;">
+                  <div style="display:flex; align-items:center; gap:8px;"><span style="width:9px; height:9px; border-radius:3px; background:var(--expense);"></span><span style="font-size:12.5px; font-weight:600; flex:1;">Comida / menú</span><span style="font-size:12.5px; font-weight:800; font-variant-numeric:tabular-nums;">34%</span></div>
+                  <div style="display:flex; align-items:center; gap:8px;"><span style="width:9px; height:9px; border-radius:3px; background:var(--income);"></span><span style="font-size:12.5px; font-weight:600; flex:1;">Mercado</span><span style="font-size:12.5px; font-weight:800; font-variant-numeric:tabular-nums;">22%</span></div>
+                  <div style="display:flex; align-items:center; gap:8px;"><span style="width:9px; height:9px; border-radius:3px; background:var(--info);"></span><span style="font-size:12.5px; font-weight:600; flex:1;">Transporte</span><span style="font-size:12.5px; font-weight:800; font-variant-numeric:tabular-nums;">14%</span></div>
+                  <div style="display:flex; align-items:center; gap:8px;"><span style="width:9px; height:9px; border-radius:3px; background:var(--pending);"></span><span style="font-size:12.5px; font-weight:600; flex:1;">Servicios</span><span style="font-size:12.5px; font-weight:800; font-variant-numeric:tabular-nums;">12%</span></div>
+                  <div style="display:flex; align-items:center; gap:8px;"><span style="width:9px; height:9px; border-radius:3px; background:var(--primary);"></span><span style="font-size:12.5px; font-weight:600; flex:1;">Otros</span><span style="font-size:12.5px; font-weight:800; font-variant-numeric:tabular-nums;">18%</span></div>
+                </div>
+              </div>
+            </div>
+
+            <!-- recent movements -->
+            <div style="display:flex; align-items:center; justify-content:space-between; margin:20px 2px 10px;">
+              <span style="font-size:15px; font-weight:800;">Últimos movimientos</span>
+              <button onClick="{{ goHistorial }}" style="border:none; background:transparent; color:var(--primary); font-weight:700; font-size:12.5px; font-family:inherit; cursor:pointer;">Historial</button>
+            </div>
+            <div style="background:var(--surface); border:1px solid var(--border); border-radius:20px; overflow:hidden; box-shadow:var(--shadow);">
+              <button onClick="{{ goMovimiento }}" style="width:100%; display:flex; align-items:center; gap:12px; padding:13px 15px; background:transparent; border:none; border-bottom:1px solid var(--line); cursor:pointer; text-align:left; font-family:inherit;">
+                <span style="width:42px; height:42px; border-radius:13px; background:var(--expense-soft); display:flex; align-items:center; justify-content:center; flex:0 0 auto;"><svg width="21" height="21" viewBox="0 0 24 24" fill="none"><path d="M7 3v7a2 2 0 0 0 2 2v9M7 3v4M5 3v4M9 3v4M17 3c-1.5 0-2.5 2-2.5 5s1 4 2.5 4v9" stroke="var(--expense)" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+                <div style="flex:1; min-width:0;"><div style="font-size:14px; font-weight:700;">Menú del día</div><div style="font-size:11.5px; color:var(--muted); margin-top:2px;">Comida · Efectivo · 1:15 pm</div></div>
+                <div style="font-size:15px; font-weight:800; color:var(--expense); font-variant-numeric:tabular-nums;">−S/ 12.00</div>
+              </button>
+              <div style="width:100%; display:flex; align-items:center; gap:12px; padding:13px 15px; border-bottom:1px solid var(--line);">
+                <span style="width:42px; height:42px; border-radius:13px; background:var(--info-soft); display:flex; align-items:center; justify-content:center; flex:0 0 auto;"><svg width="21" height="21" viewBox="0 0 24 24" fill="none"><rect x="3" y="6" width="18" height="10" rx="2.5" stroke="var(--info)" stroke-width="1.9"/><circle cx="7.5" cy="19" r="1.8" stroke="var(--info)" stroke-width="1.9"/><circle cx="16.5" cy="19" r="1.8" stroke="var(--info)" stroke-width="1.9"/><path d="M3 10h18" stroke="var(--info)" stroke-width="1.9"/></svg></span>
+                <div style="flex:1; min-width:0;"><div style="font-size:14px; font-weight:700;">Pasaje combi</div><div style="font-size:11.5px; color:var(--muted); margin-top:2px;">Transporte · Efectivo · 8:30 am</div></div>
+                <div style="font-size:15px; font-weight:800; color:var(--expense); font-variant-numeric:tabular-nums;">−S/ 2.50</div>
+              </div>
+              <div style="width:100%; display:flex; align-items:center; gap:12px; padding:13px 15px;">
+                <span style="width:42px; height:42px; border-radius:13px; background:var(--income-soft); display:flex; align-items:center; justify-content:center; flex:0 0 auto;"><svg width="21" height="21" viewBox="0 0 24 24" fill="none"><path d="M12 3v18M12 21l-4-4M12 21l4-4M6 7l6-4 6 4" stroke="var(--income)" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+                <div style="flex:1; min-width:0;"><div style="font-size:14px; font-weight:700;">Sueldo quincena</div><div style="font-size:11.5px; color:var(--muted); margin-top:2px;">Ingreso · Cuenta BCP · Ayer</div></div>
+                <div style="font-size:15px; font-weight:800; color:var(--income); font-variant-numeric:tabular-nums;">+S/ 1,200</div>
+              </div>
+            </div>
+
+            <!-- offline hint -->
+            <div style="display:flex; align-items:center; gap:9px; margin-top:16px; padding:12px 14px; background:var(--surface2); border-radius:15px;">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M12 3l7 3v5c0 4.5-3 7.6-7 9-4-1.4-7-4.5-7-9V6l7-3Z" stroke="var(--muted)" stroke-width="1.8" stroke-linejoin="round"/></svg>
+              <span style="font-size:11.5px; color:var(--muted); font-weight:600; line-height:1.4;">Todo se guarda en tu teléfono. No necesitas internet.</span>
+            </div>
+          </div>
+        </sc-if>
+
+        <!-- ============ HISTORIAL ============ -->
+        <sc-if value="{{ isHistorial }}" hint-placeholder-val="{{ false }}">
+          <div data-screen-label="Historial" style="padding:52px 16px 128px;">
+            <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:14px;">
+              <div style="font-size:24px; font-weight:800; letter-spacing:-.4px;">Movimientos</div>
+              <button onClick="{{ goReportes }}" style="width:40px; height:40px; border-radius:13px; border:1px solid var(--border); background:var(--surface); display:flex; align-items:center; justify-content:center; cursor:pointer; box-shadow:var(--shadow);"><svg width="19" height="19" viewBox="0 0 24 24" fill="none"><path d="M5 19V10M12 19V5M19 19v-6" stroke="var(--text)" stroke-width="2.2" stroke-linecap="round"/></svg></button>
+            </div>
+            <!-- search -->
+            <div style="display:flex; align-items:center; gap:9px; background:var(--surface); border:1px solid var(--border); border-radius:14px; padding:11px 14px; box-shadow:var(--shadow);">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><circle cx="11" cy="11" r="7" stroke="var(--faint)" stroke-width="2"/><path d="m20 20-3.5-3.5" stroke="var(--faint)" stroke-width="2" stroke-linecap="round"/></svg>
+              <span style="font-size:14px; color:var(--faint);">Buscar por nota o monto…</span>
+            </div>
+            <!-- filter chips -->
+            <div class="bx-h" style="display:flex; gap:8px; overflow-x:auto; margin:14px -16px 4px; padding:0 16px;">
+              <span style="flex:0 0 auto; font-size:12.5px; font-weight:700; padding:8px 14px; border-radius:999px; background:var(--primary); color:var(--on-primary);">Todos</span>
+              <span style="flex:0 0 auto; font-size:12.5px; font-weight:700; padding:8px 14px; border-radius:999px; background:var(--surface); border:1px solid var(--border); color:var(--muted);">Gastos</span>
+              <span style="flex:0 0 auto; font-size:12.5px; font-weight:700; padding:8px 14px; border-radius:999px; background:var(--surface); border:1px solid var(--border); color:var(--muted);">Ingresos</span>
+              <span style="flex:0 0 auto; display:flex; align-items:center; gap:5px; font-size:12.5px; font-weight:700; padding:8px 14px; border-radius:999px; background:var(--surface); border:1px solid var(--border); color:var(--muted);"><svg width="13" height="13" viewBox="0 0 24 24" fill="none"><path d="M4 6h16M7 12h10M10 18h4" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>Filtros</span>
+            </div>
+            <!-- month summary -->
+            <div style="display:flex; gap:10px; margin:12px 0 6px;">
+              <div style="flex:1; background:var(--income-soft); border-radius:15px; padding:12px 14px;"><div style="font-size:11px; color:var(--income); font-weight:700;">Ingresos</div><div style="font-size:17px; font-weight:800; color:var(--income); margin-top:2px; font-variant-numeric:tabular-nums;">+S/ 2,450</div></div>
+              <div style="flex:1; background:var(--expense-soft); border-radius:15px; padding:12px 14px;"><div style="font-size:11px; color:var(--expense); font-weight:700;">Gastos</div><div style="font-size:17px; font-weight:800; color:var(--expense); margin-top:2px; font-variant-numeric:tabular-nums;">−S/ 1,180</div></div>
+            </div>
+
+            <!-- HOY -->
+            <div style="display:flex; align-items:center; justify-content:space-between; margin:18px 2px 8px;"><span style="font-size:12.5px; font-weight:800; color:var(--muted);">HOY · 2 jul</span><span style="font-size:12px; font-weight:700; color:var(--expense); font-variant-numeric:tabular-nums;">−S/ 64.50</span></div>
+            <div style="background:var(--surface); border:1px solid var(--border); border-radius:18px; overflow:hidden; box-shadow:var(--shadow);">
+              <button onClick="{{ goMovimiento }}" style="width:100%; display:flex; align-items:center; gap:12px; padding:12px 14px; background:transparent; border:none; border-bottom:1px solid var(--line); cursor:pointer; text-align:left; font-family:inherit;">
+                <span style="width:40px; height:40px; border-radius:12px; background:var(--expense-soft); display:flex; align-items:center; justify-content:center; flex:0 0 auto;"><svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M7 3v7a2 2 0 0 0 2 2v9M17 3c-1.5 0-2.5 2-2.5 5s1 4 2.5 4v9" stroke="var(--expense)" stroke-width="1.9" stroke-linecap="round"/></svg></span>
+                <div style="flex:1;"><div style="font-size:13.5px; font-weight:700;">Menú del día</div><div style="font-size:11px; color:var(--muted); margin-top:1px;">Comida · Efectivo</div></div>
+                <div style="text-align:right;"><div style="font-size:14.5px; font-weight:800; color:var(--expense); font-variant-numeric:tabular-nums;">−S/ 12.00</div><div style="font-size:10.5px; color:var(--faint);">1:15 pm</div></div>
+              </button>
+              <div style="width:100%; display:flex; align-items:center; gap:12px; padding:12px 14px; border-bottom:1px solid var(--line);">
+                <span style="width:40px; height:40px; border-radius:12px; background:var(--pending-soft); display:flex; align-items:center; justify-content:center; flex:0 0 auto;"><svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M4 8h11l-3-3M20 16H9l3 3" stroke="var(--pending)" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+                <div style="flex:1;"><div style="font-size:13.5px; font-weight:700;">Yape a Rosa <span style="font-size:10px; font-weight:700; color:var(--pending); background:var(--pending-soft); padding:1px 6px; border-radius:6px;">Préstamo</span></div><div style="font-size:11px; color:var(--muted); margin-top:1px;">Por cobrar · Yape</div></div>
+                <div style="text-align:right;"><div style="font-size:14.5px; font-weight:800; color:var(--expense); font-variant-numeric:tabular-nums;">−S/ 50.00</div><div style="font-size:10.5px; color:var(--faint);">11:02 am</div></div>
+              </div>
+              <div style="width:100%; display:flex; align-items:center; gap:12px; padding:12px 14px;">
+                <span style="width:40px; height:40px; border-radius:12px; background:var(--info-soft); display:flex; align-items:center; justify-content:center; flex:0 0 auto;"><svg width="20" height="20" viewBox="0 0 24 24" fill="none"><rect x="3" y="6" width="18" height="10" rx="2.5" stroke="var(--info)" stroke-width="1.9"/><path d="M3 10h18" stroke="var(--info)" stroke-width="1.9"/><circle cx="7.5" cy="19" r="1.6" stroke="var(--info)" stroke-width="1.9"/><circle cx="16.5" cy="19" r="1.6" stroke="var(--info)" stroke-width="1.9"/></svg></span>
+                <div style="flex:1;"><div style="font-size:13.5px; font-weight:700;">Pasaje combi</div><div style="font-size:11px; color:var(--muted); margin-top:1px;">Transporte · Efectivo</div></div>
+                <div style="text-align:right;"><div style="font-size:14.5px; font-weight:800; color:var(--expense); font-variant-numeric:tabular-nums;">−S/ 2.50</div><div style="font-size:10.5px; color:var(--faint);">8:30 am</div></div>
+              </div>
+            </div>
+
+            <!-- AYER -->
+            <div style="display:flex; align-items:center; justify-content:space-between; margin:18px 2px 8px;"><span style="font-size:12.5px; font-weight:800; color:var(--muted);">AYER · 1 jul</span><span style="font-size:12px; font-weight:700; color:var(--income); font-variant-numeric:tabular-nums;">+S/ 1,110.10</span></div>
+            <div style="background:var(--surface); border:1px solid var(--border); border-radius:18px; overflow:hidden; box-shadow:var(--shadow);">
+              <div style="width:100%; display:flex; align-items:center; gap:12px; padding:12px 14px; border-bottom:1px solid var(--line);">
+                <span style="width:40px; height:40px; border-radius:12px; background:var(--income-soft); display:flex; align-items:center; justify-content:center; flex:0 0 auto;"><svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M12 3v18M12 3l-4 4M12 3l4 4" stroke="var(--income)" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+                <div style="flex:1;"><div style="font-size:13.5px; font-weight:700;">Sueldo quincena</div><div style="font-size:11px; color:var(--muted); margin-top:1px;">Ingreso · Cuenta BCP</div></div>
+                <div style="text-align:right;"><div style="font-size:14.5px; font-weight:800; color:var(--income); font-variant-numeric:tabular-nums;">+S/ 1,200</div><div style="font-size:10.5px; color:var(--faint);">4:00 pm</div></div>
+              </div>
+              <div style="width:100%; display:flex; align-items:center; gap:12px; padding:12px 14px; border-bottom:1px solid var(--line);">
+                <span style="width:40px; height:40px; border-radius:12px; background:var(--income-soft); display:flex; align-items:center; justify-content:center; flex:0 0 auto;"><svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M6 12h9l-3-3M6 12l3 3" stroke="var(--income)" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/><rect x="3" y="4" width="18" height="16" rx="3" stroke="var(--income)" stroke-width="1.9"/></svg></span>
+                <div style="flex:1;"><div style="font-size:13.5px; font-weight:700;">Devolución de Juan</div><div style="font-size:11px; color:var(--muted); margin-top:1px;">Ingreso · Plin</div></div>
+                <div style="text-align:right;"><div style="font-size:14.5px; font-weight:800; color:var(--income); font-variant-numeric:tabular-nums;">+S/ 30.00</div><div style="font-size:10.5px; color:var(--faint);">7:20 pm</div></div>
+              </div>
+              <div style="width:100%; display:flex; align-items:center; gap:12px; padding:12px 14px; border-bottom:1px solid var(--line);">
+                <span style="width:40px; height:40px; border-radius:12px; background:var(--income-soft); display:flex; align-items:center; justify-content:center; flex:0 0 auto;"><svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M8 8h8v10a2 2 0 0 1-2 2h-4a2 2 0 0 1-2-2V8ZM10 8V6a2 2 0 0 1 4 0v2" stroke="var(--income)" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+                <div style="flex:1;"><div style="font-size:13.5px; font-weight:700;">Mercado (verduras)</div><div style="font-size:11px; color:var(--muted); margin-top:1px;">Mercado · Yape</div></div>
+                <div style="text-align:right;"><div style="font-size:14.5px; font-weight:800; color:var(--expense); font-variant-numeric:tabular-nums;">−S/ 38.50</div><div style="font-size:10.5px; color:var(--faint);">9:10 am</div></div>
+              </div>
+              <div style="width:100%; display:flex; align-items:center; gap:12px; padding:12px 14px;">
+                <span style="width:40px; height:40px; border-radius:12px; background:var(--primary-soft); display:flex; align-items:center; justify-content:center; flex:0 0 auto;"><svg width="20" height="20" viewBox="0 0 24 24" fill="none"><rect x="6" y="3" width="12" height="18" rx="3" stroke="var(--primary)" stroke-width="1.9"/><path d="M11 18h2" stroke="var(--primary)" stroke-width="1.9" stroke-linecap="round"/></svg></span>
+                <div style="flex:1;"><div style="font-size:13.5px; font-weight:700;">Recarga celular</div><div style="font-size:11px; color:var(--muted); margin-top:1px;">Servicios · Yape</div></div>
+                <div style="text-align:right;"><div style="font-size:14.5px; font-weight:800; color:var(--expense); font-variant-numeric:tabular-nums;">−S/ 15.00</div><div style="font-size:10.5px; color:var(--faint);">6:45 pm</div></div>
+              </div>
+            </div>
+            <div style="text-align:center; font-size:11.5px; color:var(--faint); margin-top:16px;">Desliza una fila para editar o eliminar</div>
+          </div>
+        </sc-if>
+
+        <!-- ============ MOVIMIENTO DETALLE ============ -->
+        <sc-if value="{{ isMovimiento }}" hint-placeholder-val="{{ false }}">
+          <div data-screen-label="Detalle movimiento" style="padding:52px 16px 128px;">
+            <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:20px;">
+              <button onClick="{{ back }}" style="width:40px; height:40px; border-radius:13px; border:1px solid var(--border); background:var(--surface); display:flex; align-items:center; justify-content:center; cursor:pointer; box-shadow:var(--shadow);"><svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M15 5l-7 7 7 7" stroke="var(--text)" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+              <span style="font-size:16px; font-weight:800;">Detalle</span>
+              <button style="width:40px; height:40px; border-radius:13px; border:1px solid var(--border); background:var(--surface); display:flex; align-items:center; justify-content:center; cursor:pointer; box-shadow:var(--shadow);"><svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="m4 14 8-8 4 4-8 8H4v-4Z" stroke="var(--text)" stroke-width="1.9" stroke-linejoin="round"/><path d="m13 5 2-2 4 4-2 2" stroke="var(--text)" stroke-width="1.9" stroke-linejoin="round"/></svg></button>
+            </div>
+            <div style="display:flex; flex-direction:column; align-items:center; text-align:center; gap:12px;">
+              <span style="width:66px; height:66px; border-radius:20px; background:var(--expense-soft); display:flex; align-items:center; justify-content:center;"><svg width="34" height="34" viewBox="0 0 24 24" fill="none"><path d="M7 3v7a2 2 0 0 0 2 2v9M17 3c-1.5 0-2.5 2-2.5 5s1 4 2.5 4v9" stroke="var(--expense)" stroke-width="1.9" stroke-linecap="round"/></svg></span>
+              <div>
+                <div style="font-size:15px; color:var(--muted); font-weight:600;">Menú del día</div>
+                <div style="font-size:42px; font-weight:800; color:var(--expense); letter-spacing:-1px; margin-top:2px; font-variant-numeric:tabular-nums;">−S/ 12.00</div>
+              </div>
+              <span style="font-size:12px; font-weight:700; color:var(--expense); background:var(--expense-soft); padding:5px 12px; border-radius:999px;">Gasto</span>
+            </div>
+            <div style="margin-top:24px; background:var(--surface); border:1px solid var(--border); border-radius:20px; overflow:hidden; box-shadow:var(--shadow);">
+              <div style="display:flex; align-items:center; justify-content:space-between; padding:14px 16px; border-bottom:1px solid var(--line);"><span style="font-size:13px; color:var(--muted); font-weight:600;">Categoría</span><span style="font-size:13.5px; font-weight:700;">🍽 Comida / menú</span></div>
+              <div style="display:flex; align-items:center; justify-content:space-between; padding:14px 16px; border-bottom:1px solid var(--line);"><span style="font-size:13px; color:var(--muted); font-weight:600;">Cuenta</span><span style="font-size:13.5px; font-weight:700;">Efectivo</span></div>
+              <div style="display:flex; align-items:center; justify-content:space-between; padding:14px 16px; border-bottom:1px solid var(--line);"><span style="font-size:13px; color:var(--muted); font-weight:600;">Fecha</span><span style="font-size:13.5px; font-weight:700;">Hoy, 2 jul · 1:15 pm</span></div>
+              <div style="display:flex; align-items:flex-start; justify-content:space-between; padding:14px 16px; gap:16px;"><span style="font-size:13px; color:var(--muted); font-weight:600; flex:0 0 auto;">Nota</span><span style="font-size:13.5px; font-weight:600; text-align:right;">Menú de la señora Chela, con refresco</span></div>
+            </div>
+            <div style="margin-top:14px; background:var(--surface); border:1px dashed var(--border); border-radius:20px; padding:16px; display:flex; align-items:center; gap:12px;">
+              <span style="width:48px; height:48px; border-radius:12px; background:var(--surface2); display:flex; align-items:center; justify-content:center;"><svg width="22" height="22" viewBox="0 0 24 24" fill="none"><rect x="3" y="6" width="18" height="14" rx="2.5" stroke="var(--muted)" stroke-width="1.8"/><circle cx="12" cy="13" r="3.4" stroke="var(--muted)" stroke-width="1.8"/><path d="M8 6l1.5-2h5L16 6" stroke="var(--muted)" stroke-width="1.8" stroke-linejoin="round"/></svg></span>
+              <div style="flex:1;"><div style="font-size:13px; font-weight:700;">Foto de boleta</div><div style="font-size:11.5px; color:var(--muted); margin-top:1px;">Toca para agregar una foto</div></div>
+            </div>
+            <div style="display:flex; gap:10px; margin-top:18px;">
+              <button style="flex:1; display:flex; align-items:center; justify-content:center; gap:7px; padding:14px; border:1px solid var(--border); background:var(--surface); border-radius:15px; font-family:inherit; font-size:14px; font-weight:700; color:var(--text); cursor:pointer;"><svg width="17" height="17" viewBox="0 0 24 24" fill="none"><path d="m4 14 8-8 4 4-8 8H4v-4Z" stroke="currentColor" stroke-width="1.9" stroke-linejoin="round"/></svg>Editar</button>
+              <button style="flex:1; display:flex; align-items:center; justify-content:center; gap:7px; padding:14px; border:1px solid var(--expense); background:var(--expense-soft); border-radius:15px; font-family:inherit; font-size:14px; font-weight:700; color:var(--expense); cursor:pointer;"><svg width="17" height="17" viewBox="0 0 24 24" fill="none"><path d="M5 7h14M9 7V5h6v2M7 7l1 13h8l1-13" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/></svg>Eliminar</button>
+            </div>
+          </div>
+        </sc-if>
+        <!-- ============ CUENTAS ============ -->
+        <sc-if value="{{ isCuentas }}" hint-placeholder-val="{{ false }}">
+          <div data-screen-label="Cuentas" style="padding:52px 16px 128px;">
+            <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:8px;">
+              <button onClick="{{ goMas }}" style="width:40px; height:40px; border-radius:13px; border:1px solid var(--border); background:var(--surface); display:flex; align-items:center; justify-content:center; cursor:pointer; box-shadow:var(--shadow);"><svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M15 5l-7 7 7 7" stroke="var(--text)" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+              <span style="font-size:16px; font-weight:800;">Cuentas y billeteras</span>
+              <button style="width:40px; height:40px; border-radius:13px; border:none; background:var(--primary); display:flex; align-items:center; justify-content:center; cursor:pointer; box-shadow:var(--shadow);"><svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M12 5v14M5 12h14" stroke="var(--on-primary)" stroke-width="2.6" stroke-linecap="round"/></svg></button>
+            </div>
+            <div style="border-radius:22px; padding:20px; background:linear-gradient(150deg, var(--primary), var(--primary-ink)); box-shadow:var(--shadow-lg); margin:10px 0 18px;">
+              <div style="font-size:12px; color:rgba(255,255,255,.82); font-weight:600;">Saldo total en todas las cuentas</div>
+              <div style="font-size:34px; font-weight:800; color:#fff; letter-spacing:-1px; margin-top:4px; font-variant-numeric:tabular-nums;">S/ 3,175.50</div>
+            </div>
+            <div style="display:flex; flex-direction:column; gap:11px;">
+              <button onClick="{{ goCuentaDet }}" style="display:flex; align-items:center; gap:13px; padding:15px; background:var(--surface); border:1px solid var(--border); border-radius:18px; cursor:pointer; text-align:left; font-family:inherit; box-shadow:var(--shadow);">
+                <span style="width:46px; height:46px; border-radius:13px; background:var(--income-soft); display:flex; align-items:center; justify-content:center; flex:0 0 auto;"><svg width="24" height="24" viewBox="0 0 24 24" fill="none"><rect x="2.5" y="6" width="19" height="12" rx="2.5" stroke="var(--income)" stroke-width="1.9"/><circle cx="12" cy="12" r="2.6" stroke="var(--income)" stroke-width="1.9"/><path d="M6 9v6M18 9v6" stroke="var(--income)" stroke-width="1.9" stroke-linecap="round"/></svg></span>
+                <div style="flex:1;"><div style="font-size:15px; font-weight:700;">Efectivo</div><div style="font-size:11.5px; color:var(--muted); margin-top:1px;">Billetera física</div></div>
+                <div style="font-size:16px; font-weight:800; font-variant-numeric:tabular-nums;">S/ 320.00</div>
+              </button>
+              <button onClick="{{ goCuentaDet }}" style="display:flex; align-items:center; gap:13px; padding:15px; background:var(--surface); border:1px solid var(--border); border-radius:18px; cursor:pointer; text-align:left; font-family:inherit; box-shadow:var(--shadow);">
+                <span style="width:46px; height:46px; border-radius:13px; background:#EBE3F7; display:flex; align-items:center; justify-content:center; flex:0 0 auto;"><svg width="24" height="24" viewBox="0 0 24 24" fill="none"><rect x="4" y="3" width="16" height="18" rx="4" fill="#7A2D8F"/><path d="M12 8v8M9 11h6" stroke="#fff" stroke-width="2" stroke-linecap="round"/></svg></span>
+                <div style="flex:1;"><div style="font-size:15px; font-weight:700;">Yape</div><div style="font-size:11.5px; color:var(--muted); margin-top:1px;">Billetera digital · BCP</div></div>
+                <div style="font-size:16px; font-weight:800; font-variant-numeric:tabular-nums;">S/ 845.50</div>
+              </button>
+              <button onClick="{{ goCuentaDet }}" style="display:flex; align-items:center; gap:13px; padding:15px; background:var(--surface); border:1px solid var(--border); border-radius:18px; cursor:pointer; text-align:left; font-family:inherit; box-shadow:var(--shadow);">
+                <span style="width:46px; height:46px; border-radius:13px; background:#D9F3F1; display:flex; align-items:center; justify-content:center; flex:0 0 auto;"><svg width="24" height="24" viewBox="0 0 24 24" fill="none"><rect x="4" y="3" width="16" height="18" rx="4" fill="#00A9A0"/><path d="M8 12l3 3 5-6" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+                <div style="flex:1;"><div style="font-size:15px; font-weight:700;">Plin</div><div style="font-size:11.5px; color:var(--muted); margin-top:1px;">Billetera digital · Interbank</div></div>
+                <div style="font-size:16px; font-weight:800; font-variant-numeric:tabular-nums;">S/ 120.00</div>
+              </button>
+              <button onClick="{{ goCuentaDet }}" style="display:flex; align-items:center; gap:13px; padding:15px; background:var(--surface); border:1px solid var(--border); border-radius:18px; cursor:pointer; text-align:left; font-family:inherit; box-shadow:var(--shadow);">
+                <span style="width:46px; height:46px; border-radius:13px; background:var(--info-soft); display:flex; align-items:center; justify-content:center; flex:0 0 auto;"><svg width="24" height="24" viewBox="0 0 24 24" fill="none"><path d="M4 10l8-5 8 5M5 10v8m14-8v8M9 10v8m6-8v8M3 20h18" stroke="var(--info)" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+                <div style="flex:1;"><div style="font-size:15px; font-weight:700;">Cuenta BCP</div><div style="font-size:11.5px; color:var(--muted); margin-top:1px;">Cuenta de ahorros ·••4821</div></div>
+                <div style="font-size:16px; font-weight:800; font-variant-numeric:tabular-nums;">S/ 2,430.00</div>
+              </button>
+              <button onClick="{{ goCuentaDet }}" style="display:flex; align-items:center; gap:13px; padding:15px; background:var(--surface); border:1px solid var(--border); border-radius:18px; cursor:pointer; text-align:left; font-family:inherit; box-shadow:var(--shadow);">
+                <span style="width:46px; height:46px; border-radius:13px; background:var(--surface2); display:flex; align-items:center; justify-content:center; flex:0 0 auto;"><svg width="24" height="24" viewBox="0 0 24 24" fill="none"><rect x="3" y="5" width="18" height="14" rx="3" stroke="var(--muted)" stroke-width="1.9"/><path d="M3 10h18" stroke="var(--muted)" stroke-width="1.9"/></svg></span>
+                <div style="flex:1;"><div style="font-size:15px; font-weight:700;">Tarjeta Visa</div><div style="font-size:11.5px; color:var(--muted); margin-top:1px;">Crédito ·••1109</div></div>
+                <div style="font-size:16px; font-weight:800; color:var(--expense); font-variant-numeric:tabular-nums;">−S/ 540.00</div>
+              </button>
+            </div>
+          </div>
+        </sc-if>
+
+        <!-- ============ CUENTA DETALLE ============ -->
+        <sc-if value="{{ isCuentaDet }}" hint-placeholder-val="{{ false }}">
+          <div data-screen-label="Detalle cuenta" style="padding:52px 16px 128px;">
+            <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:16px;">
+              <button onClick="{{ back }}" style="width:40px; height:40px; border-radius:13px; border:1px solid var(--border); background:var(--surface); display:flex; align-items:center; justify-content:center; cursor:pointer; box-shadow:var(--shadow);"><svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M15 5l-7 7 7 7" stroke="var(--text)" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+              <span style="font-size:16px; font-weight:800;">Yape</span>
+              <button style="width:40px; height:40px; border-radius:13px; border:1px solid var(--border); background:var(--surface); display:flex; align-items:center; justify-content:center; cursor:pointer; box-shadow:var(--shadow);"><svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="m4 14 8-8 4 4-8 8H4v-4Z" stroke="var(--text)" stroke-width="1.9" stroke-linejoin="round"/></svg></button>
+            </div>
+            <div style="border-radius:22px; padding:22px; background:linear-gradient(150deg,#7A2D8F,#4B1A63); box-shadow:var(--shadow-lg); position:relative; overflow:hidden;">
+              <div style="position:absolute; right:-30px; top:-30px; width:120px; height:120px; border-radius:50%; background:rgba(255,255,255,.1);"></div>
+              <div style="display:flex; align-items:center; gap:9px; position:relative;"><span style="width:34px; height:34px; border-radius:10px; background:rgba(255,255,255,.2); display:flex; align-items:center; justify-content:center;"><svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M12 6v12M8 10h8" stroke="#fff" stroke-width="2.2" stroke-linecap="round"/></svg></span><span style="font-size:13px; color:rgba(255,255,255,.85); font-weight:600;">Yape · BCP</span></div>
+              <div style="font-size:12px; color:rgba(255,255,255,.75); margin-top:16px;">Saldo disponible</div>
+              <div style="font-size:34px; font-weight:800; color:#fff; letter-spacing:-1px; font-variant-numeric:tabular-nums;">S/ 845.50</div>
+            </div>
+            <div style="display:flex; gap:10px; margin-top:14px;">
+              <div style="flex:1; background:var(--income-soft); border-radius:14px; padding:12px;"><div style="font-size:11px; color:var(--income); font-weight:700;">Entró este mes</div><div style="font-size:16px; font-weight:800; color:var(--income); margin-top:2px; font-variant-numeric:tabular-nums;">+S/ 980</div></div>
+              <div style="flex:1; background:var(--expense-soft); border-radius:14px; padding:12px;"><div style="font-size:11px; color:var(--expense); font-weight:700;">Salió este mes</div><div style="font-size:16px; font-weight:800; color:var(--expense); margin-top:2px; font-variant-numeric:tabular-nums;">−S/ 640</div></div>
+            </div>
+            <div style="font-size:13px; font-weight:800; color:var(--muted); margin:20px 2px 10px;">Movimientos de esta cuenta</div>
+            <div style="background:var(--surface); border:1px solid var(--border); border-radius:18px; overflow:hidden; box-shadow:var(--shadow);">
+              <div style="display:flex; align-items:center; gap:12px; padding:12px 14px; border-bottom:1px solid var(--line);"><span style="width:38px; height:38px; border-radius:11px; background:var(--income-soft); display:flex; align-items:center; justify-content:center;"><svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M12 4v16M12 4l-4 4M12 4l4 4" stroke="var(--income)" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/></svg></span><div style="flex:1;"><div style="font-size:13.5px; font-weight:700;">Yape de mamá</div><div style="font-size:11px; color:var(--muted);">Hoy</div></div><div style="font-size:14px; font-weight:800; color:var(--income); font-variant-numeric:tabular-nums;">+S/ 100</div></div>
+              <div style="display:flex; align-items:center; gap:12px; padding:12px 14px; border-bottom:1px solid var(--line);"><span style="width:38px; height:38px; border-radius:11px; background:var(--income-soft); display:flex; align-items:center; justify-content:center;"><svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M8 8h8v10a2 2 0 0 1-2 2h-4a2 2 0 0 1-2-2V8ZM10 8V6a2 2 0 0 1 4 0v2" stroke="var(--expense)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></span><div style="flex:1;"><div style="font-size:13.5px; font-weight:700;">Mercado (verduras)</div><div style="font-size:11px; color:var(--muted);">Ayer</div></div><div style="font-size:14px; font-weight:800; color:var(--expense); font-variant-numeric:tabular-nums;">−S/ 38.50</div></div>
+              <div style="display:flex; align-items:center; gap:12px; padding:12px 14px;"><span style="width:38px; height:38px; border-radius:11px; background:var(--primary-soft); display:flex; align-items:center; justify-content:center;"><svg width="18" height="18" viewBox="0 0 24 24" fill="none"><rect x="6" y="3" width="12" height="18" rx="3" stroke="var(--primary)" stroke-width="1.8"/></svg></span><div style="flex:1;"><div style="font-size:13.5px; font-weight:700;">Recarga celular</div><div style="font-size:11px; color:var(--muted);">Ayer</div></div><div style="font-size:14px; font-weight:800; color:var(--expense); font-variant-numeric:tabular-nums;">−S/ 15.00</div></div>
+            </div>
+          </div>
+        </sc-if>
+        <!-- ============ PRESTAMOS ============ -->
+        <sc-if value="{{ isPrestamos }}" hint-placeholder-val="{{ false }}">
+          <div data-screen-label="Préstamos" style="padding:52px 16px 128px;">
+            <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:14px;">
+              <span style="font-size:24px; font-weight:800; letter-spacing:-.4px;">Préstamos</span>
+              <button style="width:40px; height:40px; border-radius:13px; border:none; background:var(--primary); display:flex; align-items:center; justify-content:center; cursor:pointer; box-shadow:var(--shadow);"><svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M12 5v14M5 12h14" stroke="var(--on-primary)" stroke-width="2.6" stroke-linecap="round"/></svg></button>
+            </div>
+            <!-- tab switch -->
+            <div style="display:flex; background:var(--surface2); border-radius:14px; padding:4px; margin-bottom:16px;">
+              <button onClick="{{ setMeDeben }}" style="{{ tabMeDebenStyle }}">Me deben</button>
+              <button onClick="{{ setDebo }}" style="{{ tabDeboStyle }}">Debo</button>
+            </div>
+
+            <sc-if value="{{ prestamoMeDeben }}" hint-placeholder-val="{{ true }}">
+              <div>
+                <div style="border-radius:18px; padding:16px 18px; background:var(--pending-soft); margin-bottom:16px;">
+                  <div style="font-size:12px; color:var(--pending); font-weight:700;">Total por cobrar</div>
+                  <div style="font-size:28px; font-weight:800; color:var(--pending); letter-spacing:-.6px; margin-top:2px; font-variant-numeric:tabular-nums;">S/ 170.00</div>
+                  <div style="font-size:11.5px; color:var(--pending); opacity:.8; margin-top:2px;">2 préstamos pendientes</div>
+                </div>
+                <button onClick="{{ goPrestamoDet }}" style="width:100%; display:flex; align-items:center; gap:13px; padding:15px; background:var(--surface); border:1px solid var(--border); border-radius:18px; margin-bottom:11px; cursor:pointer; text-align:left; font-family:inherit; box-shadow:var(--shadow);">
+                  <span style="width:46px; height:46px; border-radius:50%; background:var(--pending-soft); display:flex; align-items:center; justify-content:center; font-size:17px; font-weight:800; color:var(--pending); flex:0 0 auto;">R</span>
+                  <div style="flex:1;"><div style="font-size:14.5px; font-weight:700;">Rosa Quispe</div><div style="font-size:11.5px; color:var(--muted); margin-top:2px;">Prestado hoy · Yape</div></div>
+                  <div style="text-align:right;"><div style="font-size:16px; font-weight:800; color:var(--pending); font-variant-numeric:tabular-nums;">S/ 50.00</div><div style="font-size:10.5px; font-weight:700; color:var(--pending); background:var(--pending-soft); padding:2px 8px; border-radius:6px; margin-top:3px; display:inline-block;">Pendiente</div></div>
+                </button>
+                <button onClick="{{ goPrestamoDet }}" style="width:100%; display:flex; align-items:center; gap:13px; padding:15px; background:var(--surface); border:1px solid var(--border); border-radius:18px; margin-bottom:11px; cursor:pointer; text-align:left; font-family:inherit; box-shadow:var(--shadow);">
+                  <span style="width:46px; height:46px; border-radius:50%; background:var(--info-soft); display:flex; align-items:center; justify-content:center; font-size:17px; font-weight:800; color:var(--info); flex:0 0 auto;">C</span>
+                  <div style="flex:1;"><div style="font-size:14.5px; font-weight:700;">Carlos (trabajo)</div><div style="font-size:11.5px; color:var(--muted); margin-top:2px; display:flex; align-items:center; gap:4px;"><svg width="12" height="12" viewBox="0 0 24 24" fill="none"><path d="M12 8v4l3 2" stroke="var(--expense)" stroke-width="2" stroke-linecap="round"/><circle cx="12" cy="12" r="8" stroke="var(--expense)" stroke-width="2"/></svg>Vence en 3 días</div></div>
+                  <div style="text-align:right;"><div style="font-size:16px; font-weight:800; color:var(--pending); font-variant-numeric:tabular-nums;">S/ 120.00</div><div style="font-size:10.5px; font-weight:700; color:var(--pending); background:var(--pending-soft); padding:2px 8px; border-radius:6px; margin-top:3px; display:inline-block;">Pendiente</div></div>
+                </button>
+                <button style="width:100%; display:flex; align-items:center; gap:13px; padding:15px; background:var(--surface); border:1px solid var(--border); border-radius:18px; cursor:pointer; text-align:left; font-family:inherit; box-shadow:var(--shadow); opacity:.72;">
+                  <span style="width:46px; height:46px; border-radius:50%; background:var(--income-soft); display:flex; align-items:center; justify-content:center; font-size:17px; font-weight:800; color:var(--income); flex:0 0 auto;">M</span>
+                  <div style="flex:1;"><div style="font-size:14.5px; font-weight:700;">Mamá</div><div style="font-size:11.5px; color:var(--muted); margin-top:2px;">Devuelto · 20 jun</div></div>
+                  <div style="text-align:right;"><div style="font-size:16px; font-weight:800; color:var(--muted); text-decoration:line-through; font-variant-numeric:tabular-nums;">S/ 200</div><div style="font-size:10.5px; font-weight:700; color:var(--income); background:var(--income-soft); padding:2px 8px; border-radius:6px; margin-top:3px; display:inline-block;">Pagado</div></div>
+                </button>
+              </div>
+            </sc-if>
+            <sc-if value="{{ prestamoDebo }}" hint-placeholder-val="{{ false }}">
+              <div>
+                <div style="border-radius:18px; padding:16px 18px; background:var(--expense-soft); margin-bottom:16px;">
+                  <div style="font-size:12px; color:var(--expense); font-weight:700;">Total que debo</div>
+                  <div style="font-size:28px; font-weight:800; color:var(--expense); letter-spacing:-.6px; margin-top:2px; font-variant-numeric:tabular-nums;">S/ 380.00</div>
+                  <div style="font-size:11.5px; color:var(--expense); opacity:.8; margin-top:2px;">2 deudas pendientes</div>
+                </div>
+                <div style="width:100%; display:flex; align-items:center; gap:13px; padding:15px; background:var(--surface); border:1px solid var(--border); border-radius:18px; margin-bottom:11px; box-shadow:var(--shadow);">
+                  <span style="width:46px; height:46px; border-radius:50%; background:var(--info-soft); display:flex; align-items:center; justify-content:center; font-size:17px; font-weight:800; color:var(--info); flex:0 0 auto;">J</span>
+                  <div style="flex:1;"><div style="font-size:14.5px; font-weight:700;">Juan (compañero)</div><div style="font-size:11.5px; color:var(--muted); margin-top:2px;">Me prestó · 28 jun</div></div>
+                  <div style="text-align:right;"><div style="font-size:16px; font-weight:800; color:var(--expense); font-variant-numeric:tabular-nums;">S/ 80.00</div><div style="font-size:10.5px; font-weight:700; color:var(--pending); background:var(--pending-soft); padding:2px 8px; border-radius:6px; margin-top:3px; display:inline-block;">Pendiente</div></div>
+                </div>
+                <div style="width:100%; display:flex; align-items:center; gap:13px; padding:15px; background:var(--surface); border:1px solid var(--border); border-radius:18px; box-shadow:var(--shadow);">
+                  <span style="width:46px; height:46px; border-radius:50%; background:var(--primary-soft); display:flex; align-items:center; justify-content:center; font-size:17px; font-weight:800; color:var(--primary-ink); flex:0 0 auto;">T</span>
+                  <div style="flex:1;"><div style="font-size:14.5px; font-weight:700;">Tía Marta</div><div style="font-size:11.5px; color:var(--muted); margin-top:2px;">Me prestó · 15 jun</div></div>
+                  <div style="text-align:right;"><div style="font-size:16px; font-weight:800; color:var(--expense); font-variant-numeric:tabular-nums;">S/ 300.00</div><div style="font-size:10.5px; font-weight:700; color:var(--pending); background:var(--pending-soft); padding:2px 8px; border-radius:6px; margin-top:3px; display:inline-block;">Pendiente</div></div>
+                </div>
+              </div>
+            </sc-if>
+          </div>
+        </sc-if>
+
+        <!-- ============ PRESTAMO DETALLE ============ -->
+        <sc-if value="{{ isPrestamoDet }}" hint-placeholder-val="{{ false }}">
+          <div data-screen-label="Detalle préstamo" style="padding:52px 16px 128px;">
+            <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:20px;">
+              <button onClick="{{ back }}" style="width:40px; height:40px; border-radius:13px; border:1px solid var(--border); background:var(--surface); display:flex; align-items:center; justify-content:center; cursor:pointer; box-shadow:var(--shadow);"><svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M15 5l-7 7 7 7" stroke="var(--text)" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+              <span style="font-size:16px; font-weight:800;">Préstamo</span>
+              <button style="width:40px; height:40px; border-radius:13px; border:1px solid var(--border); background:var(--surface); display:flex; align-items:center; justify-content:center; cursor:pointer; box-shadow:var(--shadow);"><svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="m4 14 8-8 4 4-8 8H4v-4Z" stroke="var(--text)" stroke-width="1.9" stroke-linejoin="round"/></svg></button>
+            </div>
+            <div style="display:flex; flex-direction:column; align-items:center; text-align:center; gap:10px;">
+              <span style="width:70px; height:70px; border-radius:50%; background:var(--pending-soft); display:flex; align-items:center; justify-content:center; font-size:26px; font-weight:800; color:var(--pending);">R</span>
+              <div style="font-size:18px; font-weight:800;">Rosa Quispe</div>
+              <span style="font-size:11.5px; font-weight:700; color:var(--pending); background:var(--pending-soft); padding:4px 12px; border-radius:999px;">Me debe · Pendiente</span>
+              <div style="font-size:40px; font-weight:800; color:var(--pending); letter-spacing:-1px; margin-top:4px; font-variant-numeric:tabular-nums;">S/ 50.00</div>
+            </div>
+            <div style="margin-top:22px; background:var(--surface); border:1px solid var(--border); border-radius:20px; overflow:hidden; box-shadow:var(--shadow);">
+              <div style="display:flex; align-items:center; justify-content:space-between; padding:14px 16px; border-bottom:1px solid var(--line);"><span style="font-size:13px; color:var(--muted); font-weight:600;">Prestado el</span><span style="font-size:13.5px; font-weight:700;">2 jul 2026</span></div>
+              <div style="display:flex; align-items:center; justify-content:space-between; padding:14px 16px; border-bottom:1px solid var(--line);"><span style="font-size:13px; color:var(--muted); font-weight:600;">Salió de</span><span style="font-size:13.5px; font-weight:700;">Yape</span></div>
+              <div style="display:flex; align-items:center; justify-content:space-between; padding:14px 16px; border-bottom:1px solid var(--line);"><span style="font-size:13px; color:var(--muted); font-weight:600;">Recordatorio</span><span style="font-size:13.5px; font-weight:700; color:var(--primary);">9 jul · 9:00 am</span></div>
+              <div style="display:flex; align-items:flex-start; justify-content:space-between; padding:14px 16px; gap:16px;"><span style="font-size:13px; color:var(--muted); font-weight:600;">Nota</span><span style="font-size:13.5px; font-weight:600; text-align:right;">Para el pasaje, me paga el viernes</span></div>
+            </div>
+            <button style="width:100%; margin-top:18px; display:flex; align-items:center; justify-content:center; gap:8px; border:none; background:var(--income); color:#fff; font-family:inherit; font-size:15.5px; font-weight:700; padding:15px; border-radius:16px; cursor:pointer; box-shadow:var(--shadow);"><svg width="19" height="19" viewBox="0 0 24 24" fill="none"><path d="M5 12.5 10 17l9-10" stroke="#fff" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></svg>Marcar como pagado</button>
+            <button style="width:100%; margin-top:10px; display:flex; align-items:center; justify-content:center; gap:8px; border:1px solid var(--border); background:var(--surface); color:var(--muted); font-family:inherit; font-size:14px; font-weight:700; padding:13px; border-radius:15px; cursor:pointer;"><svg width="17" height="17" viewBox="0 0 24 24" fill="none"><path d="M15 4v4M9 4v4M5 8h14v12H5zM8 12h3M8 16h6" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"/></svg>Enviar recordatorio</button>
+          </div>
+        </sc-if>
+        <!-- ============ PANDEROS ============ -->
+        <sc-if value="{{ isPanderos }}" hint-placeholder-val="{{ false }}">
+          <div data-screen-label="Panderos" style="padding:52px 16px 128px;">
+            <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:6px;">
+              <button onClick="{{ goMas }}" style="width:40px; height:40px; border-radius:13px; border:1px solid var(--border); background:var(--surface); display:flex; align-items:center; justify-content:center; cursor:pointer; box-shadow:var(--shadow);"><svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M15 5l-7 7 7 7" stroke="var(--text)" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+              <span style="font-size:16px; font-weight:800;">Panderos / Juntas</span>
+              <button style="width:40px; height:40px; border-radius:13px; border:none; background:var(--primary); display:flex; align-items:center; justify-content:center; cursor:pointer; box-shadow:var(--shadow);"><svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M12 5v14M5 12h14" stroke="var(--on-primary)" stroke-width="2.6" stroke-linecap="round"/></svg></button>
+            </div>
+            <div style="font-size:13px; color:var(--muted); margin:6px 2px 16px; line-height:1.5;">Ahorro rotativo con más personas. Cada quien aporta su cuota y por turno alguien recibe el pozo completo.</div>
+
+            <button onClick="{{ goPanderoDet }}" style="width:100%; text-align:left; border:1px solid var(--border); background:var(--surface); border-radius:20px; padding:0; overflow:hidden; cursor:pointer; font-family:inherit; box-shadow:var(--shadow); margin-bottom:13px;">
+              <div style="padding:16px 16px 14px; background:linear-gradient(150deg, var(--primary), var(--primary-ink));">
+                <div style="display:flex; align-items:center; justify-content:space-between;">
+                  <span style="font-size:15.5px; font-weight:800; color:#fff;">Pandero de la oficina</span>
+                  <span style="font-size:10.5px; font-weight:700; color:#fff; background:rgba(255,255,255,.2); padding:3px 9px; border-radius:999px;">Activo</span>
+                </div>
+                <div style="display:flex; gap:16px; margin-top:12px;">
+                  <div><div style="font-size:10.5px; color:rgba(255,255,255,.8);">Cuota</div><div style="font-size:15px; font-weight:800; color:#fff; font-variant-numeric:tabular-nums;">S/ 200</div></div>
+                  <div><div style="font-size:10.5px; color:rgba(255,255,255,.8);">Participantes</div><div style="font-size:15px; font-weight:800; color:#fff;">10</div></div>
+                  <div><div style="font-size:10.5px; color:rgba(255,255,255,.8);">Frecuencia</div><div style="font-size:15px; font-weight:800; color:#fff;">Mensual</div></div>
+                </div>
+              </div>
+              <div style="padding:13px 16px; display:flex; align-items:center; gap:10px;">
+                <span style="width:38px; height:38px; border-radius:11px; background:var(--pending-soft); display:flex; align-items:center; justify-content:center; flex:0 0 auto;"><svg width="19" height="19" viewBox="0 0 24 24" fill="none"><rect x="3" y="5" width="18" height="16" rx="2.5" stroke="var(--pending)" stroke-width="1.9"/><path d="M3 10h18M8 3v4M16 3v4" stroke="var(--pending)" stroke-width="1.9" stroke-linecap="round"/></svg></span>
+                <div style="flex:1;"><div style="font-size:12.5px; font-weight:700;">Te toca cobrar en <span style="color:var(--pending);">abril</span></div><div style="font-size:11px; color:var(--muted); margin-top:1px;">Turno 4 de 10 · faltan 3 meses</div></div>
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="m9 5 7 7-7 7" stroke="var(--faint)" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+              </div>
+            </button>
+
+            <button style="width:100%; text-align:left; border:1px solid var(--border); background:var(--surface); border-radius:20px; padding:15px 16px; cursor:pointer; font-family:inherit; box-shadow:var(--shadow); display:flex; align-items:center; gap:12px;">
+              <span style="width:44px; height:44px; border-radius:13px; background:var(--income-soft); display:flex; align-items:center; justify-content:center; flex:0 0 auto;"><svg width="22" height="22" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="8" r="3" stroke="var(--income)" stroke-width="2"/><path d="M6 20c0-3 2.7-5 6-5s6 2 6 5" stroke="var(--income)" stroke-width="2" stroke-linecap="round"/></svg></span>
+              <div style="flex:1;"><div style="font-size:14.5px; font-weight:700;">Junta familiar</div><div style="font-size:11.5px; color:var(--muted); margin-top:2px;">5 personas · S/ 100 quincenal · turno 2</div></div>
+              <div style="font-size:11px; font-weight:700; color:var(--income); background:var(--income-soft); padding:3px 9px; border-radius:999px;">Cobré</div>
+            </button>
+          </div>
+        </sc-if>
+
+        <!-- ============ PANDERO DETALLE (calendario de turnos) ============ -->
+        <sc-if value="{{ isPanderoDet }}" hint-placeholder-val="{{ false }}">
+          <div data-screen-label="Pandero detalle" style="padding:52px 16px 128px;">
+            <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:16px;">
+              <button onClick="{{ back }}" style="width:40px; height:40px; border-radius:13px; border:1px solid var(--border); background:var(--surface); display:flex; align-items:center; justify-content:center; cursor:pointer; box-shadow:var(--shadow);"><svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M15 5l-7 7 7 7" stroke="var(--text)" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+              <span style="font-size:15px; font-weight:800;">Pandero de la oficina</span>
+              <button style="width:40px; height:40px; border-radius:13px; border:1px solid var(--border); background:var(--surface); display:flex; align-items:center; justify-content:center; cursor:pointer; box-shadow:var(--shadow);"><svg width="20" height="20" viewBox="0 0 24 24" fill="none"><circle cx="5" cy="12" r="1.7" fill="var(--text)"/><circle cx="12" cy="12" r="1.7" fill="var(--text)"/><circle cx="19" cy="12" r="1.7" fill="var(--text)"/></svg></button>
+            </div>
+
+            <!-- my turn highlight -->
+            <div style="border-radius:22px; padding:20px; background:linear-gradient(150deg, var(--primary), var(--primary-ink)); box-shadow:var(--shadow-lg); position:relative; overflow:hidden; margin-bottom:16px;">
+              <div style="position:absolute; right:-30px; top:-30px; width:120px; height:120px; border-radius:50%; background:rgba(255,255,255,.09);"></div>
+              <div style="font-size:12px; color:rgba(255,255,255,.82); font-weight:600;">Cuando me toca cobrar</div>
+              <div style="font-size:28px; font-weight:800; color:#fff; letter-spacing:-.5px; margin-top:2px;">Abril 2026 · Turno 4</div>
+              <div style="display:flex; gap:10px; margin-top:16px;">
+                <div style="flex:1; background:rgba(255,255,255,.14); border-radius:14px; padding:11px 12px;"><div style="font-size:10.5px; color:rgba(255,255,255,.82);">He aportado</div><div style="font-size:17px; font-weight:800; color:#fff; margin-top:2px; font-variant-numeric:tabular-nums;">S/ 600</div><div style="font-size:9.5px; color:rgba(255,255,255,.7);">3 de 10 cuotas</div></div>
+                <div style="flex:1; background:rgba(255,255,255,.14); border-radius:14px; padding:11px 12px;"><div style="font-size:10.5px; color:rgba(255,255,255,.82);">Recibiré el pozo</div><div style="font-size:17px; font-weight:800; color:#fff; margin-top:2px; font-variant-numeric:tabular-nums;">S/ 2,000</div><div style="font-size:9.5px; color:rgba(255,255,255,.7);">10 × S/ 200</div></div>
+              </div>
+            </div>
+
+            <!-- progress -->
+            <div style="background:var(--surface); border:1px solid var(--border); border-radius:18px; padding:15px 16px; box-shadow:var(--shadow); margin-bottom:16px;">
+              <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:9px;"><span style="font-size:12.5px; font-weight:700;">Avance del pandero</span><span style="font-size:12px; font-weight:800; color:var(--primary); font-variant-numeric:tabular-nums;">3 / 10 meses</span></div>
+              <div style="height:9px; background:var(--surface2); border-radius:6px; overflow:hidden;"><div style="width:30%; height:100%; background:var(--primary); border-radius:6px;"></div></div>
+            </div>
+
+            <!-- turn calendar -->
+            <div style="font-size:13px; font-weight:800; color:var(--muted); margin:4px 2px 10px;">A quién le toca cada mes</div>
+            <div style="background:var(--surface); border:1px solid var(--border); border-radius:18px; overflow:hidden; box-shadow:var(--shadow);">
+              <!-- done -->
+              <div style="display:flex; align-items:center; gap:12px; padding:11px 15px; border-bottom:1px solid var(--line);"><span style="width:34px; height:34px; border-radius:10px; background:var(--income-soft); display:flex; align-items:center; justify-content:center; font-size:12px; font-weight:800; color:var(--income); flex:0 0 auto;">1</span><div style="flex:1;"><div style="font-size:13px; font-weight:700;">Lucía Ramos</div><div style="font-size:10.5px; color:var(--muted);">Enero</div></div><span style="font-size:10.5px; font-weight:700; color:var(--income); background:var(--income-soft); padding:3px 9px; border-radius:999px;">Cobró</span></div>
+              <div style="display:flex; align-items:center; gap:12px; padding:11px 15px; border-bottom:1px solid var(--line);"><span style="width:34px; height:34px; border-radius:10px; background:var(--income-soft); display:flex; align-items:center; justify-content:center; font-size:12px; font-weight:800; color:var(--income); flex:0 0 auto;">2</span><div style="flex:1;"><div style="font-size:13px; font-weight:700;">Miguel Torres</div><div style="font-size:10.5px; color:var(--muted);">Febrero</div></div><span style="font-size:10.5px; font-weight:700; color:var(--income); background:var(--income-soft); padding:3px 9px; border-radius:999px;">Cobró</span></div>
+              <!-- current -->
+              <div style="display:flex; align-items:center; gap:12px; padding:11px 15px; border-bottom:1px solid var(--line);"><span style="width:34px; height:34px; border-radius:10px; background:var(--pending-soft); display:flex; align-items:center; justify-content:center; font-size:12px; font-weight:800; color:var(--pending); flex:0 0 auto;">3</span><div style="flex:1;"><div style="font-size:13px; font-weight:700;">José Huamán</div><div style="font-size:10.5px; color:var(--muted);">Marzo · este mes</div></div><span style="font-size:10.5px; font-weight:700; color:var(--pending); background:var(--pending-soft); padding:3px 9px; border-radius:999px;">Cobra ahora</span></div>
+              <!-- ME -->
+              <div style="display:flex; align-items:center; gap:12px; padding:13px 15px; border-bottom:1px solid var(--line); background:var(--primary-soft);"><span style="width:34px; height:34px; border-radius:10px; background:var(--primary); display:flex; align-items:center; justify-content:center; font-size:12px; font-weight:800; color:var(--on-primary); flex:0 0 auto;">4</span><div style="flex:1;"><div style="font-size:13.5px; font-weight:800; color:var(--primary-ink);">Andrea (tú) 🎉</div><div style="font-size:10.5px; color:var(--primary-ink); opacity:.8;">Abril · te toca cobrar</div></div><span style="font-size:10.5px; font-weight:800; color:var(--on-primary); background:var(--primary); padding:3px 9px; border-radius:999px;">Mi turno</span></div>
+              <!-- upcoming -->
+              <div style="display:flex; align-items:center; gap:12px; padding:11px 15px; border-bottom:1px solid var(--line); opacity:.75;"><span style="width:34px; height:34px; border-radius:10px; background:var(--surface2); display:flex; align-items:center; justify-content:center; font-size:12px; font-weight:800; color:var(--muted); flex:0 0 auto;">5</span><div style="flex:1;"><div style="font-size:13px; font-weight:700;">Rosa Quispe</div><div style="font-size:10.5px; color:var(--muted);">Mayo</div></div><span style="font-size:10.5px; font-weight:700; color:var(--muted);">Pendiente</span></div>
+              <div style="display:flex; align-items:center; gap:12px; padding:11px 15px; opacity:.75;"><span style="width:34px; height:34px; border-radius:10px; background:var(--surface2); display:flex; align-items:center; justify-content:center; font-size:12px; font-weight:800; color:var(--muted); flex:0 0 auto;">6</span><div style="flex:1;"><div style="font-size:13px; font-weight:700;">Carlos Díaz</div><div style="font-size:10.5px; color:var(--muted);">Junio</div></div><span style="font-size:10.5px; font-weight:700; color:var(--muted);">Pendiente</span></div>
+            </div>
+            <button style="width:100%; margin-top:14px; text-align:center; border:1px solid var(--border); background:var(--surface); color:var(--primary); font-family:inherit; font-size:13px; font-weight:700; padding:12px; border-radius:14px; cursor:pointer;">Ver los 10 turnos</button>
+          </div>
+        </sc-if>
+        <!-- ============ METAS ============ -->
+        <sc-if value="{{ isMetas }}" hint-placeholder-val="{{ false }}">
+          <div data-screen-label="Metas" style="padding:52px 16px 128px;">
+            <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:16px;">
+              <button onClick="{{ goMas }}" style="width:40px; height:40px; border-radius:13px; border:1px solid var(--border); background:var(--surface); display:flex; align-items:center; justify-content:center; cursor:pointer; box-shadow:var(--shadow);"><svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M15 5l-7 7 7 7" stroke="var(--text)" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+              <span style="font-size:16px; font-weight:800;">Metas de ahorro</span>
+              <button style="width:40px; height:40px; border-radius:13px; border:none; background:var(--primary); display:flex; align-items:center; justify-content:center; cursor:pointer; box-shadow:var(--shadow);"><svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M12 5v14M5 12h14" stroke="var(--on-primary)" stroke-width="2.6" stroke-linecap="round"/></svg></button>
+            </div>
+
+            <button onClick="{{ goMetaDet }}" style="width:100%; text-align:left; border:1px solid var(--border); background:var(--surface); border-radius:20px; padding:17px; cursor:pointer; font-family:inherit; box-shadow:var(--shadow); margin-bottom:12px;">
+              <div style="display:flex; align-items:center; gap:12px; margin-bottom:13px;">
+                <span style="width:44px; height:44px; border-radius:13px; background:var(--info-soft); display:flex; align-items:center; justify-content:center; flex:0 0 auto;"><svg width="23" height="23" viewBox="0 0 24 24" fill="none"><path d="M4 20c0-5 3.5-9 8-9s8 4 8 9M9 6c0-1.5 1.3-3 3-3s3 1.5 3 3-1.3 3-3 3-3-1.5-3-3Z" stroke="var(--info)" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+                <div style="flex:1;"><div style="font-size:15px; font-weight:700;">Viaje a Cusco</div><div style="font-size:11.5px; color:var(--muted); margin-top:1px;">Meta para octubre 2026</div></div>
+                <div style="font-size:17px; font-weight:800; color:var(--info); font-variant-numeric:tabular-nums;">60%</div>
+              </div>
+              <div style="height:10px; background:var(--surface2); border-radius:6px; overflow:hidden; margin-bottom:8px;"><div style="width:60%; height:100%; background:var(--info); border-radius:6px;"></div></div>
+              <div style="display:flex; justify-content:space-between; font-size:12px;"><span style="font-weight:800; font-variant-numeric:tabular-nums;">S/ 900</span><span style="color:var(--muted); font-variant-numeric:tabular-nums;">de S/ 1,500</span></div>
+            </button>
+
+            <button style="width:100%; text-align:left; border:1px solid var(--border); background:var(--surface); border-radius:20px; padding:17px; cursor:pointer; font-family:inherit; box-shadow:var(--shadow); margin-bottom:12px;">
+              <div style="display:flex; align-items:center; gap:12px; margin-bottom:13px;">
+                <span style="width:44px; height:44px; border-radius:13px; background:var(--primary-soft); display:flex; align-items:center; justify-content:center; flex:0 0 auto;"><svg width="23" height="23" viewBox="0 0 24 24" fill="none"><rect x="3" y="5" width="18" height="12" rx="2.5" stroke="var(--primary)" stroke-width="1.9"/><path d="M8 21h8M12 17v4" stroke="var(--primary)" stroke-width="1.9" stroke-linecap="round"/></svg></span>
+                <div style="flex:1;"><div style="font-size:15px; font-weight:700;">Laptop nueva</div><div style="font-size:11.5px; color:var(--muted); margin-top:1px;">Meta para marzo 2027</div></div>
+                <div style="font-size:17px; font-weight:800; color:var(--primary); font-variant-numeric:tabular-nums;">25%</div>
+              </div>
+              <div style="height:10px; background:var(--surface2); border-radius:6px; overflow:hidden; margin-bottom:8px;"><div style="width:25%; height:100%; background:var(--primary); border-radius:6px;"></div></div>
+              <div style="display:flex; justify-content:space-between; font-size:12px;"><span style="font-weight:800; font-variant-numeric:tabular-nums;">S/ 750</span><span style="color:var(--muted); font-variant-numeric:tabular-nums;">de S/ 3,000</span></div>
+            </button>
+
+            <button style="width:100%; text-align:left; border:1px solid var(--border); background:var(--surface); border-radius:20px; padding:17px; cursor:pointer; font-family:inherit; box-shadow:var(--shadow);">
+              <div style="display:flex; align-items:center; gap:12px; margin-bottom:13px;">
+                <span style="width:44px; height:44px; border-radius:13px; background:var(--income-soft); display:flex; align-items:center; justify-content:center; flex:0 0 auto;"><svg width="23" height="23" viewBox="0 0 24 24" fill="none"><path d="M12 3l7 3v5c0 4.5-3 7.6-7 9-4-1.4-7-4.5-7-9V6l7-3Z" stroke="var(--income)" stroke-width="1.9" stroke-linejoin="round"/></svg></span>
+                <div style="flex:1;"><div style="font-size:15px; font-weight:700;">Fondo de emergencia</div><div style="font-size:11.5px; color:var(--muted); margin-top:1px;">Sin fecha límite</div></div>
+                <div style="font-size:17px; font-weight:800; color:var(--income); font-variant-numeric:tabular-nums;">40%</div>
+              </div>
+              <div style="height:10px; background:var(--surface2); border-radius:6px; overflow:hidden; margin-bottom:8px;"><div style="width:40%; height:100%; background:var(--income); border-radius:6px;"></div></div>
+              <div style="display:flex; justify-content:space-between; font-size:12px;"><span style="font-weight:800; font-variant-numeric:tabular-nums;">S/ 2,000</span><span style="color:var(--muted); font-variant-numeric:tabular-nums;">de S/ 5,000</span></div>
+            </button>
+          </div>
+        </sc-if>
+
+        <!-- ============ META DETALLE ============ -->
+        <sc-if value="{{ isMetaDet }}" hint-placeholder-val="{{ false }}">
+          <div data-screen-label="Meta detalle" style="padding:52px 16px 128px;">
+            <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:20px;">
+              <button onClick="{{ back }}" style="width:40px; height:40px; border-radius:13px; border:1px solid var(--border); background:var(--surface); display:flex; align-items:center; justify-content:center; cursor:pointer; box-shadow:var(--shadow);"><svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M15 5l-7 7 7 7" stroke="var(--text)" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+              <span style="font-size:16px; font-weight:800;">Viaje a Cusco</span>
+              <button style="width:40px; height:40px; border-radius:13px; border:1px solid var(--border); background:var(--surface); display:flex; align-items:center; justify-content:center; cursor:pointer; box-shadow:var(--shadow);"><svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="m4 14 8-8 4 4-8 8H4v-4Z" stroke="var(--text)" stroke-width="1.9" stroke-linejoin="round"/></svg></button>
+            </div>
+            <div style="display:flex; flex-direction:column; align-items:center; text-align:center;">
+              <div style="position:relative; width:172px; height:172px;">
+                <svg width="172" height="172" viewBox="0 0 180 180">
+                  <circle cx="90" cy="90" r="76" fill="none" stroke="var(--line)" stroke-width="16"/>
+                  <circle cx="90" cy="90" r="76" fill="none" stroke="var(--info)" stroke-width="16" stroke-linecap="round" stroke-dasharray="286.6 477.5" stroke-dashoffset="0" transform="rotate(-90 90 90)"/>
+                </svg>
+                <div style="position:absolute; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:center;"><div style="font-size:34px; font-weight:800; color:var(--info); letter-spacing:-1px;">60%</div><div style="font-size:11px; color:var(--muted);">ahorrado</div></div>
+              </div>
+              <div style="font-size:30px; font-weight:800; letter-spacing:-.6px; margin-top:14px; font-variant-numeric:tabular-nums;">S/ 900 <span style="font-size:16px; color:var(--muted); font-weight:600;">/ S/ 1,500</span></div>
+              <div style="font-size:12.5px; color:var(--muted); margin-top:4px;">Te faltan <b style="color:var(--text);">S/ 600</b> para llegar a la meta</div>
+            </div>
+            <div style="display:flex; gap:10px; margin-top:22px;">
+              <div style="flex:1; background:var(--surface); border:1px solid var(--border); border-radius:16px; padding:14px; box-shadow:var(--shadow);"><div style="font-size:11px; color:var(--muted); font-weight:600;">Fecha estimada</div><div style="font-size:15px; font-weight:800; margin-top:3px;">Oct 2026</div></div>
+              <div style="flex:1; background:var(--surface); border:1px solid var(--border); border-radius:16px; padding:14px; box-shadow:var(--shadow);"><div style="font-size:11px; color:var(--muted); font-weight:600;">Ritmo sugerido</div><div style="font-size:15px; font-weight:800; margin-top:3px; font-variant-numeric:tabular-nums;">S/ 200/mes</div></div>
+            </div>
+            <button style="width:100%; margin-top:18px; display:flex; align-items:center; justify-content:center; gap:8px; border:none; background:var(--primary); color:var(--on-primary); font-family:inherit; font-size:15.5px; font-weight:700; padding:15px; border-radius:16px; cursor:pointer; box-shadow:var(--shadow);"><svg width="19" height="19" viewBox="0 0 24 24" fill="none"><path d="M12 5v14M5 12h14" stroke="var(--on-primary)" stroke-width="2.6" stroke-linecap="round"/></svg>Agregar ahorro</button>
+          </div>
+        </sc-if>
+
+        <!-- ============ PRESUPUESTOS ============ -->
+        <sc-if value="{{ isPresupuestos }}" hint-placeholder-val="{{ false }}">
+          <div data-screen-label="Presupuestos" style="padding:52px 16px 128px;">
+            <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:14px;">
+              <button onClick="{{ goMas }}" style="width:40px; height:40px; border-radius:13px; border:1px solid var(--border); background:var(--surface); display:flex; align-items:center; justify-content:center; cursor:pointer; box-shadow:var(--shadow);"><svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M15 5l-7 7 7 7" stroke="var(--text)" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+              <span style="font-size:16px; font-weight:800;">Presupuestos</span>
+              <button style="width:40px; height:40px; border-radius:13px; border:none; background:var(--primary); display:flex; align-items:center; justify-content:center; cursor:pointer; box-shadow:var(--shadow);"><svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M12 5v14M5 12h14" stroke="var(--on-primary)" stroke-width="2.6" stroke-linecap="round"/></svg></button>
+            </div>
+            <div style="border-radius:18px; padding:16px 18px; background:var(--surface); border:1px solid var(--border); box-shadow:var(--shadow); margin-bottom:16px;">
+              <div style="display:flex; align-items:center; justify-content:space-between;"><span style="font-size:12.5px; color:var(--muted); font-weight:600;">Gastado de S/ 1,020 presupuestado</span></div>
+              <div style="display:flex; align-items:flex-end; gap:8px; margin-top:4px;"><span style="font-size:28px; font-weight:800; letter-spacing:-.6px; font-variant-numeric:tabular-nums;">S/ 750</span><span style="font-size:13px; color:var(--muted); margin-bottom:5px;">· 74% del mes</span></div>
+              <div style="height:9px; background:var(--surface2); border-radius:6px; overflow:hidden; margin-top:10px;"><div style="width:74%; height:100%; background:var(--primary); border-radius:6px;"></div></div>
+            </div>
+
+            <div style="display:flex; flex-direction:column; gap:12px;">
+              <!-- comida -->
+              <div style="background:var(--surface); border:1px solid var(--border); border-radius:18px; padding:15px; box-shadow:var(--shadow);">
+                <div style="display:flex; align-items:center; gap:11px; margin-bottom:10px;"><span style="width:38px; height:38px; border-radius:11px; background:var(--expense-soft); display:flex; align-items:center; justify-content:center;"><svg width="19" height="19" viewBox="0 0 24 24" fill="none"><path d="M7 3v7a2 2 0 0 0 2 2v9M17 3c-1.5 0-2.5 2-2.5 5s1 4 2.5 4v9" stroke="var(--expense)" stroke-width="1.9" stroke-linecap="round"/></svg></span><div style="flex:1;"><div style="font-size:13.5px; font-weight:700;">Comida / menú</div><div style="font-size:11px; color:var(--muted);">S/ 310 de S/ 400</div></div><span style="font-size:12.5px; font-weight:800; color:var(--pending); font-variant-numeric:tabular-nums;">78%</span></div>
+                <div style="height:8px; background:var(--surface2); border-radius:5px; overflow:hidden;"><div style="width:78%; height:100%; background:var(--pending); border-radius:5px;"></div></div>
+              </div>
+              <!-- transporte -->
+              <div style="background:var(--surface); border:1px solid var(--border); border-radius:18px; padding:15px; box-shadow:var(--shadow);">
+                <div style="display:flex; align-items:center; gap:11px; margin-bottom:10px;"><span style="width:38px; height:38px; border-radius:11px; background:var(--info-soft); display:flex; align-items:center; justify-content:center;"><svg width="19" height="19" viewBox="0 0 24 24" fill="none"><rect x="3" y="6" width="18" height="10" rx="2.5" stroke="var(--info)" stroke-width="1.9"/><path d="M3 10h18" stroke="var(--info)" stroke-width="1.9"/><circle cx="7.5" cy="19" r="1.6" stroke="var(--info)" stroke-width="1.9"/><circle cx="16.5" cy="19" r="1.6" stroke="var(--info)" stroke-width="1.9"/></svg></span><div style="flex:1;"><div style="font-size:13.5px; font-weight:700;">Transporte</div><div style="font-size:11px; color:var(--muted);">S/ 95 de S/ 120</div></div><span style="font-size:12.5px; font-weight:800; color:var(--pending); font-variant-numeric:tabular-nums;">79%</span></div>
+                <div style="height:8px; background:var(--surface2); border-radius:5px; overflow:hidden;"><div style="width:79%; height:100%; background:var(--pending); border-radius:5px;"></div></div>
+              </div>
+              <!-- entretenimiento OVER -->
+              <div style="background:var(--expense-soft); border:1px solid var(--expense); border-radius:18px; padding:15px;">
+                <div style="display:flex; align-items:center; gap:11px; margin-bottom:10px;"><span style="width:38px; height:38px; border-radius:11px; background:var(--surface); display:flex; align-items:center; justify-content:center;"><svg width="19" height="19" viewBox="0 0 24 24" fill="none"><rect x="3" y="5" width="18" height="14" rx="2.5" stroke="var(--expense)" stroke-width="1.9"/><path d="m10 9 5 3-5 3V9Z" fill="var(--expense)"/></svg></span><div style="flex:1;"><div style="font-size:13.5px; font-weight:700;">Entretenimiento</div><div style="font-size:11px; color:var(--expense); font-weight:600;">S/ 165 de S/ 150 · te pasaste</div></div><span style="display:flex; align-items:center; gap:3px; font-size:12.5px; font-weight:800; color:var(--expense); font-variant-numeric:tabular-nums;"><svg width="13" height="13" viewBox="0 0 24 24" fill="none"><path d="M12 8v5M12 16h.01M10.3 4l-7 12A2 2 0 0 0 5 19h14a2 2 0 0 0 1.7-3l-7-12a2 2 0 0 0-3.4 0Z" stroke="var(--expense)" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/></svg>110%</span></div>
+                <div style="height:8px; background:var(--surface); border-radius:5px; overflow:hidden;"><div style="width:100%; height:100%; background:var(--expense); border-radius:5px;"></div></div>
+              </div>
+              <!-- mercado ok -->
+              <div style="background:var(--surface); border:1px solid var(--border); border-radius:18px; padding:15px; box-shadow:var(--shadow);">
+                <div style="display:flex; align-items:center; gap:11px; margin-bottom:10px;"><span style="width:38px; height:38px; border-radius:11px; background:var(--income-soft); display:flex; align-items:center; justify-content:center;"><svg width="19" height="19" viewBox="0 0 24 24" fill="none"><path d="M8 8h8v10a2 2 0 0 1-2 2h-4a2 2 0 0 1-2-2V8ZM10 8V6a2 2 0 0 1 4 0v2" stroke="var(--income)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></span><div style="flex:1;"><div style="font-size:13.5px; font-weight:700;">Mercado</div><div style="font-size:11px; color:var(--muted);">S/ 180 de S/ 350</div></div><span style="font-size:12.5px; font-weight:800; color:var(--income); font-variant-numeric:tabular-nums;">51%</span></div>
+                <div style="height:8px; background:var(--surface2); border-radius:5px; overflow:hidden;"><div style="width:51%; height:100%; background:var(--income); border-radius:5px;"></div></div>
+              </div>
+            </div>
+          </div>
+        </sc-if>
+        <!-- ============ REPORTES ============ -->
+        <sc-if value="{{ isReportes }}" hint-placeholder-val="{{ false }}">
+          <div data-screen-label="Reportes" style="padding:52px 16px 128px;">
+            <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:14px;">
+              <span style="font-size:24px; font-weight:800; letter-spacing:-.4px;">Reportes</span>
+              <span style="display:flex; align-items:center; gap:6px; font-size:12.5px; font-weight:700; padding:8px 12px; border-radius:999px; background:var(--surface); border:1px solid var(--border); box-shadow:var(--shadow);">Julio 2026 <svg width="13" height="13" viewBox="0 0 24 24" fill="none"><path d="m6 9 6 6 6-6" stroke="var(--muted)" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+            </div>
+
+            <!-- compare vs last month -->
+            <div style="display:flex; gap:10px; margin-bottom:16px;">
+              <div style="flex:1; background:var(--surface); border:1px solid var(--border); border-radius:16px; padding:14px; box-shadow:var(--shadow);">
+                <div style="font-size:11px; color:var(--muted); font-weight:600;">Gasto este mes</div>
+                <div style="font-size:20px; font-weight:800; margin-top:3px; font-variant-numeric:tabular-nums;">S/ 1,180</div>
+                <div style="display:flex; align-items:center; gap:3px; font-size:11px; font-weight:700; color:var(--income); margin-top:3px;"><svg width="12" height="12" viewBox="0 0 24 24" fill="none"><path d="M12 19V5M12 5l-5 5M12 5l5 5" stroke="var(--income)" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>12% menos que junio</div>
+              </div>
+              <div style="flex:1; background:var(--surface); border:1px solid var(--border); border-radius:16px; padding:14px; box-shadow:var(--shadow);">
+                <div style="font-size:11px; color:var(--muted); font-weight:600;">Ahorro del mes</div>
+                <div style="font-size:20px; font-weight:800; margin-top:3px; color:var(--income); font-variant-numeric:tabular-nums;">S/ 1,270</div>
+                <div style="display:flex; align-items:center; gap:3px; font-size:11px; font-weight:700; color:var(--muted); margin-top:3px;">52% de tus ingresos</div>
+              </div>
+            </div>
+
+            <!-- bars per month -->
+            <div style="background:var(--surface); border:1px solid var(--border); border-radius:20px; padding:18px; box-shadow:var(--shadow); margin-bottom:16px;">
+              <div style="font-size:14.5px; font-weight:800; margin-bottom:4px;">Gasto por mes</div>
+              <div style="font-size:11.5px; color:var(--muted); margin-bottom:16px;">Últimos 6 meses</div>
+              <div style="display:flex; align-items:flex-end; justify-content:space-between; gap:10px; height:130px;">
+                <div style="flex:1; display:flex; flex-direction:column; align-items:center; gap:7px; height:100%; justify-content:flex-end;"><div style="width:100%; max-width:26px; height:62%; background:var(--surface2); border-radius:7px;"></div><span style="font-size:10.5px; color:var(--muted); font-weight:600;">Feb</span></div>
+                <div style="flex:1; display:flex; flex-direction:column; align-items:center; gap:7px; height:100%; justify-content:flex-end;"><div style="width:100%; max-width:26px; height:78%; background:var(--surface2); border-radius:7px;"></div><span style="font-size:10.5px; color:var(--muted); font-weight:600;">Mar</span></div>
+                <div style="flex:1; display:flex; flex-direction:column; align-items:center; gap:7px; height:100%; justify-content:flex-end;"><div style="width:100%; max-width:26px; height:55%; background:var(--surface2); border-radius:7px;"></div><span style="font-size:10.5px; color:var(--muted); font-weight:600;">Abr</span></div>
+                <div style="flex:1; display:flex; flex-direction:column; align-items:center; gap:7px; height:100%; justify-content:flex-end;"><div style="width:100%; max-width:26px; height:88%; background:var(--surface2); border-radius:7px;"></div><span style="font-size:10.5px; color:var(--muted); font-weight:600;">May</span></div>
+                <div style="flex:1; display:flex; flex-direction:column; align-items:center; gap:7px; height:100%; justify-content:flex-end;"><div style="width:100%; max-width:26px; height:100%; background:var(--surface2); border-radius:7px;"></div><span style="font-size:10.5px; color:var(--muted); font-weight:600;">Jun</span></div>
+                <div style="flex:1; display:flex; flex-direction:column; align-items:center; gap:7px; height:100%; justify-content:flex-end;"><div style="width:100%; max-width:26px; height:74%; background:var(--primary); border-radius:7px;"></div><span style="font-size:10.5px; color:var(--primary); font-weight:800;">Jul</span></div>
+              </div>
+            </div>
+
+            <!-- donut by category -->
+            <div style="background:var(--surface); border:1px solid var(--border); border-radius:20px; padding:18px; box-shadow:var(--shadow);">
+              <div style="font-size:14.5px; font-weight:800; margin-bottom:14px;">Gasto por categoría</div>
+              <div style="display:flex; align-items:center; gap:16px;">
+                <div style="position:relative; width:128px; height:128px; flex:0 0 auto;">
+                  <svg width="128" height="128" viewBox="0 0 180 180">
+                    <circle cx="90" cy="90" r="70" fill="none" stroke="var(--line)" stroke-width="24"/>
+                    <circle cx="90" cy="90" r="70" fill="none" stroke="var(--expense)" stroke-width="24" stroke-dasharray="149.5 439.8" stroke-dashoffset="0" transform="rotate(-90 90 90)"/>
+                    <circle cx="90" cy="90" r="70" fill="none" stroke="var(--income)" stroke-width="24" stroke-dasharray="96.8 439.8" stroke-dashoffset="-149.5" transform="rotate(-90 90 90)"/>
+                    <circle cx="90" cy="90" r="70" fill="none" stroke="var(--info)" stroke-width="24" stroke-dasharray="61.6 439.8" stroke-dashoffset="-246.3" transform="rotate(-90 90 90)"/>
+                    <circle cx="90" cy="90" r="70" fill="none" stroke="var(--pending)" stroke-width="24" stroke-dasharray="52.8 439.8" stroke-dashoffset="-307.9" transform="rotate(-90 90 90)"/>
+                    <circle cx="90" cy="90" r="70" fill="none" stroke="var(--primary)" stroke-width="24" stroke-dasharray="79.1 439.8" stroke-dashoffset="-360.7" transform="rotate(-90 90 90)"/>
+                  </svg>
+                  <div style="position:absolute; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:center;"><div style="font-size:18px; font-weight:800; font-variant-numeric:tabular-nums;">S/1,180</div><div style="font-size:10px; color:var(--muted);">total</div></div>
+                </div>
+                <div style="flex:1; display:flex; flex-direction:column; gap:8px;">
+                  <div style="display:flex; align-items:center; gap:8px;"><span style="width:9px; height:9px; border-radius:3px; background:var(--expense);"></span><span style="font-size:12px; font-weight:600; flex:1;">Comida</span><span style="font-size:12px; font-weight:800; font-variant-numeric:tabular-nums;">S/ 401</span></div>
+                  <div style="display:flex; align-items:center; gap:8px;"><span style="width:9px; height:9px; border-radius:3px; background:var(--income);"></span><span style="font-size:12px; font-weight:600; flex:1;">Mercado</span><span style="font-size:12px; font-weight:800; font-variant-numeric:tabular-nums;">S/ 260</span></div>
+                  <div style="display:flex; align-items:center; gap:8px;"><span style="width:9px; height:9px; border-radius:3px; background:var(--info);"></span><span style="font-size:12px; font-weight:600; flex:1;">Transporte</span><span style="font-size:12px; font-weight:800; font-variant-numeric:tabular-nums;">S/ 165</span></div>
+                  <div style="display:flex; align-items:center; gap:8px;"><span style="width:9px; height:9px; border-radius:3px; background:var(--pending);"></span><span style="font-size:12px; font-weight:600; flex:1;">Servicios</span><span style="font-size:12px; font-weight:800; font-variant-numeric:tabular-nums;">S/ 142</span></div>
+                  <div style="display:flex; align-items:center; gap:8px;"><span style="width:9px; height:9px; border-radius:3px; background:var(--primary);"></span><span style="font-size:12px; font-weight:600; flex:1;">Otros</span><span style="font-size:12px; font-weight:800; font-variant-numeric:tabular-nums;">S/ 212</span></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </sc-if>
+        <!-- ============ MÁS ============ -->
+        <sc-if value="{{ isMas }}" hint-placeholder-val="{{ false }}">
+          <div data-screen-label="Más" style="padding:52px 16px 128px;">
+            <div style="font-size:24px; font-weight:800; letter-spacing:-.4px; margin-bottom:16px;">Más</div>
+            <div style="display:grid; grid-template-columns:1fr 1fr; gap:11px;">
+              <button onClick="{{ goCuentas }}" style="text-align:left; background:var(--surface); border:1px solid var(--border); border-radius:18px; padding:16px; cursor:pointer; font-family:inherit; box-shadow:var(--shadow);"><span style="width:42px; height:42px; border-radius:12px; background:var(--income-soft); display:flex; align-items:center; justify-content:center;"><svg width="21" height="21" viewBox="0 0 24 24" fill="none"><rect x="2.5" y="6" width="19" height="12" rx="2.5" stroke="var(--income)" stroke-width="1.9"/><circle cx="12" cy="12" r="2.6" stroke="var(--income)" stroke-width="1.9"/></svg></span><div style="font-size:14px; font-weight:700; margin-top:11px;">Cuentas</div><div style="font-size:11px; color:var(--muted); margin-top:1px;">5 billeteras</div></button>
+              <button onClick="{{ goPanderos }}" style="text-align:left; background:var(--surface); border:1px solid var(--border); border-radius:18px; padding:16px; cursor:pointer; font-family:inherit; box-shadow:var(--shadow);"><span style="width:42px; height:42px; border-radius:12px; background:var(--primary-soft); display:flex; align-items:center; justify-content:center;"><svg width="21" height="21" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="8" r="3" stroke="var(--primary)" stroke-width="2"/><path d="M6 20c0-3 2.7-5 6-5s6 2 6 5" stroke="var(--primary)" stroke-width="2" stroke-linecap="round"/></svg></span><div style="font-size:14px; font-weight:700; margin-top:11px;">Panderos</div><div style="font-size:11px; color:var(--muted); margin-top:1px;">2 activos</div></button>
+              <button onClick="{{ goMetas }}" style="text-align:left; background:var(--surface); border:1px solid var(--border); border-radius:18px; padding:16px; cursor:pointer; font-family:inherit; box-shadow:var(--shadow);"><span style="width:42px; height:42px; border-radius:12px; background:var(--info-soft); display:flex; align-items:center; justify-content:center;"><svg width="21" height="21" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="8" stroke="var(--info)" stroke-width="2"/><circle cx="12" cy="12" r="3.4" stroke="var(--info)" stroke-width="2"/></svg></span><div style="font-size:14px; font-weight:700; margin-top:11px;">Metas</div><div style="font-size:11px; color:var(--muted); margin-top:1px;">3 en curso</div></button>
+              <button onClick="{{ goPresupuestos }}" style="text-align:left; background:var(--surface); border:1px solid var(--border); border-radius:18px; padding:16px; cursor:pointer; font-family:inherit; box-shadow:var(--shadow);"><span style="width:42px; height:42px; border-radius:12px; background:var(--pending-soft); display:flex; align-items:center; justify-content:center;"><svg width="21" height="21" viewBox="0 0 24 24" fill="none"><path d="M4 7h16M4 12h16M4 17h9" stroke="var(--pending)" stroke-width="2" stroke-linecap="round"/></svg></span><div style="font-size:14px; font-weight:700; margin-top:11px;">Presupuestos</div><div style="font-size:11px; color:var(--muted); margin-top:1px;">1 excedido</div></button>
+              <button onClick="{{ goRecurrentes }}" style="text-align:left; background:var(--surface); border:1px solid var(--border); border-radius:18px; padding:16px; cursor:pointer; font-family:inherit; box-shadow:var(--shadow);"><span style="width:42px; height:42px; border-radius:12px; background:var(--expense-soft); display:flex; align-items:center; justify-content:center;"><svg width="21" height="21" viewBox="0 0 24 24" fill="none"><path d="M4 12a8 8 0 0 1 13-6l3 2M20 12a8 8 0 0 1-13 6l-3-2" stroke="var(--expense)" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/><path d="M20 4v4h-4M4 20v-4h4" stroke="var(--expense)" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/></svg></span><div style="font-size:14px; font-weight:700; margin-top:11px;">Recurrentes</div><div style="font-size:11px; color:var(--muted); margin-top:1px;">4 suscripciones</div></button>
+              <button onClick="{{ goReportes }}" style="text-align:left; background:var(--surface); border:1px solid var(--border); border-radius:18px; padding:16px; cursor:pointer; font-family:inherit; box-shadow:var(--shadow);"><span style="width:42px; height:42px; border-radius:12px; background:var(--primary-soft); display:flex; align-items:center; justify-content:center;"><svg width="21" height="21" viewBox="0 0 24 24" fill="none"><path d="M5 19V10M12 19V5M19 19v-6" stroke="var(--primary)" stroke-width="2.2" stroke-linecap="round"/></svg></span><div style="font-size:14px; font-weight:700; margin-top:11px;">Reportes</div><div style="font-size:11px; color:var(--muted); margin-top:1px;">Estadísticas</div></button>
+            </div>
+            <div style="margin-top:12px; display:flex; flex-direction:column; gap:2px; background:var(--surface); border:1px solid var(--border); border-radius:18px; overflow:hidden; box-shadow:var(--shadow);">
+              <button onClick="{{ goAjustes }}" style="display:flex; align-items:center; gap:12px; padding:14px 16px; background:transparent; border:none; border-bottom:1px solid var(--line); cursor:pointer; font-family:inherit; text-align:left;"><svg width="20" height="20" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="3.2" stroke="var(--text)" stroke-width="2"/><path d="M12 3v2.2M12 18.8V21M21 12h-2.2M5.2 12H3M18 6l-1.6 1.6M7.6 16.4 6 18M18 18l-1.6-1.6M7.6 7.6 6 6" stroke="var(--text)" stroke-width="2" stroke-linecap="round"/></svg><span style="flex:1; font-size:14px; font-weight:700;">Ajustes</span><svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="m9 5 7 7-7 7" stroke="var(--faint)" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+              <button onClick="{{ goVacios }}" style="display:flex; align-items:center; gap:12px; padding:14px 16px; background:transparent; border:none; cursor:pointer; font-family:inherit; text-align:left;"><svg width="20" height="20" viewBox="0 0 24 24" fill="none"><rect x="4" y="4" width="16" height="16" rx="3" stroke="var(--text)" stroke-width="2"/><path d="M9 12h6" stroke="var(--text)" stroke-width="2" stroke-linecap="round"/></svg><span style="flex:1; font-size:14px; font-weight:700;">Estados vacíos</span><svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="m9 5 7 7-7 7" stroke="var(--faint)" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+            </div>
+          </div>
+        </sc-if>
+
+        <!-- ============ RECURRENTES ============ -->
+        <sc-if value="{{ isRecurrentes }}" hint-placeholder-val="{{ false }}">
+          <div data-screen-label="Recurrentes" style="padding:52px 16px 128px;">
+            <div style="display:flex; align-items:center; gap:12px; margin-bottom:14px;">
+              <button onClick="{{ goMas }}" style="width:40px; height:40px; border-radius:13px; border:1px solid var(--border); background:var(--surface); display:flex; align-items:center; justify-content:center; cursor:pointer; box-shadow:var(--shadow);"><svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M15 5l-7 7 7 7" stroke="var(--text)" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+              <span style="font-size:19px; font-weight:800;">Gastos recurrentes</span>
+            </div>
+            <div style="border-radius:18px; padding:16px 18px; background:var(--expense-soft); margin-bottom:16px;"><div style="font-size:12px; color:var(--expense); font-weight:700;">Pagos fijos al mes</div><div style="font-size:26px; font-weight:800; color:var(--expense); margin-top:2px; font-variant-numeric:tabular-nums;">S/ 235.80</div></div>
+            <div style="display:flex; flex-direction:column; gap:11px;">
+              <div style="display:flex; align-items:center; gap:12px; padding:14px; background:var(--surface); border:1px solid var(--border); border-radius:18px; box-shadow:var(--shadow);"><span style="width:44px; height:44px; border-radius:12px; background:#FDECEA; display:flex; align-items:center; justify-content:center; font-size:15px; font-weight:800; color:#E50914;">N</span><div style="flex:1;"><div style="font-size:14px; font-weight:700;">Netflix</div><div style="font-size:11.5px; color:var(--pending); font-weight:600; margin-top:1px;">Se cobra en 3 días · día 5</div></div><div style="font-size:15px; font-weight:800; font-variant-numeric:tabular-nums;">S/ 34.90</div></div>
+              <div style="display:flex; align-items:center; gap:12px; padding:14px; background:var(--surface); border:1px solid var(--border); border-radius:18px; box-shadow:var(--shadow);"><span style="width:44px; height:44px; border-radius:12px; background:#E4F7EC; display:flex; align-items:center; justify-content:center; font-size:15px; font-weight:800; color:#1DB954;">S</span><div style="flex:1;"><div style="font-size:14px; font-weight:700;">Spotify</div><div style="font-size:11.5px; color:var(--muted); margin-top:1px;">Día 12 de cada mes</div></div><div style="font-size:15px; font-weight:800; font-variant-numeric:tabular-nums;">S/ 21.90</div></div>
+              <div style="display:flex; align-items:center; gap:12px; padding:14px; background:var(--surface); border:1px solid var(--border); border-radius:18px; box-shadow:var(--shadow);"><span style="width:44px; height:44px; border-radius:12px; background:var(--info-soft); display:flex; align-items:center; justify-content:center;"><svg width="22" height="22" viewBox="0 0 24 24" fill="none"><path d="M5 13a10 10 0 0 1 14 0M8.5 16.5a5 5 0 0 1 7 0M12 20h.01" stroke="var(--info)" stroke-width="2" stroke-linecap="round"/></svg></span><div style="flex:1;"><div style="font-size:14px; font-weight:700;">Internet Movistar</div><div style="font-size:11.5px; color:var(--muted); margin-top:1px;">Día 20 de cada mes</div></div><div style="font-size:15px; font-weight:800; font-variant-numeric:tabular-nums;">S/ 99.00</div></div>
+              <div style="display:flex; align-items:center; gap:12px; padding:14px; background:var(--surface); border:1px solid var(--border); border-radius:18px; box-shadow:var(--shadow);"><span style="width:44px; height:44px; border-radius:12px; background:var(--primary-soft); display:flex; align-items:center; justify-content:center;"><svg width="22" height="22" viewBox="0 0 24 24" fill="none"><path d="M6.5 6.5 17.5 17.5M17.5 6.5 6.5 17.5" stroke="var(--primary)" stroke-width="2" stroke-linecap="round"/><circle cx="12" cy="12" r="9" stroke="var(--primary)" stroke-width="2"/></svg></span><div style="flex:1;"><div style="font-size:14px; font-weight:700;">Gimnasio</div><div style="font-size:11.5px; color:var(--muted); margin-top:1px;">Día 1 de cada mes</div></div><div style="font-size:15px; font-weight:800; font-variant-numeric:tabular-nums;">S/ 80.00</div></div>
+            </div>
+          </div>
+        </sc-if>
+
+        <!-- ============ AJUSTES ============ -->
+        <sc-if value="{{ isAjustes }}" hint-placeholder-val="{{ false }}">
+          <div data-screen-label="Ajustes" style="padding:52px 16px 128px;">
+            <div style="display:flex; align-items:center; gap:12px; margin-bottom:18px;">
+              <button onClick="{{ goMas }}" style="width:40px; height:40px; border-radius:13px; border:1px solid var(--border); background:var(--surface); display:flex; align-items:center; justify-content:center; cursor:pointer; box-shadow:var(--shadow);"><svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M15 5l-7 7 7 7" stroke="var(--text)" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+              <span style="font-size:19px; font-weight:800;">Ajustes</span>
+            </div>
+
+            <div style="font-size:11.5px; font-weight:800; color:var(--faint); letter-spacing:.5px; margin:0 4px 8px;">GENERAL</div>
+            <div style="background:var(--surface); border:1px solid var(--border); border-radius:18px; overflow:hidden; box-shadow:var(--shadow); margin-bottom:18px;">
+              <div style="display:flex; align-items:center; gap:12px; padding:14px 16px; border-bottom:1px solid var(--line);"><span style="width:36px; height:36px; border-radius:10px; background:var(--income-soft); display:flex; align-items:center; justify-content:center; font-weight:800; color:var(--income);">S/</span><span style="flex:1; font-size:14px; font-weight:700;">Moneda</span><span style="font-size:13px; color:var(--muted); font-weight:600;">Soles (PEN)</span></div>
+              <button onClick="{{ toggleTheme }}" style="width:100%; display:flex; align-items:center; gap:12px; padding:14px 16px; background:transparent; border:none; cursor:pointer; font-family:inherit; text-align:left;"><span style="width:36px; height:36px; border-radius:10px; background:var(--primary-soft); display:flex; align-items:center; justify-content:center;"><svg width="19" height="19" viewBox="0 0 24 24" fill="none"><path d="M20 14.5A8 8 0 0 1 9.5 4 8 8 0 1 0 20 14.5Z" stroke="var(--primary)" stroke-width="1.9" stroke-linejoin="round"/></svg></span><span style="flex:1; font-size:14px; font-weight:700;">Tema</span><span style="font-size:13px; color:var(--primary); font-weight:700;">{{ themeLabel }}</span></div>
+            </div>
+
+            <div style="font-size:11.5px; font-weight:800; color:var(--faint); letter-spacing:.5px; margin:0 4px 8px;">SEGURIDAD</div>
+            <div style="background:var(--surface); border:1px solid var(--border); border-radius:18px; overflow:hidden; box-shadow:var(--shadow); margin-bottom:18px;">
+              <div style="display:flex; align-items:center; gap:12px; padding:14px 16px; border-bottom:1px solid var(--line);"><span style="width:36px; height:36px; border-radius:10px; background:var(--pending-soft); display:flex; align-items:center; justify-content:center;"><svg width="19" height="19" viewBox="0 0 24 24" fill="none"><rect x="5" y="10" width="14" height="10" rx="2.5" stroke="var(--pending)" stroke-width="1.9"/><path d="M8 10V7a4 4 0 0 1 8 0v3" stroke="var(--pending)" stroke-width="1.9"/></svg></span><span style="flex:1; font-size:14px; font-weight:700;">Bloqueo con PIN</span><span style="width:44px; height:26px; border-radius:999px; background:var(--primary); position:relative;"><span style="position:absolute; top:3px; right:3px; width:20px; height:20px; border-radius:50%; background:#fff;"></span></span></div>
+              <div style="display:flex; align-items:center; gap:12px; padding:14px 16px;"><span style="width:36px; height:36px; border-radius:10px; background:var(--info-soft); display:flex; align-items:center; justify-content:center;"><svg width="19" height="19" viewBox="0 0 24 24" fill="none"><path d="M5 11a10 10 0 0 1 14 0M12 4c1.5 2 1.5 14 0 16M12 8v8" stroke="var(--info)" stroke-width="1.9" stroke-linecap="round"/></svg></span><span style="flex:1; font-size:14px; font-weight:700;">Huella / Face ID</span><span style="width:44px; height:26px; border-radius:999px; background:var(--surface2); position:relative;"><span style="position:absolute; top:3px; left:3px; width:20px; height:20px; border-radius:50%; background:#fff; box-shadow:0 1px 3px rgba(0,0,0,.2);"></span></span></div>
+            </div>
+
+            <div style="font-size:11.5px; font-weight:800; color:var(--faint); letter-spacing:.5px; margin:0 4px 8px;">DATOS</div>
+            <div style="background:var(--surface); border:1px solid var(--border); border-radius:18px; overflow:hidden; box-shadow:var(--shadow); margin-bottom:18px;">
+              <div style="display:flex; align-items:center; gap:12px; padding:14px 16px; border-bottom:1px solid var(--line);"><span style="width:36px; height:36px; border-radius:10px; background:var(--income-soft); display:flex; align-items:center; justify-content:center;"><svg width="19" height="19" viewBox="0 0 24 24" fill="none"><path d="M12 3v11m0 0-4-4m4 4 4-4M5 17v2a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-2" stroke="var(--income)" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/></svg></span><span style="flex:1; font-size:14px; font-weight:700;">Exportar a CSV / Excel</span><svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="m9 5 7 7-7 7" stroke="var(--faint)" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+              <div style="display:flex; align-items:center; gap:12px; padding:14px 16px;"><span style="width:36px; height:36px; border-radius:10px; background:var(--primary-soft); display:flex; align-items:center; justify-content:center;"><svg width="19" height="19" viewBox="0 0 24 24" fill="none"><path d="M4 12a8 8 0 0 1 13-6l3 2M20 12a8 8 0 0 1-13 6l-3-2" stroke="var(--primary)" stroke-width="1.9" stroke-linecap="round"/></svg></span><span style="flex:1; font-size:14px; font-weight:700;">Respaldo y restaurar</span><span style="font-size:11.5px; color:var(--muted);">Opcional</span></div>
+            </div>
+
+            <div style="display:flex; align-items:center; gap:9px; padding:13px 15px; background:var(--income-soft); border-radius:15px;"><svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M12 3l7 3v5c0 4.5-3 7.6-7 9-4-1.4-7-4.5-7-9V6l7-3Z" stroke="var(--income)" stroke-width="1.8" stroke-linejoin="round"/><path d="M9 12l2 2 4-4" stroke="var(--income)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg><span style="font-size:12px; color:var(--income); font-weight:700; line-height:1.4;">Tus datos viven solo en este teléfono. La nube es opcional.</span></div>
+          </div>
+        </sc-if>
+
+        <!-- ============ ESTADOS VACÍOS ============ -->
+        <sc-if value="{{ isVacios }}" hint-placeholder-val="{{ false }}">
+          <div data-screen-label="Estados vacíos" style="padding:52px 16px 128px;">
+            <div style="display:flex; align-items:center; gap:12px; margin-bottom:6px;">
+              <button onClick="{{ goMas }}" style="width:40px; height:40px; border-radius:13px; border:1px solid var(--border); background:var(--surface); display:flex; align-items:center; justify-content:center; cursor:pointer; box-shadow:var(--shadow);"><svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M15 5l-7 7 7 7" stroke="var(--text)" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+              <span style="font-size:19px; font-weight:800;">Estados vacíos</span>
+            </div>
+            <div style="font-size:12px; color:var(--muted); margin:0 2px 14px;">Cómo se ve cada módulo cuando aún no hay datos.</div>
+
+            <div style="background:var(--surface); border:1px solid var(--border); border-radius:20px; padding:26px 20px; text-align:center; box-shadow:var(--shadow); margin-bottom:13px;">
+              <div style="width:88px; height:88px; margin:0 auto 14px; border-radius:24px; background:var(--primary-soft); display:flex; align-items:center; justify-content:center;"><svg width="42" height="42" viewBox="0 0 24 24" fill="none"><rect x="3" y="6" width="18" height="13" rx="3" stroke="var(--primary)" stroke-width="1.8"/><path d="M3 10h18M8 15h3" stroke="var(--primary)" stroke-width="1.8" stroke-linecap="round"/><circle cx="18" cy="6" r="4" fill="var(--primary)"/><path d="M18 4.4v3.2M16.4 6h3.2" stroke="#fff" stroke-width="1.4" stroke-linecap="round"/></svg></div>
+              <div style="font-size:16px; font-weight:800;">Aún no anotas nada</div>
+              <div style="font-size:12.5px; color:var(--muted); margin-top:5px; line-height:1.5;">Registra tu primer gasto o ingreso. Toma menos de 10 segundos.</div>
+              <button onClick="{{ openReg }}" style="margin-top:14px; border:none; background:var(--primary); color:var(--on-primary); font-family:inherit; font-size:13.5px; font-weight:700; padding:11px 22px; border-radius:13px; cursor:pointer;">＋ Registrar movimiento</button>
+            </div>
+
+            <div style="background:var(--surface); border:1px solid var(--border); border-radius:20px; padding:26px 20px; text-align:center; box-shadow:var(--shadow); margin-bottom:13px;">
+              <div style="width:88px; height:88px; margin:0 auto 14px; border-radius:24px; background:var(--pending-soft); display:flex; align-items:center; justify-content:center;"><svg width="42" height="42" viewBox="0 0 24 24" fill="none"><path d="M4 8h11l-3-3M20 16H9l3 3" stroke="var(--pending)" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+              <div style="font-size:16px; font-weight:800;">Sin préstamos por ahora</div>
+              <div style="font-size:12.5px; color:var(--muted); margin-top:5px; line-height:1.5;">Anota a quién le prestaste o quién te prestó, y no olvides quién te debe.</div>
+              <button onClick="{{ goPrestamos }}" style="margin-top:14px; border:1px solid var(--border); background:var(--surface); color:var(--text); font-family:inherit; font-size:13.5px; font-weight:700; padding:11px 22px; border-radius:13px; cursor:pointer;">Agregar préstamo</button>
+            </div>
+
+            <div style="background:var(--surface); border:1px solid var(--border); border-radius:20px; padding:26px 20px; text-align:center; box-shadow:var(--shadow);">
+              <div style="width:88px; height:88px; margin:0 auto 14px; border-radius:24px; background:var(--income-soft); display:flex; align-items:center; justify-content:center;"><svg width="42" height="42" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="8" r="3" stroke="var(--income)" stroke-width="1.9"/><path d="M6 20c0-3 2.7-5 6-5s6 2 6 5" stroke="var(--income)" stroke-width="1.9" stroke-linecap="round"/><circle cx="4.5" cy="9.5" r="1.6" fill="var(--income)"/><circle cx="19.5" cy="9.5" r="1.6" fill="var(--income)"/></svg></div>
+              <div style="font-size:16px; font-weight:800;">Todavía no tienes panderos</div>
+              <div style="font-size:12.5px; color:var(--muted); margin-top:5px; line-height:1.5;">Crea o únete a un pandero y lleva el control de tu turno y tus aportes.</div>
+              <button onClick="{{ goPanderos }}" style="margin-top:14px; border:1px solid var(--border); background:var(--surface); color:var(--text); font-family:inherit; font-size:13.5px; font-weight:700; padding:11px 22px; border-radius:13px; cursor:pointer;">Crear pandero</button>
+            </div>
+          </div>
+        </sc-if>
+        <!-- ============ MINI GUÍA DE ESTILO ============ -->
+        <sc-if value="{{ isGuia }}" hint-placeholder-val="{{ false }}">
+          <div data-screen-label="Guía de estilo" style="padding:52px 18px 40px;">
+            <div style="font-size:24px; font-weight:800; letter-spacing:-.4px;">Guía de estilo</div>
+            <div style="font-size:12.5px; color:var(--muted); margin:4px 0 20px;">Bolsillo · sistema visual</div>
+
+            <div style="font-size:12px; font-weight:800; color:var(--faint); letter-spacing:.5px; margin-bottom:10px;">MARCA</div>
+            <div style="display:flex; gap:10px; margin-bottom:22px;">
+              <div style="flex:1; border-radius:16px; overflow:hidden; border:1px solid var(--border); box-shadow:var(--shadow);"><div style="height:60px; background:var(--primary);"></div><div style="padding:9px 11px; background:var(--surface);"><div style="font-size:12px; font-weight:700;">Primario</div><div style="font-size:10.5px; color:var(--muted); font-variant-numeric:tabular-nums;">#6D5AE6</div></div></div>
+              <div style="flex:1; border-radius:16px; overflow:hidden; border:1px solid var(--border); box-shadow:var(--shadow);"><div style="height:60px; background:var(--primary-ink);"></div><div style="padding:9px 11px; background:var(--surface);"><div style="font-size:12px; font-weight:700;">Primario oscuro</div><div style="font-size:10.5px; color:var(--muted); font-variant-numeric:tabular-nums;">#4A3FB8</div></div></div>
+            </div>
+
+            <div style="font-size:12px; font-weight:800; color:var(--faint); letter-spacing:.5px; margin-bottom:10px;">SEMÁNTICOS</div>
+            <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:22px;">
+              <div style="display:flex; align-items:center; gap:10px; padding:12px; background:var(--surface); border:1px solid var(--border); border-radius:14px; box-shadow:var(--shadow);"><span style="width:30px; height:30px; border-radius:9px; background:var(--income);"></span><div><div style="font-size:12.5px; font-weight:700;">Ingreso</div><div style="font-size:10.5px; color:var(--muted);">Verde</div></div></div>
+              <div style="display:flex; align-items:center; gap:10px; padding:12px; background:var(--surface); border:1px solid var(--border); border-radius:14px; box-shadow:var(--shadow);"><span style="width:30px; height:30px; border-radius:9px; background:var(--expense);"></span><div><div style="font-size:12.5px; font-weight:700;">Gasto</div><div style="font-size:10.5px; color:var(--muted);">Coral</div></div></div>
+              <div style="display:flex; align-items:center; gap:10px; padding:12px; background:var(--surface); border:1px solid var(--border); border-radius:14px; box-shadow:var(--shadow);"><span style="width:30px; height:30px; border-radius:9px; background:var(--pending);"></span><div><div style="font-size:12.5px; font-weight:700;">Pendiente</div><div style="font-size:10.5px; color:var(--muted);">Ámbar</div></div></div>
+              <div style="display:flex; align-items:center; gap:10px; padding:12px; background:var(--surface); border:1px solid var(--border); border-radius:14px; box-shadow:var(--shadow);"><span style="width:30px; height:30px; border-radius:9px; background:var(--info);"></span><div><div style="font-size:12.5px; font-weight:700;">Info</div><div style="font-size:10.5px; color:var(--muted);">Azul</div></div></div>
+            </div>
+
+            <div style="font-size:12px; font-weight:800; color:var(--faint); letter-spacing:.5px; margin-bottom:10px;">NEUTROS</div>
+            <div style="display:flex; gap:0; border-radius:14px; overflow:hidden; border:1px solid var(--border); margin-bottom:22px;">
+              <div style="flex:1; height:48px; background:var(--text);"></div>
+              <div style="flex:1; height:48px; background:var(--muted);"></div>
+              <div style="flex:1; height:48px; background:var(--faint);"></div>
+              <div style="flex:1; height:48px; background:var(--surface2);"></div>
+              <div style="flex:1; height:48px; background:var(--surface); border-left:1px solid var(--border);"></div>
+            </div>
+
+            <div style="font-size:12px; font-weight:800; color:var(--faint); letter-spacing:.5px; margin-bottom:10px;">TIPOGRAFÍA · Plus Jakarta Sans</div>
+            <div style="background:var(--surface); border:1px solid var(--border); border-radius:16px; padding:16px; box-shadow:var(--shadow); margin-bottom:22px;">
+              <div style="font-size:38px; font-weight:800; letter-spacing:-1px; font-variant-numeric:tabular-nums;">S/ 3,175.50</div>
+              <div style="font-size:11px; color:var(--muted); margin-bottom:12px;">Saldo · 38px / 800 · números tabulares</div>
+              <div style="font-size:24px; font-weight:800; letter-spacing:-.4px;">Título de sección</div>
+              <div style="font-size:11px; color:var(--muted); margin-bottom:12px;">24px / 800</div>
+              <div style="font-size:14px; font-weight:600;">Texto de cuerpo y descripciones</div>
+              <div style="font-size:11px; color:var(--muted); margin-bottom:12px;">14px / 600</div>
+              <div style="font-size:11px; font-weight:700; color:var(--muted);">ETIQUETA PEQUEÑA</div>
+              <div style="font-size:11px; color:var(--muted);">11px / 700</div>
+            </div>
+
+            <div style="font-size:12px; font-weight:800; color:var(--faint); letter-spacing:.5px; margin-bottom:10px;">ICONOGRAFÍA · categorías y cuentas</div>
+            <div style="display:flex; gap:12px; flex-wrap:wrap;">
+              <span style="width:46px; height:46px; border-radius:13px; background:var(--expense-soft); display:flex; align-items:center; justify-content:center;"><svg width="22" height="22" viewBox="0 0 24 24" fill="none"><path d="M7 3v7a2 2 0 0 0 2 2v9M17 3c-1.5 0-2.5 2-2.5 5s1 4 2.5 4v9" stroke="var(--expense)" stroke-width="1.9" stroke-linecap="round"/></svg></span>
+              <span style="width:46px; height:46px; border-radius:13px; background:var(--info-soft); display:flex; align-items:center; justify-content:center;"><svg width="22" height="22" viewBox="0 0 24 24" fill="none"><rect x="3" y="6" width="18" height="10" rx="2.5" stroke="var(--info)" stroke-width="1.9"/><path d="M3 10h18" stroke="var(--info)" stroke-width="1.9"/><circle cx="7.5" cy="19" r="1.6" stroke="var(--info)" stroke-width="1.9"/><circle cx="16.5" cy="19" r="1.6" stroke="var(--info)" stroke-width="1.9"/></svg></span>
+              <span style="width:46px; height:46px; border-radius:13px; background:var(--income-soft); display:flex; align-items:center; justify-content:center;"><svg width="22" height="22" viewBox="0 0 24 24" fill="none"><path d="M8 8h8v10a2 2 0 0 1-2 2h-4a2 2 0 0 1-2-2V8ZM10 8V6a2 2 0 0 1 4 0v2" stroke="var(--income)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+              <span style="width:46px; height:46px; border-radius:13px; background:var(--pending-soft); display:flex; align-items:center; justify-content:center;"><svg width="22" height="22" viewBox="0 0 24 24" fill="none"><rect x="6" y="3" width="12" height="18" rx="3" stroke="var(--pending)" stroke-width="1.9"/></svg></span>
+              <span style="width:46px; height:46px; border-radius:13px; background:#EBE3F7; display:flex; align-items:center; justify-content:center;"><svg width="22" height="22" viewBox="0 0 24 24" fill="none"><rect x="4" y="3" width="16" height="18" rx="4" fill="#7A2D8F"/><path d="M12 8v8M9 11h6" stroke="#fff" stroke-width="2" stroke-linecap="round"/></svg></span>
+              <span style="width:46px; height:46px; border-radius:13px; background:#D9F3F1; display:flex; align-items:center; justify-content:center;"><svg width="22" height="22" viewBox="0 0 24 24" fill="none"><rect x="4" y="3" width="16" height="18" rx="4" fill="#00A9A0"/><path d="M8 12l3 3 5-6" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+              <span style="width:46px; height:46px; border-radius:13px; background:var(--info-soft); display:flex; align-items:center; justify-content:center;"><svg width="22" height="22" viewBox="0 0 24 24" fill="none"><path d="M4 10l8-5 8 5M5 10v8m14-8v8M9 10v8m6-8v8M3 20h18" stroke="var(--info)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+              <span style="width:46px; height:46px; border-radius:13px; background:var(--income-soft); display:flex; align-items:center; justify-content:center;"><svg width="22" height="22" viewBox="0 0 24 24" fill="none"><rect x="2.5" y="6" width="19" height="12" rx="2.5" stroke="var(--income)" stroke-width="1.9"/><circle cx="12" cy="12" r="2.6" stroke="var(--income)" stroke-width="1.9"/></svg></span>
+            </div>
+            <button onClick="{{ goHome }}" style="width:100%; margin-top:24px; border:none; background:var(--primary); color:var(--on-primary); font-family:inherit; font-size:15px; font-weight:700; padding:14px; border-radius:15px; cursor:pointer;">Volver al inicio</button>
+          </div>
+        </sc-if>
+        <!--BX-SCREENS-->
+
+      </div>
+
+      <!-- ===== BOTTOM NAV + FAB ===== -->
+      <sc-if value="{{ showNav }}" hint-placeholder-val="{{ true }}">
+        <div style="position:absolute; left:0; right:0; bottom:0; z-index:30;">
+          <div style="position:absolute; left:50%; bottom:34px; transform:translateX(-50%); z-index:32;">
+            <button onClick="{{ openReg }}" style="width:62px; height:62px; border-radius:22px; border:none; background:var(--primary); box-shadow:0 10px 24px rgba(109,90,230,.45); display:flex; align-items:center; justify-content:center; cursor:pointer;" style-active="transform:scale(.94);">
+              <svg width="28" height="28" viewBox="0 0 24 24" fill="none"><path d="M12 5v14M5 12h14" stroke="var(--on-primary)" stroke-width="2.8" stroke-linecap="round"/></svg>
+            </button>
+          </div>
+          <div style="height:78px; background:var(--surface); border-top:1px solid var(--border); display:flex; align-items:stretch; padding:0 8px 16px; box-shadow:0 -6px 20px rgba(20,21,26,.05);">
+            <button onClick="{{ goHome }}" style="{{ navHomeStyle }}">
+              <svg width="23" height="23" viewBox="0 0 24 24" fill="none"><path d="M4 11.5 12 4l8 7.5M6 10v9h12v-9" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+              <span style="font-size:10px; font-weight:700;">Inicio</span>
+            </button>
+            <button onClick="{{ goHistorial }}" style="{{ navHistStyle }}">
+              <svg width="23" height="23" viewBox="0 0 24 24" fill="none"><path d="M5 5h14M5 10h14M5 15h9" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><circle cx="18" cy="16" r="4" stroke="currentColor" stroke-width="2"/></svg>
+              <span style="font-size:10px; font-weight:700;">Movimientos</span>
+            </button>
+            <div style="width:62px; flex:0 0 auto;"></div>
+            <button onClick="{{ goPrestamos }}" style="{{ navPrestStyle }}">
+              <svg width="23" height="23" viewBox="0 0 24 24" fill="none"><path d="M4 8h11l-3-3M20 16H9l3 3" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+              <span style="font-size:10px; font-weight:700;">Préstamos</span>
+            </button>
+            <button onClick="{{ goMas }}" style="{{ navMasStyle }}">
+              <svg width="23" height="23" viewBox="0 0 24 24" fill="none"><circle cx="5.5" cy="6" r="1.7" fill="currentColor"/><circle cx="12" cy="6" r="1.7" fill="currentColor"/><circle cx="18.5" cy="6" r="1.7" fill="currentColor"/><circle cx="5.5" cy="13" r="1.7" fill="currentColor"/><circle cx="12" cy="13" r="1.7" fill="currentColor"/><circle cx="18.5" cy="13" r="1.7" fill="currentColor"/></svg>
+              <span style="font-size:10px; font-weight:700;">Más</span>
+            </button>
+          </div>
+        </div>
+      </sc-if>
+
+      <!-- ===== QUICK-ADD SHEET ===== -->
+      <sc-if value="{{ sheetReg }}" hint-placeholder-val="{{ false }}">
+        <div style="position:absolute; inset:0; z-index:50;">
+          <div onClick="{{ closeSheet }}" style="position:absolute; inset:0; background:rgba(10,11,16,.5);"></div>
+          <div style="position:absolute; left:0; right:0; bottom:0; background:var(--surface); border-radius:28px 28px 0 0; padding:12px 20px 26px; box-shadow:0 -14px 44px rgba(0,0,0,.3);">
+            <div style="width:40px; height:5px; border-radius:3px; background:var(--border); margin:0 auto 14px;"></div>
+            <!-- type toggle -->
+            <div style="display:flex; background:var(--surface2); border-radius:14px; padding:4px; margin-bottom:14px;">
+              <button onClick="{{ setGasto }}" style="{{ regGastoStyle }}">Gasto</button>
+              <button onClick="{{ setIngreso }}" style="{{ regIngresoStyle }}">Ingreso</button>
+            </div>
+            <!-- amount display -->
+            <div style="text-align:center; margin-bottom:6px;">
+              <div style="font-size:12px; color:var(--muted); font-weight:600;">Monto</div>
+              <div style="font-size:46px; font-weight:800; letter-spacing:-1.5px; margin-top:2px; color:{{ regAmountColor }}; font-variant-numeric:tabular-nums;">S/ {{ regAmount }}</div>
+            </div>
+            <!-- category + account chips -->
+            <div style="display:flex; gap:9px; margin-bottom:14px;">
+              <div style="flex:1; display:flex; align-items:center; gap:9px; padding:11px 13px; background:var(--surface2); border-radius:14px;">
+                <span style="width:30px; height:30px; border-radius:9px; background:var(--expense-soft); display:flex; align-items:center; justify-content:center;"><svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M7 3v7a2 2 0 0 0 2 2v9M17 3c-1.5 0-2.5 2-2.5 5s1 4 2.5 4v9" stroke="var(--expense)" stroke-width="1.9" stroke-linecap="round"/></svg></span>
+                <div style="min-width:0;"><div style="font-size:9.5px; color:var(--muted); font-weight:600;">Categoría</div><div style="font-size:13px; font-weight:700;">{{ regCat }}</div></div>
+              </div>
+              <div style="flex:1; display:flex; align-items:center; gap:9px; padding:11px 13px; background:var(--surface2); border-radius:14px;">
+                <span style="width:30px; height:30px; border-radius:9px; background:var(--income-soft); display:flex; align-items:center; justify-content:center;"><svg width="16" height="16" viewBox="0 0 24 24" fill="none"><rect x="3" y="6" width="18" height="12" rx="3" stroke="var(--income)" stroke-width="1.9"/><path d="M3 10h18" stroke="var(--income)" stroke-width="1.9"/></svg></span>
+                <div style="min-width:0;"><div style="font-size:9.5px; color:var(--muted); font-weight:600;">Cuenta</div><div style="font-size:13px; font-weight:700;">{{ regAccount }}</div></div>
+              </div>
+            </div>
+            <!-- extras row -->
+            <div style="display:flex; gap:8px; margin-bottom:12px;">
+              <span style="flex:1; display:flex; align-items:center; justify-content:center; gap:6px; padding:9px; background:var(--surface2); border-radius:12px; font-size:11.5px; font-weight:700; color:var(--muted);"><svg width="14" height="14" viewBox="0 0 24 24" fill="none"><rect x="3" y="5" width="18" height="16" rx="2.5" stroke="currentColor" stroke-width="1.9"/><path d="M3 9h18M8 3v4M16 3v4" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"/></svg>Hoy</span>
+              <span style="flex:1; display:flex; align-items:center; justify-content:center; gap:6px; padding:9px; background:var(--surface2); border-radius:12px; font-size:11.5px; font-weight:700; color:var(--muted);"><svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M12 5v14M5 12h14" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>Nota</span>
+              <span style="flex:1; display:flex; align-items:center; justify-content:center; gap:6px; padding:9px; background:var(--surface2); border-radius:12px; font-size:11.5px; font-weight:700; color:var(--muted);"><svg width="14" height="14" viewBox="0 0 24 24" fill="none"><rect x="3" y="6" width="18" height="14" rx="2.5" stroke="currentColor" stroke-width="1.9"/><circle cx="12" cy="13" r="3.2" stroke="currentColor" stroke-width="1.9"/><path d="M8 6l1.5-2h5L16 6" stroke="currentColor" stroke-width="1.9" stroke-linejoin="round"/></svg>Boleta</span>
+            </div>
+            <!-- numpad -->
+            <div style="display:grid; grid-template-columns:repeat(3,1fr); gap:8px;">
+              <sc-for list="{{ numKeys }}" as="k" hint-placeholder-count="12">
+                <button onClick="{{ k.onClick }}" style="padding:15px 0; border:none; background:var(--surface2); border-radius:14px; font-family:inherit; font-size:22px; font-weight:700; color:var(--text); cursor:pointer;" style-active="background:var(--border);">{{ k.label }}</button>
+              </sc-for>
+            </div>
+            <button onClick="{{ closeSheet }}" style="width:100%; margin-top:12px; border:none; background:var(--primary); color:var(--on-primary); font-family:inherit; font-size:16px; font-weight:700; padding:16px; border-radius:16px; cursor:pointer;" style-active="transform:scale(.99);">Guardar movimiento</button>
+          </div>
+        </div>
+      </sc-if>
+
+    </div>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+class Component extends DCLogic {
+  state = {
+    screen: 'dashboard',
+    theme: 'light',
+    sheet: null,
+    history: [],
+    reg: { amount: '', type: 'gasto', cat: 'Comida', account: 'Efectivo' },
+    prestamoTab: 'medeben',
+  };
+
+  go(s) {
+    this.setState(st => ({ screen: s, history: [...st.history, st.screen], sheet: null }));
+    this.scrollTop();
+  }
+  back() {
+    this.setState(st => {
+      const h = [...st.history];
+      const prev = h.pop() || 'dashboard';
+      return { screen: prev, history: h, sheet: null };
+    });
+    this.scrollTop();
+  }
+  scrollTop() {
+    requestAnimationFrame(() => { const el = document.getElementById('bx-scroll'); if (el) el.scrollTop = 0; });
+  }
+  toggleTheme() { this.setState(s => ({ theme: s.theme === 'dark' ? 'light' : 'dark' })); }
+  openReg() { this.setState({ sheet: 'reg', reg: { amount: '', type: 'gasto', cat: 'Comida', account: 'Efectivo' } }); }
+  closeSheet() { this.setState({ sheet: null }); }
+  setType(t) { this.setState(st => ({ reg: { ...st.reg, type: t } })); }
+  press(k) {
+    this.setState(st => {
+      let a = st.reg.amount;
+      if (k === 'del') a = a.slice(0, -1);
+      else if (k === '.') { if (!a.includes('.')) a = (a || '0') + '.'; }
+      else { if (a.includes('.') && a.split('.')[1].length >= 2) return {}; if (a === '0') a = k; else a = a + k; }
+      return { reg: { ...st.reg, amount: a } };
+    });
+  }
+
+  renderVals() {
+    const s = this.state.screen;
+    const t = this.state.theme;
+    const G = (scr) => () => this.go(scr);
+    const navBase = 'flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:3px; border:none; background:transparent; cursor:pointer; font-family:inherit; padding-top:4px;';
+    const navFor = (active) => navBase + (active ? 'color:var(--primary);' : 'color:var(--faint);');
+    const segOn = 'flex:1; border:none; border-radius:11px; padding:10px; font-family:inherit; font-size:14px; font-weight:700; cursor:pointer; background:var(--surface); color:var(--text); box-shadow:var(--shadow);';
+    const segOff = 'flex:1; border:none; border-radius:11px; padding:10px; font-family:inherit; font-size:14px; font-weight:700; cursor:pointer; background:transparent; color:var(--muted);';
+
+    const jItems = [
+      ['onboarding', 'Onboarding'], ['dashboard', 'Inicio / Dashboard'], ['registro', 'Registro rápido'],
+      ['movimiento', 'Detalle movimiento'], ['historial', 'Historial + filtros'], ['cuentas', 'Cuentas'],
+      ['cuentaDet', 'Detalle de cuenta'], ['prestamos', 'Préstamos'], ['prestamoDet', 'Detalle préstamo'],
+      ['panderos', 'Panderos'], ['panderoDet', 'Pandero + turnos'], ['metas', 'Metas de ahorro'],
+      ['metaDet', 'Detalle de meta'], ['presupuestos', 'Presupuestos'], ['reportes', 'Reportes'],
+      ['recurrentes', 'Gastos recurrentes'], ['ajustes', 'Ajustes'], ['mas', 'Menú "Más"'], ['vacios', 'Estados vacíos'],
+      ['guia', 'Mini guía de estilo'],
+    ];
+    const jStyle = (active) => 'text-align:left; padding:8px 11px; border-radius:10px; border:1px solid ' + (active ? 'var(--primary)' : 'var(--border)') + '; background:' + (active ? 'var(--primary-soft)' : 'var(--surface)') + '; color:' + (active ? 'var(--primary-ink)' : 'var(--text)') + '; font-family:inherit; font-size:12px; font-weight:' + (active ? '700' : '600') + '; cursor:pointer;';
+    const jumper = jItems.map(([k, label]) => ({
+      label, style: jStyle(s === k),
+      onClick: k === 'registro' ? () => this.openReg() : () => this.go(k),
+    }));
+
+    const numKeys = ['1', '2', '3', '4', '5', '6', '7', '8', '9', '.', '0', 'del'].map(k => ({
+      label: k === 'del' ? '⌫' : k, onClick: () => this.press(k),
+    }));
+
+    const isGasto = this.state.reg.type === 'gasto';
+
+    return {
+      theme: t,
+      themeLabel: t === 'dark' ? 'Cambiar a claro' : 'Cambiar a oscuro',
+      themeIcon: t === 'dark' ? '☀️' : '🌙',
+      jumper,
+      // screen flags
+      isOnboarding: s === 'onboarding',
+      isDashboard: s === 'dashboard',
+      isHistorial: s === 'historial',
+      isMovimiento: s === 'movimiento',
+      isCuentas: s === 'cuentas',
+      isCuentaDet: s === 'cuentaDet',
+      isPrestamos: s === 'prestamos',
+      isPrestamoDet: s === 'prestamoDet',
+      isPanderos: s === 'panderos',
+      isPanderoDet: s === 'panderoDet',
+      isMetas: s === 'metas',
+      isMetaDet: s === 'metaDet',
+      isPresupuestos: s === 'presupuestos',
+      isReportes: s === 'reportes',
+      isRecurrentes: s === 'recurrentes',
+      isAjustes: s === 'ajustes',
+      isMas: s === 'mas',
+      isVacios: s === 'vacios',
+      isGuia: s === 'guia',
+      showNav: s !== 'onboarding' && s !== 'guia',
+      // nav handlers
+      goHome: G('dashboard'), goHistorial: G('historial'), goMovimiento: G('movimiento'),
+      goCuentas: G('cuentas'), goCuentaDet: G('cuentaDet'), goPrestamos: G('prestamos'),
+      goPrestamoDet: G('prestamoDet'), goPanderos: G('panderos'), goPanderoDet: G('panderoDet'),
+      goMetas: G('metas'), goMetaDet: G('metaDet'), goPresupuestos: G('presupuestos'),
+      goReportes: G('reportes'), goRecurrentes: G('recurrentes'), goAjustes: G('ajustes'),
+      goMas: G('mas'), goVacios: G('vacios'),
+      back: () => this.back(),
+      toggleTheme: () => this.toggleTheme(),
+      openReg: () => this.openReg(),
+      closeSheet: () => this.closeSheet(),
+      // nav active styles
+      navHomeStyle: navFor(s === 'dashboard'),
+      navHistStyle: navFor(s === 'historial' || s === 'movimiento'),
+      navPrestStyle: navFor(s === 'prestamos' || s === 'prestamoDet'),
+      navMasStyle: navFor(s === 'mas'),
+      // reg sheet
+      sheetReg: this.state.sheet === 'reg',
+      regAmount: this.state.reg.amount || '0',
+      regAmountColor: isGasto ? 'var(--expense)' : 'var(--income)',
+      regCat: this.state.reg.cat,
+      regAccount: this.state.reg.account,
+      regGastoStyle: isGasto ? segOn : segOff,
+      regIngresoStyle: !isGasto ? segOn : segOff,
+      setGasto: () => this.setType('gasto'),
+      setIngreso: () => this.setType('ingreso'),
+      numKeys,
+      // prestamo tab
+      prestamoMeDeben: this.state.prestamoTab === 'medeben',
+      prestamoDebo: this.state.prestamoTab === 'debo',
+      tabMeDebenStyle: this.state.prestamoTab === 'medeben' ? segOn : segOff,
+      tabDeboStyle: this.state.prestamoTab === 'debo' ? segOn : segOff,
+      setMeDeben: () => this.setState({ prestamoTab: 'medeben' }),
+      setDebo: () => this.setState({ prestamoTab: 'debo' }),
+    };
+  }
+}
+</script>
+</body>
+</html>

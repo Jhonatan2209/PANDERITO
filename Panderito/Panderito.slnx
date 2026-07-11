@@ -1,0 +1,9 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/Panderito.App/Panderito.App.csproj" />
+    <Project Path="src/Panderito.Core/Panderito.Core.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/Panderito.Tests/Panderito.Tests.csproj" />
+  </Folder>
+</Solution>

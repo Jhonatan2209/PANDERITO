@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:vm="clr-namespace:Panderito.Core.ViewModels;assembly=Panderito.Core"
+             x:Class="Panderito.App.Views.MetasPage"
+             x:DataType="vm:MetasViewModel"
+             Title="Metas de ahorro"
+             BackgroundColor="{AppThemeBinding Light={StaticResource Fondo}, Dark={StaticResource FondoDark}}">
+
+    <Grid RowDefinitions="*,Auto" Padding="16">
+        <ScrollView Grid.Row="0">
+            <VerticalStackLayout Spacing="8">
+                <Label Text="Aún no tienes metas 🎯&#10;Crea una y empieza a ahorrar."
+                       Style="{StaticResource EtiquetaVacio}"
+                       IsVisible="{Binding HayMetas, Converter={StaticResource InvertedBoolConverter}}" />
+                <VerticalStackLayout BindableLayout.ItemsSource="{Binding Metas}" Spacing="8">
+                    <BindableLayout.ItemTemplate>
+                        <DataTemplate x:DataType="vm:MetaItem">
+                            <Border Style="{StaticResource Tarjeta}" Padding="14">
+                                <Border.GestureRecognizers>
+                                    <TapGestureRecognizer
+                                        Command="{Binding EditarCommand, Source={RelativeSource AncestorType={x:Type vm:MetasViewModel}}}"
+                                        CommandParameter="{Binding .}" />
+                                </Border.GestureRecognizers>
+                                <VerticalStackLayout Spacing="8">
+                                    <Grid ColumnDefinitions="*,Auto">
+                                        <HorizontalStackLayout Grid.Column="0" Spacing="8">
+                                            <Label Text="🎯" FontSize="18" VerticalOptions="Center" />
+                                            <Label Text="{Binding Meta.Nombre}" FontAttributes="Bold" FontSize="15" VerticalOptions="Center"
+                                                   TextColor="{AppThemeBinding Light={StaticResource Texto}, Dark={StaticResource TextoDark}}" />
+                                        </HorizontalStackLayout>
+                                        <Label Grid.Column="1" Text="{Binding PorcentajeTexto}" FontAttributes="Bold"
+                                               TextColor="{AppThemeBinding Light={StaticResource PrimaryInk}, Dark={StaticResource PrimaryInkDark}}" />
+                                    </Grid>
+                                    <ProgressBar Progress="{Binding Avance}"
+                                                 ProgressColor="{AppThemeBinding Light={StaticResource Primary}, Dark={StaticResource PrimaryDark}}" />
+                                    <Grid ColumnDefinitions="*,Auto">
+                                        <Label Grid.Column="0" Text="{Binding ProgresoTexto}" Style="{StaticResource TextoSecundario}" FontSize="12" />
+                                        <Border Grid.Column="1" Style="{StaticResource Chip}" IsVisible="{Binding Lograda}"
+                                                BackgroundColor="{AppThemeBinding Light={StaticResource IngresoSoft}, Dark={StaticResource IngresoSoftDark}}">
+                                            <Label Text="¡Lograda! 🎉" FontSize="11" FontAttributes="Bold"
+                                                   TextColor="{AppThemeBinding Light={StaticResource Ingreso}, Dark={StaticResource IngresoDark}}" />
+                                        </Border>
+                                    </Grid>
+                                </VerticalStackLayout>
+                            </Border>
+                        </DataTemplate>
+                    </BindableLayout.ItemTemplate>
+                </VerticalStackLayout>
+            </VerticalStackLayout>
+        </ScrollView>
+
+        <Button Grid.Row="1" Text="＋ Nueva meta" Style="{StaticResource BotonPrimario}"
+                Command="{Binding NuevaCommand}" Margin="0,12,0,0" />
+    </Grid>
+</ContentPage>

@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<svg width="512" height="512" viewBox="0 0 512 512" version="1.1" xmlns="http://www.w3.org/2000/svg">
+    <!-- Version monocromatica violeta: para fondos claros -->
+    <g transform="translate(28,28)" fill="#4A3FB8">
+        <circle cx="315.7" cy="140.3" r="12"/>
+        <circle cx="352"   cy="228"   r="12"/>
+        <circle cx="315.7" cy="315.7" r="12"/>
+        <circle cx="228"   cy="352"   r="12"/>
+        <circle cx="140.3" cy="315.7" r="12"/>
+        <circle cx="104"   cy="228"   r="12"/>
+        <circle cx="140.3" cy="140.3" r="12"/>
+        <circle cx="228" cy="104" r="14" fill="#F79009"/>
+        <circle cx="228" cy="228" r="80" fill="none" stroke="#4A3FB8" stroke-width="14"/>
+        <path d="M194 181 H234 A35 35 0 0 1 234 251 H213 V275 H194 Z M213 200 H231 A16 16 0 0 1 231 232 H213 Z"
+              fill-rule="evenodd"/>
+    </g>
+</svg>

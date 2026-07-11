@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:vm="clr-namespace:Panderito.Core.ViewModels;assembly=Panderito.Core"
+             x:Class="Panderito.App.Views.PanderosPage"
+             x:DataType="vm:PanderosViewModel"
+             Title="Panderos"
+             BackgroundColor="{AppThemeBinding Light={StaticResource Fondo}, Dark={StaticResource FondoDark}}">
+
+    <Grid RowDefinitions="*,Auto" Padding="16">
+        <ScrollView Grid.Row="0">
+            <VerticalStackLayout Spacing="8">
+                <Label Text="No tienes panderos activos 🎡&#10;Crea uno para llevar tus juntas."
+                       Style="{StaticResource EtiquetaVacio}"
+                       IsVisible="{Binding HayPanderos, Converter={StaticResource InvertedBoolConverter}}" />
+                <VerticalStackLayout BindableLayout.ItemsSource="{Binding Panderos}" Spacing="8">
+                    <BindableLayout.ItemTemplate>
+                        <DataTemplate x:DataType="vm:PanderoItem">
+                            <Border Style="{StaticResource Tarjeta}" Padding="14">
+                                <Border.GestureRecognizers>
+                                    <TapGestureRecognizer
+                                        Command="{Binding AbrirDetalleCommand, Source={RelativeSource AncestorType={x:Type vm:PanderosViewModel}}}"
+                                        CommandParameter="{Binding .}" />
+                                </Border.GestureRecognizers>
+                                <VerticalStackLayout Spacing="8">
+                                    <Grid ColumnDefinitions="*,Auto">
+                                        <Label Grid.Column="0" Text="{Binding Pandero.Nombre}" FontAttributes="Bold" FontSize="16"
+                                               TextColor="{AppThemeBinding Light={StaticResource Texto}, Dark={StaticResource TextoDark}}" />
+                                        <Label Grid.Column="1" Text="{Binding AvanceTexto}" FontAttributes="Bold"
+                                               TextColor="{AppThemeBinding Light={StaticResource PrimaryInk}, Dark={StaticResource PrimaryInkDark}}" />
+                                    </Grid>
+                                    <Label Text="{Binding CuotaTexto}" Style="{StaticResource TextoSecundario}" FontSize="13" />
+                                    <Label Text="{Binding MiTurnoTexto}" Style="{StaticResource TextoSecundario}" FontSize="13" />
+                                    <ProgressBar Progress="{Binding Avance}"
+                                                 ProgressColor="{AppThemeBinding Light={StaticResource Primary}, Dark={StaticResource PrimaryDark}}" />
+                                </VerticalStackLayout>
+                            </Border>
+                        </DataTemplate>
+                    </BindableLayout.ItemTemplate>
+                </VerticalStackLayout>
+            </VerticalStackLayout>
+        </ScrollView>
+
+        <Button Grid.Row="1" Text="＋ Nuevo pandero" Style="{StaticResource BotonPrimario}"
+                Command="{Binding NuevoCommand}" Margin="0,12,0,0" />
+    </Grid>
+</ContentPage>

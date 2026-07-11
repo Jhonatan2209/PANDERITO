@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:vm="clr-namespace:Panderito.Core.ViewModels;assembly=Panderito.Core"
+             xmlns:models="clr-namespace:Panderito.Core.Models;assembly=Panderito.Core"
+             x:Class="Panderito.App.Views.EdicionRecurrentePage"
+             x:DataType="vm:EdicionRecurrenteViewModel"
+             Title="Gasto recurrente"
+             BackgroundColor="{AppThemeBinding Light={StaticResource Fondo}, Dark={StaticResource FondoDark}}">
+
+    <ScrollView>
+        <VerticalStackLayout Padding="16,20" Spacing="14">
+
+            <Border Style="{StaticResource Tarjeta}" Padding="12,8">
+                <VerticalStackLayout Spacing="2">
+                    <Label Text="Nombre" Style="{StaticResource TextoSecundario}" FontSize="11" />
+                    <Entry Text="{Binding Nombre}" Placeholder="Ej. Internet, Luz, Netflix…" />
+                </VerticalStackLayout>
+            </Border>
+
+            <Border Style="{StaticResource Tarjeta}" Padding="12,8">
+                <VerticalStackLayout Spacing="2">
+                    <Label Text="Monto (S/)" Style="{StaticResource TextoSecundario}" FontSize="11" />
+                    <Entry Text="{Binding MontoTexto}" Placeholder="90.00" Keyboard="Numeric" />
+                </VerticalStackLayout>
+            </Border>
+
+            <Grid ColumnDefinitions="*,*" ColumnSpacing="12">
+                <Border Grid.Column="0" Style="{StaticResource Tarjeta}" Padding="12,8">
+                    <VerticalStackLayout Spacing="2">
+                        <Label Text="Categoría" Style="{StaticResource TextoSecundario}" FontSize="11" />
+                        <Picker ItemsSource="{Binding Categorias}"
+                                SelectedItem="{Binding CategoriaSeleccionada}"
+                                ItemDisplayBinding="{Binding Nombre, x:DataType=models:Categoria}" />
+                    </VerticalStackLayout>
+                </Border>
+                <Border Grid.Column="1" Style="{StaticResource Tarjeta}" Padding="12,8">
+                    <VerticalStackLayout Spacing="2">
+                        <Label Text="Cuenta" Style="{StaticResource TextoSecundario}" FontSize="11" />
+                        <Picker ItemsSource="{Binding Cuentas}"
+                                SelectedItem="{Binding CuentaSeleccionada}"
+                                ItemDisplayBinding="{Binding Nombre, x:DataType=models:Cuenta}" />
+                    </VerticalStackLayout>
+                </Border>
+            </Grid>
+
+            <Grid ColumnDefinitions="*,*" ColumnSpacing="12">
+                <Border Grid.Column="0" Style="{StaticResource Tarjeta}" Padding="12,8">
+                    <VerticalStackLayout Spacing="2">
+                        <Label Text="Frecuencia" Style="{StaticResource TextoSecundario}" FontSize="11" />
+                        <Picker ItemsSource="{Binding Frecuencias}" SelectedIndex="{Binding IndiceFrecuencia}" />
+                    </VerticalStackLayout>
+                </Border>
+                <Border Grid.Column="1" Style="{StaticResource Tarjeta}" Padding="12,8">
+                    <VerticalStackLayout Spacing="2">
+                        <Label Text="Próximo pago" Style="{StaticResource TextoSecundario}" FontSize="11" />
+                        <DatePicker Date="{Binding ProximaFecha}" Format="dd/MM/yyyy" />
+                    </VerticalStackLayout>
+                </Border>
+            </Grid>
+
+            <Button Text="Guardar" Style="{StaticResource BotonPrimario}" Command="{Binding GuardarCommand}" />
+
+            <Button Text="🗑 Eliminar recurrente"
+                    IsVisible="{Binding EsEdicion}"
+                    Command="{Binding EliminarCommand}"
+                    BackgroundColor="{AppThemeBinding Light={StaticResource GastoSoft}, Dark={StaticResource GastoSoftDark}}"
+                    TextColor="{AppThemeBinding Light={StaticResource Gasto}, Dark={StaticResource GastoDark}}"
+                    FontAttributes="Bold" CornerRadius="16" HeightRequest="52" />
+
+        </VerticalStackLayout>
+    </ScrollView>
+</ContentPage>

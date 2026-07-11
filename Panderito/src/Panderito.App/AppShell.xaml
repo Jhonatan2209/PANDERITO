@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<Shell
+    x:Class="Panderito.App.AppShell"
+    xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+    xmlns:views="clr-namespace:Panderito.App.Views"
+    Title="Panderito"
+    Shell.TabBarBackgroundColor="{AppThemeBinding Light={StaticResource Superficie}, Dark={StaticResource SuperficieDark}}"
+    Shell.TabBarTitleColor="{AppThemeBinding Light={StaticResource Primary}, Dark={StaticResource PrimaryDark}}"
+    Shell.TabBarForegroundColor="{AppThemeBinding Light={StaticResource Primary}, Dark={StaticResource PrimaryDark}}"
+    Shell.TabBarUnselectedColor="{AppThemeBinding Light={StaticResource TextoTenue}, Dark={StaticResource TextoTenueDark}}"
+    Shell.BackgroundColor="{AppThemeBinding Light={StaticResource Fondo}, Dark={StaticResource FondoDark}}"
+    Shell.ForegroundColor="{AppThemeBinding Light={StaticResource Texto}, Dark={StaticResource TextoDark}}"
+    Shell.TitleColor="{AppThemeBinding Light={StaticResource Texto}, Dark={StaticResource TextoDark}}">
+
+    <!-- Tabs inferiores: Inicio · Movimientos · Registrar (+) · Reportes · Más -->
+    <TabBar>
+        <Tab Title="Inicio" Icon="ic_inicio.png" Route="inicio">
+            <ShellContent ContentTemplate="{DataTemplate views:DashboardPage}" />
+        </Tab>
+        <Tab Title="Movimientos" Icon="ic_movimientos.png" Route="movimientos">
+            <ShellContent ContentTemplate="{DataTemplate views:HistorialPage}" />
+        </Tab>
+        <Tab Title="Registrar" Icon="ic_registrar.png" Route="registrar">
+            <ShellContent ContentTemplate="{DataTemplate views:RegistroPage}" />
+        </Tab>
+        <Tab Title="Reportes" Icon="ic_reportes.png" Route="reportes">
+            <ShellContent ContentTemplate="{DataTemplate views:ReportesPage}" />
+        </Tab>
+        <Tab Title="Más" Icon="ic_mas.png" Route="mas">
+            <ShellContent ContentTemplate="{DataTemplate views:MasPage}" />
+        </Tab>
+    </TabBar>
+
+</Shell>

@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:vm="clr-namespace:Panderito.Core.ViewModels;assembly=Panderito.Core"
+             x:Class="Panderito.App.Views.EdicionPanderoPage"
+             x:DataType="vm:EdicionPanderoViewModel"
+             Title="Nuevo pandero"
+             BackgroundColor="{AppThemeBinding Light={StaticResource Fondo}, Dark={StaticResource FondoDark}}">
+
+    <ScrollView>
+        <VerticalStackLayout Padding="16,20" Spacing="14">
+
+            <Border Style="{StaticResource Tarjeta}" Padding="12,8">
+                <VerticalStackLayout Spacing="2">
+                    <Label Text="Nombre" Style="{StaticResource TextoSecundario}" FontSize="11" />
+                    <Entry Text="{Binding Nombre}" Placeholder="Ej. Pandero de la oficina" />
+                </VerticalStackLayout>
+            </Border>
+
+            <Grid ColumnDefinitions="*,*" ColumnSpacing="12">
+                <Border Grid.Column="0" Style="{StaticResource Tarjeta}" Padding="12,8">
+                    <VerticalStackLayout Spacing="2">
+                        <Label Text="Participantes" Style="{StaticResource TextoSecundario}" FontSize="11" />
+                        <Entry Text="{Binding NumParticipantesTexto}" Placeholder="10" Keyboard="Numeric" />
+                    </VerticalStackLayout>
+                </Border>
+                <Border Grid.Column="1" Style="{StaticResource Tarjeta}" Padding="12,8">
+                    <VerticalStackLayout Spacing="2">
+                        <Label Text="Cuota (S/)" Style="{StaticResource TextoSecundario}" FontSize="11" />
+                        <Entry Text="{Binding CuotaTexto}" Placeholder="200.00" Keyboard="Numeric" />
+                    </VerticalStackLayout>
+                </Border>
+            </Grid>
+
+            <Grid ColumnDefinitions="*,*" ColumnSpacing="12">
+                <Border Grid.Column="0" Style="{StaticResource Tarjeta}" Padding="12,8">
+                    <VerticalStackLayout Spacing="2">
+                        <Label Text="Frecuencia" Style="{StaticResource TextoSecundario}" FontSize="11" />
+                        <Picker ItemsSource="{Binding Frecuencias}" SelectedIndex="{Binding IndiceFrecuencia}" FontAttributes="Bold" />
+                    </VerticalStackLayout>
+                </Border>
+                <Border Grid.Column="1" Style="{StaticResource Tarjeta}" Padding="12,8">
+                    <VerticalStackLayout Spacing="2">
+                        <Label Text="Mi turno (nº)" Style="{StaticResource TextoSecundario}" FontSize="11" />
+                        <Entry Text="{Binding MiTurnoTexto}" Placeholder="1" Keyboard="Numeric" />
+                    </VerticalStackLayout>
+                </Border>
+            </Grid>
+
+            <Border Style="{StaticResource Tarjeta}" Padding="12,8">
+                <VerticalStackLayout Spacing="2">
+                    <Label Text="Fecha del primer turno" Style="{StaticResource TextoSecundario}" FontSize="11" />
+                    <DatePicker Date="{Binding FechaInicio}" Format="dd/MM/yyyy" />
+                </VerticalStackLayout>
+            </Border>
+
+            <Label Text="Se crearán los turnos automáticamente según el número de participantes y la frecuencia. En el detalle podrás marcar cada turno como cobrado."
+                   Style="{StaticResource TextoSecundario}" FontSize="12" />
+
+            <Button Text="Crear pandero" Style="{StaticResource BotonPrimario}" Command="{Binding GuardarCommand}" />
+        </VerticalStackLayout>
+    </ScrollView>
+</ContentPage>

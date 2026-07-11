@@ -1,0 +1,90 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<ResourceDictionary
+    xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml">
+
+    <!-- Paleta Panderito, tomada del prototipo "Bolsillo" (Claude Design).
+         Sufijo "Dark" = variante para tema oscuro; usar con AppThemeBinding. -->
+
+    <!-- Marca -->
+    <Color x:Key="Primary">#6D5AE6</Color>
+    <Color x:Key="PrimaryDark">#8C7CF0</Color>
+    <Color x:Key="PrimaryInk">#4A3FB8</Color>
+    <Color x:Key="PrimaryInkDark">#B7ADF7</Color>
+    <Color x:Key="PrimarySoft">#EDEAFB</Color>
+    <Color x:Key="PrimarySoftDark">#241F3A</Color>
+    <Color x:Key="OnPrimary">#FFFFFF</Color>
+    <Color x:Key="OnPrimaryDark">#0A0B10</Color>
+
+    <!-- Semántica: verde = ingreso, rojo/coral = gasto, ámbar = pendiente -->
+    <Color x:Key="Ingreso">#12B76A</Color>
+    <Color x:Key="IngresoDark">#3DDC97</Color>
+    <Color x:Key="IngresoSoft">#E6F7EF</Color>
+    <Color x:Key="IngresoSoftDark">#112A20</Color>
+    <Color x:Key="Gasto">#F04438</Color>
+    <Color x:Key="GastoDark">#FF6B5E</Color>
+    <Color x:Key="GastoSoft">#FDECEA</Color>
+    <Color x:Key="GastoSoftDark">#2E1613</Color>
+    <Color x:Key="Pendiente">#F79009</Color>
+    <Color x:Key="PendienteDark">#FDB022</Color>
+    <Color x:Key="PendienteSoft">#FEF2E2</Color>
+    <Color x:Key="PendienteSoftDark">#2E2210</Color>
+    <Color x:Key="Info">#2E90FA</Color>
+    <Color x:Key="InfoDark">#5AA8FF</Color>
+    <Color x:Key="InfoSoft">#E7F1FE</Color>
+    <Color x:Key="InfoSoftDark">#0E2033</Color>
+
+    <!-- Fondos y superficies -->
+    <Color x:Key="Fondo">#EDEFF6</Color>
+    <Color x:Key="FondoDark">#0A0B10</Color>
+    <Color x:Key="Superficie">#FFFFFF</Color>
+    <Color x:Key="SuperficieDark">#15171F</Color>
+    <Color x:Key="SuperficieAlta">#FFFFFF</Color>
+    <Color x:Key="SuperficieAltaDark">#1B1E28</Color>
+    <Color x:Key="Borde">#ECEDF2</Color>
+    <Color x:Key="BordeDark">#282C38</Color>
+    <Color x:Key="Linea">#F0F1F5</Color>
+    <Color x:Key="LineaDark">#22252F</Color>
+
+    <!-- Texto -->
+    <Color x:Key="Texto">#14151A</Color>
+    <Color x:Key="TextoDark">#F2F3F7</Color>
+    <Color x:Key="TextoSuave">#6C7280</Color>
+    <Color x:Key="TextoSuaveDark">#9AA0AE</Color>
+    <Color x:Key="TextoTenue">#9AA0AE</Color>
+    <Color x:Key="TextoTenueDark">#6B7280</Color>
+
+    <!-- Claves que usan los estilos base de la plantilla MAUI -->
+    <Color x:Key="PrimaryDarkText">#242424</Color>
+    <Color x:Key="Secondary">#EDEAFB</Color>
+    <Color x:Key="SecondaryDarkText">#B7ADF7</Color>
+    <Color x:Key="Tertiary">#4A3FB8</Color>
+
+    <Color x:Key="White">White</Color>
+    <Color x:Key="Black">Black</Color>
+    <Color x:Key="OffBlack">#1f1f1f</Color>
+
+    <Color x:Key="Gray100">#E1E1E1</Color>
+    <Color x:Key="Gray200">#C8C8C8</Color>
+    <Color x:Key="Gray300">#ACACAC</Color>
+    <Color x:Key="Gray400">#919191</Color>
+    <Color x:Key="Gray500">#6E6E6E</Color>
+    <Color x:Key="Gray600">#404040</Color>
+    <Color x:Key="Gray900">#212121</Color>
+    <Color x:Key="Gray950">#141414</Color>
+
+    <SolidColorBrush x:Key="PrimaryBrush" Color="{StaticResource Primary}"/>
+    <SolidColorBrush x:Key="SecondaryBrush" Color="{StaticResource Secondary}"/>
+    <SolidColorBrush x:Key="TertiaryBrush" Color="{StaticResource Tertiary}"/>
+    <SolidColorBrush x:Key="WhiteBrush" Color="{StaticResource White}"/>
+    <SolidColorBrush x:Key="BlackBrush" Color="{StaticResource Black}"/>
+
+    <SolidColorBrush x:Key="Gray100Brush" Color="{StaticResource Gray100}"/>
+    <SolidColorBrush x:Key="Gray200Brush" Color="{StaticResource Gray200}"/>
+    <SolidColorBrush x:Key="Gray300Brush" Color="{StaticResource Gray300}"/>
+    <SolidColorBrush x:Key="Gray400Brush" Color="{StaticResource Gray400}"/>
+    <SolidColorBrush x:Key="Gray500Brush" Color="{StaticResource Gray500}"/>
+    <SolidColorBrush x:Key="Gray600Brush" Color="{StaticResource Gray600}"/>
+    <SolidColorBrush x:Key="Gray900Brush" Color="{StaticResource Gray900}"/>
+    <SolidColorBrush x:Key="Gray950Brush" Color="{StaticResource Gray950}"/>
+</ResourceDictionary>

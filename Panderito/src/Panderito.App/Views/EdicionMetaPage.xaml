@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:vm="clr-namespace:Panderito.Core.ViewModels;assembly=Panderito.Core"
+             x:Class="Panderito.App.Views.EdicionMetaPage"
+             x:DataType="vm:EdicionMetaViewModel"
+             Title="Meta de ahorro"
+             BackgroundColor="{AppThemeBinding Light={StaticResource Fondo}, Dark={StaticResource FondoDark}}">
+
+    <ScrollView>
+        <VerticalStackLayout Padding="16,20" Spacing="14">
+
+            <Border Style="{StaticResource Tarjeta}" Padding="12,8">
+                <VerticalStackLayout Spacing="2">
+                    <Label Text="Nombre" Style="{StaticResource TextoSecundario}" FontSize="11" />
+                    <Entry Text="{Binding Nombre}" Placeholder="Ej. Laptop nueva" />
+                </VerticalStackLayout>
+            </Border>
+
+            <Border Style="{StaticResource Tarjeta}" Padding="12,8">
+                <VerticalStackLayout Spacing="2">
+                    <Label Text="Monto objetivo (S/)" Style="{StaticResource TextoSecundario}" FontSize="11" />
+                    <Entry Text="{Binding MontoMetaTexto}" Placeholder="3000.00" Keyboard="Numeric" />
+                </VerticalStackLayout>
+            </Border>
+
+            <Border Style="{StaticResource Tarjeta}" Padding="12,8">
+                <VerticalStackLayout Spacing="6">
+                    <Grid ColumnDefinitions="*,Auto">
+                        <Label Grid.Column="0" Text="¿Con fecha límite?" Style="{StaticResource TextoSecundario}" VerticalOptions="Center" />
+                        <Switch Grid.Column="1" IsToggled="{Binding TieneFechaMeta}" />
+                    </Grid>
+                    <DatePicker Date="{Binding FechaMeta}" Format="dd/MM/yyyy" IsVisible="{Binding TieneFechaMeta}" />
+                </VerticalStackLayout>
+            </Border>
+
+            <!-- Abonar (solo en edición) -->
+            <Border Style="{StaticResource Tarjeta}" IsVisible="{Binding EsEdicion}">
+                <VerticalStackLayout Spacing="8">
+                    <Label Text="{Binding ProgresoTexto}" Style="{StaticResource Subtitulo}" />
+                    <Grid ColumnDefinitions="*,Auto" ColumnSpacing="10">
+                        <Entry Grid.Column="0" Text="{Binding AbonoTexto}" Placeholder="Monto a ahorrar S/" Keyboard="Numeric" />
+                        <Button Grid.Column="1" Text="Abonar 🐷" Style="{StaticResource BotonSecundario}" HeightRequest="44"
+                                Command="{Binding AbonarCommand}" />
+                    </Grid>
+                </VerticalStackLayout>
+            </Border>
+
+            <Button Text="Guardar" Style="{StaticResource BotonPrimario}" Command="{Binding GuardarCommand}" />
+
+            <Button Text="🗑 Eliminar meta"
+                    IsVisible="{Binding EsEdicion}"
+                    Command="{Binding EliminarCommand}"
+                    BackgroundColor="{AppThemeBinding Light={StaticResource GastoSoft}, Dark={StaticResource GastoSoftDark}}"
+                    TextColor="{AppThemeBinding Light={StaticResource Gasto}, Dark={StaticResource GastoDark}}"
+                    FontAttributes="Bold" CornerRadius="16" HeightRequest="52" />
+
+        </VerticalStackLayout>
+    </ScrollView>
+</ContentPage>

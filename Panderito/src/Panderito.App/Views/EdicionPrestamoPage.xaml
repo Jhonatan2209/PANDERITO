@@ -1,0 +1,87 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:vm="clr-namespace:Panderito.Core.ViewModels;assembly=Panderito.Core"
+             x:Class="Panderito.App.Views.EdicionPrestamoPage"
+             x:DataType="vm:EdicionPrestamoViewModel"
+             Title="Nuevo préstamo"
+             BackgroundColor="{AppThemeBinding Light={StaticResource Fondo}, Dark={StaticResource FondoDark}}">
+
+    <ScrollView>
+        <VerticalStackLayout Padding="16,20" Spacing="14">
+
+            <Border StrokeThickness="0" StrokeShape="RoundRectangle 16"
+                    BackgroundColor="{AppThemeBinding Light={StaticResource Superficie}, Dark={StaticResource SuperficieDark}}"
+                    Padding="4">
+                <Grid ColumnDefinitions="*,*" ColumnSpacing="4">
+                    <Button Grid.Column="0" Text="Me deben" FontAttributes="Bold" CornerRadius="12" HeightRequest="42"
+                            Command="{Binding MarcarMeDebenCommand}">
+                        <Button.Triggers>
+                            <DataTrigger TargetType="Button" Binding="{Binding IndiceTipo}" Value="0">
+                                <Setter Property="BackgroundColor" Value="{AppThemeBinding Light={StaticResource IngresoSoft}, Dark={StaticResource IngresoSoftDark}}" />
+                                <Setter Property="TextColor" Value="{AppThemeBinding Light={StaticResource Ingreso}, Dark={StaticResource IngresoDark}}" />
+                            </DataTrigger>
+                            <DataTrigger TargetType="Button" Binding="{Binding IndiceTipo}" Value="1">
+                                <Setter Property="BackgroundColor" Value="Transparent" />
+                                <Setter Property="TextColor" Value="{AppThemeBinding Light={StaticResource TextoSuave}, Dark={StaticResource TextoSuaveDark}}" />
+                            </DataTrigger>
+                        </Button.Triggers>
+                    </Button>
+                    <Button Grid.Column="1" Text="Debo" FontAttributes="Bold" CornerRadius="12" HeightRequest="42"
+                            Command="{Binding MarcarDeboCommand}">
+                        <Button.Triggers>
+                            <DataTrigger TargetType="Button" Binding="{Binding IndiceTipo}" Value="1">
+                                <Setter Property="BackgroundColor" Value="{AppThemeBinding Light={StaticResource GastoSoft}, Dark={StaticResource GastoSoftDark}}" />
+                                <Setter Property="TextColor" Value="{AppThemeBinding Light={StaticResource Gasto}, Dark={StaticResource GastoDark}}" />
+                            </DataTrigger>
+                            <DataTrigger TargetType="Button" Binding="{Binding IndiceTipo}" Value="0">
+                                <Setter Property="BackgroundColor" Value="Transparent" />
+                                <Setter Property="TextColor" Value="{AppThemeBinding Light={StaticResource TextoSuave}, Dark={StaticResource TextoSuaveDark}}" />
+                            </DataTrigger>
+                        </Button.Triggers>
+                    </Button>
+                </Grid>
+            </Border>
+
+            <Border Style="{StaticResource Tarjeta}" Padding="12,8">
+                <VerticalStackLayout Spacing="2">
+                    <Label Text="Persona" Style="{StaticResource TextoSecundario}" FontSize="11" />
+                    <Entry Text="{Binding Persona}" Placeholder="Nombre de la persona" />
+                </VerticalStackLayout>
+            </Border>
+
+            <Border Style="{StaticResource Tarjeta}" Padding="12,8">
+                <VerticalStackLayout Spacing="2">
+                    <Label Text="Monto (S/)" Style="{StaticResource TextoSecundario}" FontSize="11" />
+                    <Entry Text="{Binding MontoTexto}" Placeholder="0.00" Keyboard="Numeric" />
+                </VerticalStackLayout>
+            </Border>
+
+            <Border Style="{StaticResource Tarjeta}" Padding="12,8">
+                <VerticalStackLayout Spacing="2">
+                    <Label Text="Fecha del préstamo" Style="{StaticResource TextoSecundario}" FontSize="11" />
+                    <DatePicker Date="{Binding Fecha}" Format="dd/MM/yyyy" />
+                </VerticalStackLayout>
+            </Border>
+
+            <Border Style="{StaticResource Tarjeta}" Padding="12,8">
+                <VerticalStackLayout Spacing="6">
+                    <Grid ColumnDefinitions="*,Auto">
+                        <Label Grid.Column="0" Text="¿Tiene fecha límite?" Style="{StaticResource TextoSecundario}" VerticalOptions="Center" />
+                        <Switch Grid.Column="1" IsToggled="{Binding TieneVencimiento}" />
+                    </Grid>
+                    <DatePicker Date="{Binding FechaVencimiento}" Format="dd/MM/yyyy" IsVisible="{Binding TieneVencimiento}" />
+                </VerticalStackLayout>
+            </Border>
+
+            <Border Style="{StaticResource Tarjeta}" Padding="12,8">
+                <VerticalStackLayout Spacing="2">
+                    <Label Text="Nota (opcional)" Style="{StaticResource TextoSecundario}" FontSize="11" />
+                    <Entry Text="{Binding Nota}" Placeholder="Ej. para su pasaje" />
+                </VerticalStackLayout>
+            </Border>
+
+            <Button Text="Guardar" Style="{StaticResource BotonPrimario}" Command="{Binding GuardarCommand}" />
+        </VerticalStackLayout>
+    </ScrollView>
+</ContentPage>

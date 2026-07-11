@@ -1,0 +1,81 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:vm="clr-namespace:Panderito.Core.ViewModels;assembly=Panderito.Core"
+             x:Class="Panderito.App.Views.DetallePrestamoPage"
+             x:DataType="vm:DetallePrestamoViewModel"
+             Title="Préstamo"
+             BackgroundColor="{AppThemeBinding Light={StaticResource Fondo}, Dark={StaticResource FondoDark}}">
+
+    <ScrollView>
+        <VerticalStackLayout Padding="16,20" Spacing="14">
+
+            <Border Style="{StaticResource TarjetaPrimaria}">
+                <VerticalStackLayout Spacing="8">
+                    <Label Text="{Binding TipoTexto}" FontSize="13" Opacity="0.85"
+                           TextColor="{AppThemeBinding Light={StaticResource OnPrimary}, Dark={StaticResource OnPrimaryDark}}" />
+                    <Label Text="{Binding PersonaTexto}" FontSize="24" FontAttributes="Bold"
+                           TextColor="{AppThemeBinding Light={StaticResource OnPrimary}, Dark={StaticResource OnPrimaryDark}}" />
+                    <Grid ColumnDefinitions="*,*" ColumnSpacing="12">
+                        <VerticalStackLayout Grid.Column="0" Spacing="2">
+                            <Label Text="Pendiente" FontSize="12" Opacity="0.85"
+                                   TextColor="{AppThemeBinding Light={StaticResource OnPrimary}, Dark={StaticResource OnPrimaryDark}}" />
+                            <Label Text="{Binding PendienteTexto}" FontSize="20" FontAttributes="Bold"
+                                   TextColor="{AppThemeBinding Light={StaticResource OnPrimary}, Dark={StaticResource OnPrimaryDark}}" />
+                        </VerticalStackLayout>
+                        <VerticalStackLayout Grid.Column="1" Spacing="2">
+                            <Label Text="Abonado" FontSize="12" Opacity="0.85"
+                                   TextColor="{AppThemeBinding Light={StaticResource OnPrimary}, Dark={StaticResource OnPrimaryDark}}" />
+                            <Label Text="{Binding AbonadoTexto}" FontSize="20" FontAttributes="Bold"
+                                   TextColor="{AppThemeBinding Light={StaticResource OnPrimary}, Dark={StaticResource OnPrimaryDark}}" />
+                        </VerticalStackLayout>
+                    </Grid>
+                    <ProgressBar Progress="{Binding Avance}"
+                                 ProgressColor="{AppThemeBinding Light={StaticResource OnPrimary}, Dark={StaticResource OnPrimaryDark}}" />
+                    <Label Text="{Binding EstadoTexto}" FontSize="12" FontAttributes="Bold" Opacity="0.9"
+                           TextColor="{AppThemeBinding Light={StaticResource OnPrimary}, Dark={StaticResource OnPrimaryDark}}" />
+                </VerticalStackLayout>
+            </Border>
+
+            <!-- Registrar abono -->
+            <Border Style="{StaticResource Tarjeta}" IsVisible="{Binding EstaPagado, Converter={StaticResource InvertedBoolConverter}}">
+                <VerticalStackLayout Spacing="8">
+                    <Label Text="Registrar abono" Style="{StaticResource Subtitulo}" />
+                    <Grid ColumnDefinitions="*,Auto" ColumnSpacing="10">
+                        <Entry Grid.Column="0" Text="{Binding MontoAbonoTexto}" Placeholder="Monto S/" Keyboard="Numeric" />
+                        <Button Grid.Column="1" Text="Abonar" Style="{StaticResource BotonSecundario}" HeightRequest="44"
+                                Command="{Binding RegistrarAbonoCommand}" />
+                    </Grid>
+                    <Button Text="✓ Marcar todo como pagado" Style="{StaticResource BotonPrimario}"
+                            Command="{Binding MarcarPagadoCommand}" />
+                </VerticalStackLayout>
+            </Border>
+
+            <!-- Historial de abonos -->
+            <Label Text="Abonos" Style="{StaticResource Subtitulo}" />
+            <VerticalStackLayout BindableLayout.ItemsSource="{Binding Abonos}" Spacing="6">
+                <BindableLayout.EmptyView>
+                    <Label Text="Todavía no hay abonos" Style="{StaticResource EtiquetaVacio}" Margin="24,8" />
+                </BindableLayout.EmptyView>
+                <BindableLayout.ItemTemplate>
+                    <DataTemplate x:DataType="vm:AbonoItem">
+                        <Border Style="{StaticResource Tarjeta}" Padding="12,10">
+                            <Grid ColumnDefinitions="*,Auto">
+                                <Label Grid.Column="0" Text="{Binding FechaTexto}" Style="{StaticResource TextoSecundario}" VerticalOptions="Center" />
+                                <Label Grid.Column="1" Text="{Binding MontoTexto}" FontAttributes="Bold"
+                                       TextColor="{AppThemeBinding Light={StaticResource Ingreso}, Dark={StaticResource IngresoDark}}" />
+                            </Grid>
+                        </Border>
+                    </DataTemplate>
+                </BindableLayout.ItemTemplate>
+            </VerticalStackLayout>
+
+            <Button Text="🗑 Eliminar préstamo"
+                    Command="{Binding EliminarCommand}"
+                    BackgroundColor="{AppThemeBinding Light={StaticResource GastoSoft}, Dark={StaticResource GastoSoftDark}}"
+                    TextColor="{AppThemeBinding Light={StaticResource Gasto}, Dark={StaticResource GastoDark}}"
+                    FontAttributes="Bold" CornerRadius="16" HeightRequest="52" />
+
+        </VerticalStackLayout>
+    </ScrollView>
+</ContentPage>

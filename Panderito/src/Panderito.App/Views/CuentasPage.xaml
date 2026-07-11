@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:vm="clr-namespace:Panderito.Core.ViewModels;assembly=Panderito.Core"
+             x:Class="Panderito.App.Views.CuentasPage"
+             x:DataType="vm:CuentasViewModel"
+             Title="Cuentas"
+             BackgroundColor="{AppThemeBinding Light={StaticResource Fondo}, Dark={StaticResource FondoDark}}">
+
+    <Grid RowDefinitions="*,Auto" Padding="16">
+        <ScrollView Grid.Row="0">
+            <VerticalStackLayout Spacing="8">
+                <Label Text="No tienes cuentas activas. Crea la primera 👛"
+                       Style="{StaticResource EtiquetaVacio}"
+                       IsVisible="{Binding HayCuentas, Converter={StaticResource InvertedBoolConverter}}" />
+                <VerticalStackLayout BindableLayout.ItemsSource="{Binding Cuentas}" Spacing="8">
+                    <BindableLayout.ItemTemplate>
+                        <DataTemplate x:DataType="vm:CuentaConSaldo">
+                            <Border Style="{StaticResource Tarjeta}" Padding="14">
+                                <Border.GestureRecognizers>
+                                    <TapGestureRecognizer
+                                        Command="{Binding EditarCommand, Source={RelativeSource AncestorType={x:Type vm:CuentasViewModel}}}"
+                                        CommandParameter="{Binding .}" />
+                                </Border.GestureRecognizers>
+                                <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="14">
+                                    <Border Grid.Column="0" StrokeThickness="0" StrokeShape="RoundRectangle 12"
+                                            BackgroundColor="{Binding Cuenta.ColorHex, Converter={StaticResource ColorHexConverter}}"
+                                            WidthRequest="44" HeightRequest="44">
+                                        <Label Text="{Binding Cuenta.Icono}" FontSize="20"
+                                               HorizontalOptions="Center" VerticalOptions="Center" />
+                                    </Border>
+                                    <VerticalStackLayout Grid.Column="1" Spacing="2" VerticalOptions="Center">
+                                        <Label Text="{Binding Cuenta.Nombre}" FontAttributes="Bold" FontSize="15"
+                                               TextColor="{AppThemeBinding Light={StaticResource Texto}, Dark={StaticResource TextoDark}}" />
+                                        <Label Text="{Binding NombreTipo}" Style="{StaticResource TextoSecundario}" FontSize="12" />
+                                    </VerticalStackLayout>
+                                    <Label Grid.Column="2" Text="{Binding SaldoTexto}" FontAttributes="Bold" FontSize="16"
+                                           VerticalOptions="Center"
+                                           TextColor="{AppThemeBinding Light={StaticResource Texto}, Dark={StaticResource TextoDark}}" />
+                                </Grid>
+                            </Border>
+                        </DataTemplate>
+                    </BindableLayout.ItemTemplate>
+                </VerticalStackLayout>
+            </VerticalStackLayout>
+        </ScrollView>
+
+        <Button Grid.Row="1" Text="＋ Nueva cuenta" Style="{StaticResource BotonPrimario}"
+                Command="{Binding NuevaCommand}" Margin="0,12,0,0" />
+    </Grid>
+</ContentPage>

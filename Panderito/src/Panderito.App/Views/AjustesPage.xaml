@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:vm="clr-namespace:Panderito.Core.ViewModels;assembly=Panderito.Core"
+             x:Class="Panderito.App.Views.AjustesPage"
+             x:DataType="vm:AjustesViewModel"
+             Title="Ajustes"
+             BackgroundColor="{AppThemeBinding Light={StaticResource Fondo}, Dark={StaticResource FondoDark}}">
+
+    <ScrollView>
+        <VerticalStackLayout Padding="16,20" Spacing="14">
+
+            <Border Style="{StaticResource Tarjeta}">
+                <VerticalStackLayout Spacing="8">
+                    <Label Text="Apariencia" Style="{StaticResource Subtitulo}" />
+                    <Label Text="Tema de la app" Style="{StaticResource TextoSecundario}" FontSize="12" />
+                    <Picker ItemsSource="{Binding Temas}" SelectedIndex="{Binding IndiceTema}" FontAttributes="Bold" />
+                </VerticalStackLayout>
+            </Border>
+
+            <Border Style="{StaticResource Tarjeta}">
+                <VerticalStackLayout Spacing="8">
+                    <Label Text="Moneda" Style="{StaticResource Subtitulo}" />
+                    <Label Text="Soles peruanos (S/) — formato es-PE" Style="{StaticResource TextoSecundario}" />
+                </VerticalStackLayout>
+            </Border>
+
+            <Border Style="{StaticResource Tarjeta}">
+                <VerticalStackLayout Spacing="8">
+                    <Label Text="Categorías" Style="{StaticResource Subtitulo}" />
+                    <Label Text="Personaliza nombres, íconos y colores" Style="{StaticResource TextoSecundario}" FontSize="12" />
+                    <Button Text="Administrar categorías" Style="{StaticResource BotonSecundario}"
+                            Command="{Binding IrACategoriasCommand}" />
+                </VerticalStackLayout>
+            </Border>
+
+            <!-- Datos: exportar / respaldo (se completa en Fase 6) -->
+            <Border Style="{StaticResource Tarjeta}" x:Name="SeccionDatos">
+                <VerticalStackLayout Spacing="8">
+                    <Label Text="Tus datos" Style="{StaticResource Subtitulo}" />
+                    <Label Text="Todo se guarda solo en tu teléfono (sin internet)." Style="{StaticResource TextoSecundario}" FontSize="12" />
+                    <Button x:Name="BotonExportarCsv" Text="📄 Exportar movimientos a CSV" Style="{StaticResource BotonSecundario}" />
+                    <Button x:Name="BotonRespaldo" Text="💾 Crear respaldo de la base de datos" Style="{StaticResource BotonSecundario}" />
+                    <Button x:Name="BotonRestaurar" Text="♻️ Restaurar respaldo" Style="{StaticResource BotonSecundario}" />
+                </VerticalStackLayout>
+            </Border>
+
+            <Label Text="{Binding VersionTexto}" Style="{StaticResource TextoSecundario}"
+                   HorizontalTextAlignment="Center" Margin="0,8" />
+
+        </VerticalStackLayout>
+    </ScrollView>
+</ContentPage>

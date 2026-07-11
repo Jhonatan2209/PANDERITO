@@ -1,0 +1,126 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:vm="clr-namespace:Panderito.Core.ViewModels;assembly=Panderito.Core"
+             x:Class="Panderito.App.Views.ReportesPage"
+             x:DataType="vm:ReportesViewModel"
+             Shell.NavBarIsVisible="False"
+             BackgroundColor="{AppThemeBinding Light={StaticResource Fondo}, Dark={StaticResource FondoDark}}">
+
+    <ScrollView>
+        <VerticalStackLayout Padding="16,24,16,16" Spacing="14">
+
+            <!-- Título + selector de mes -->
+            <Grid ColumnDefinitions="*,Auto,Auto,Auto" ColumnSpacing="8">
+                <Label Grid.Column="0" Text="Reportes" Style="{StaticResource TituloPantalla}" VerticalOptions="Center" />
+                <Button Grid.Column="1" Text="‹" FontSize="20" WidthRequest="42" HeightRequest="42" CornerRadius="12"
+                        Style="{StaticResource BotonSecundario}" Padding="0"
+                        Command="{Binding MesAnteriorCommand}" />
+                <Label Grid.Column="2" Text="{Binding MesTexto}" FontAttributes="Bold" VerticalOptions="Center"
+                       TextColor="{AppThemeBinding Light={StaticResource Texto}, Dark={StaticResource TextoDark}}" />
+                <Button Grid.Column="3" Text="›" FontSize="20" WidthRequest="42" HeightRequest="42" CornerRadius="12"
+                        Style="{StaticResource BotonSecundario}" Padding="0"
+                        Command="{Binding MesSiguienteCommand}" />
+            </Grid>
+
+            <!-- Resumen del mes -->
+            <Grid ColumnDefinitions="*,*" ColumnSpacing="12">
+                <Border Grid.Column="0" Style="{StaticResource Tarjeta}">
+                    <VerticalStackLayout Spacing="4">
+                        <Label Text="Gasto este mes" Style="{StaticResource TextoSecundario}" />
+                        <Label Text="{Binding GastoMesTexto}" FontSize="19" FontAttributes="Bold"
+                               TextColor="{AppThemeBinding Light={StaticResource Texto}, Dark={StaticResource TextoDark}}" />
+                        <Label Text="{Binding ComparativoTexto}" FontSize="11" FontAttributes="Bold">
+                            <Label.Triggers>
+                                <DataTrigger TargetType="Label" Binding="{Binding MejorQueMesAnterior}" Value="True">
+                                    <Setter Property="TextColor" Value="{AppThemeBinding Light={StaticResource Ingreso}, Dark={StaticResource IngresoDark}}" />
+                                </DataTrigger>
+                                <DataTrigger TargetType="Label" Binding="{Binding MejorQueMesAnterior}" Value="False">
+                                    <Setter Property="TextColor" Value="{AppThemeBinding Light={StaticResource Gasto}, Dark={StaticResource GastoDark}}" />
+                                </DataTrigger>
+                            </Label.Triggers>
+                        </Label>
+                    </VerticalStackLayout>
+                </Border>
+                <Border Grid.Column="1" Style="{StaticResource Tarjeta}">
+                    <VerticalStackLayout Spacing="4">
+                        <Label Text="Ahorro del mes" Style="{StaticResource TextoSecundario}" />
+                        <Label Text="{Binding AhorroTexto}" FontSize="19" Style="{StaticResource MontoIngreso}" />
+                        <Label Text="{Binding AhorroDetalleTexto}" Style="{StaticResource TextoSecundario}" FontSize="11" />
+                    </VerticalStackLayout>
+                </Border>
+            </Grid>
+
+            <!-- Gasto por mes (barras) -->
+            <Border Style="{StaticResource Tarjeta}">
+                <VerticalStackLayout Spacing="10">
+                    <Label Text="Gasto por mes" Style="{StaticResource Subtitulo}" />
+                    <Label Text="Últimos 6 meses" Style="{StaticResource TextoSecundario}" FontSize="12" />
+                    <HorizontalStackLayout BindableLayout.ItemsSource="{Binding Tendencia}" Spacing="0"
+                                           HorizontalOptions="Center">
+                        <BindableLayout.ItemTemplate>
+                            <DataTemplate x:DataType="vm:BarraMes">
+                                <VerticalStackLayout Spacing="6" WidthRequest="52" VerticalOptions="End">
+                                    <BoxView HeightRequest="{Binding Altura}"
+                                             WidthRequest="30"
+                                             CornerRadius="8"
+                                             HorizontalOptions="Center"
+                                             VerticalOptions="End">
+                                        <BoxView.Triggers>
+                                            <DataTrigger TargetType="BoxView" Binding="{Binding EsActual}" Value="True">
+                                                <Setter Property="Color" Value="{AppThemeBinding Light={StaticResource Primary}, Dark={StaticResource PrimaryDark}}" />
+                                            </DataTrigger>
+                                            <DataTrigger TargetType="BoxView" Binding="{Binding EsActual}" Value="False">
+                                                <Setter Property="Color" Value="{AppThemeBinding Light={StaticResource Linea}, Dark={StaticResource LineaDark}}" />
+                                            </DataTrigger>
+                                        </BoxView.Triggers>
+                                    </BoxView>
+                                    <Label Text="{Binding Etiqueta}" FontSize="11" HorizontalTextAlignment="Center">
+                                        <Label.Triggers>
+                                            <DataTrigger TargetType="Label" Binding="{Binding EsActual}" Value="True">
+                                                <Setter Property="TextColor" Value="{AppThemeBinding Light={StaticResource Primary}, Dark={StaticResource PrimaryDark}}" />
+                                                <Setter Property="FontAttributes" Value="Bold" />
+                                            </DataTrigger>
+                                            <DataTrigger TargetType="Label" Binding="{Binding EsActual}" Value="False">
+                                                <Setter Property="TextColor" Value="{AppThemeBinding Light={StaticResource TextoSuave}, Dark={StaticResource TextoSuaveDark}}" />
+                                            </DataTrigger>
+                                        </Label.Triggers>
+                                    </Label>
+                                </VerticalStackLayout>
+                            </DataTemplate>
+                        </BindableLayout.ItemTemplate>
+                    </HorizontalStackLayout>
+                </VerticalStackLayout>
+            </Border>
+
+            <!-- Gasto por categoría -->
+            <Border Style="{StaticResource Tarjeta}">
+                <VerticalStackLayout Spacing="12">
+                    <Label Text="Gasto por categoría" Style="{StaticResource Subtitulo}" />
+                    <Label Text="Sin gastos este mes 🐷" Style="{StaticResource EtiquetaVacio}" Margin="12"
+                           IsVisible="{Binding HayGastos, Converter={StaticResource InvertedBoolConverter}}" />
+                    <VerticalStackLayout BindableLayout.ItemsSource="{Binding PorCategoria}" Spacing="10">
+                        <BindableLayout.ItemTemplate>
+                            <DataTemplate x:DataType="vm:CategoriaReporte">
+                                <VerticalStackLayout Spacing="4">
+                                    <Grid ColumnDefinitions="Auto,*,Auto,Auto" ColumnSpacing="8">
+                                        <Label Grid.Column="0" Text="{Binding Dato.Icono}" FontSize="14" />
+                                        <Label Grid.Column="1" Text="{Binding Dato.Nombre}" FontSize="13" FontAttributes="Bold"
+                                               TextColor="{AppThemeBinding Light={StaticResource Texto}, Dark={StaticResource TextoDark}}" />
+                                        <Label Grid.Column="2" Text="{Binding TotalTexto}" FontSize="13"
+                                               TextColor="{AppThemeBinding Light={StaticResource TextoSuave}, Dark={StaticResource TextoSuaveDark}}" />
+                                        <Label Grid.Column="3" Text="{Binding PorcentajeTexto}" FontSize="13" FontAttributes="Bold"
+                                               TextColor="{AppThemeBinding Light={StaticResource PrimaryInk}, Dark={StaticResource PrimaryInkDark}}" />
+                                    </Grid>
+                                    <ProgressBar Progress="{Binding FraccionDelTotal}"
+                                                 ProgressColor="{Binding Dato.ColorHex, Converter={StaticResource ColorHexConverter}}" />
+                                </VerticalStackLayout>
+                            </DataTemplate>
+                        </BindableLayout.ItemTemplate>
+                    </VerticalStackLayout>
+                </VerticalStackLayout>
+            </Border>
+
+        </VerticalStackLayout>
+    </ScrollView>
+</ContentPage>

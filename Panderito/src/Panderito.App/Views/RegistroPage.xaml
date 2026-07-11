@@ -1,0 +1,120 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:vm="clr-namespace:Panderito.Core.ViewModels;assembly=Panderito.Core"
+             xmlns:models="clr-namespace:Panderito.Core.Models;assembly=Panderito.Core"
+             x:Class="Panderito.App.Views.RegistroPage"
+             x:DataType="vm:RegistroMovimientoViewModel"
+             Title="Registrar"
+             BackgroundColor="{AppThemeBinding Light={StaticResource Fondo}, Dark={StaticResource FondoDark}}">
+
+    <ScrollView>
+        <VerticalStackLayout Padding="16,20" Spacing="16">
+
+            <!-- Selector Gasto / Ingreso -->
+            <Border StrokeThickness="0" StrokeShape="RoundRectangle 16"
+                    BackgroundColor="{AppThemeBinding Light={StaticResource Superficie}, Dark={StaticResource SuperficieDark}}"
+                    Padding="4">
+                <Grid ColumnDefinitions="*,*" ColumnSpacing="4">
+                    <Button Grid.Column="0" Text="Gasto" FontAttributes="Bold" CornerRadius="12" HeightRequest="44"
+                            Command="{Binding MarcarGastoCommand}">
+                        <Button.Triggers>
+                            <DataTrigger TargetType="Button" Binding="{Binding EsGasto}" Value="True">
+                                <Setter Property="BackgroundColor" Value="{AppThemeBinding Light={StaticResource GastoSoft}, Dark={StaticResource GastoSoftDark}}" />
+                                <Setter Property="TextColor" Value="{AppThemeBinding Light={StaticResource Gasto}, Dark={StaticResource GastoDark}}" />
+                            </DataTrigger>
+                            <DataTrigger TargetType="Button" Binding="{Binding EsGasto}" Value="False">
+                                <Setter Property="BackgroundColor" Value="Transparent" />
+                                <Setter Property="TextColor" Value="{AppThemeBinding Light={StaticResource TextoSuave}, Dark={StaticResource TextoSuaveDark}}" />
+                            </DataTrigger>
+                        </Button.Triggers>
+                    </Button>
+                    <Button Grid.Column="1" Text="Ingreso" FontAttributes="Bold" CornerRadius="12" HeightRequest="44"
+                            Command="{Binding MarcarIngresoCommand}">
+                        <Button.Triggers>
+                            <DataTrigger TargetType="Button" Binding="{Binding EsGasto}" Value="False">
+                                <Setter Property="BackgroundColor" Value="{AppThemeBinding Light={StaticResource IngresoSoft}, Dark={StaticResource IngresoSoftDark}}" />
+                                <Setter Property="TextColor" Value="{AppThemeBinding Light={StaticResource Ingreso}, Dark={StaticResource IngresoDark}}" />
+                            </DataTrigger>
+                            <DataTrigger TargetType="Button" Binding="{Binding EsGasto}" Value="True">
+                                <Setter Property="BackgroundColor" Value="Transparent" />
+                                <Setter Property="TextColor" Value="{AppThemeBinding Light={StaticResource TextoSuave}, Dark={StaticResource TextoSuaveDark}}" />
+                            </DataTrigger>
+                        </Button.Triggers>
+                    </Button>
+                </Grid>
+            </Border>
+
+            <!-- Monto protagonista -->
+            <VerticalStackLayout Spacing="4">
+                <Label Text="Monto" Style="{StaticResource TextoSecundario}" HorizontalOptions="Center" />
+                <Grid ColumnDefinitions="Auto,Auto" HorizontalOptions="Center" ColumnSpacing="8">
+                    <Label Grid.Column="0" Text="S/" FontSize="30" FontAttributes="Bold" VerticalOptions="Center"
+                           TextColor="{AppThemeBinding Light={StaticResource TextoSuave}, Dark={StaticResource TextoSuaveDark}}" />
+                    <Entry Grid.Column="1"
+                           Text="{Binding MontoTexto}"
+                           Placeholder="0.00"
+                           Keyboard="Numeric"
+                           FontSize="42"
+                           FontAttributes="Bold"
+                           MinimumWidthRequest="160"
+                           HorizontalTextAlignment="Center"
+                           VerticalOptions="Center">
+                        <Entry.Triggers>
+                            <DataTrigger TargetType="Entry" Binding="{Binding EsGasto}" Value="True">
+                                <Setter Property="TextColor" Value="{AppThemeBinding Light={StaticResource Gasto}, Dark={StaticResource GastoDark}}" />
+                            </DataTrigger>
+                            <DataTrigger TargetType="Entry" Binding="{Binding EsGasto}" Value="False">
+                                <Setter Property="TextColor" Value="{AppThemeBinding Light={StaticResource Ingreso}, Dark={StaticResource IngresoDark}}" />
+                            </DataTrigger>
+                        </Entry.Triggers>
+                    </Entry>
+                </Grid>
+            </VerticalStackLayout>
+
+            <!-- Categoría y cuenta -->
+            <Grid ColumnDefinitions="*,*" ColumnSpacing="12">
+                <Border Grid.Column="0" Style="{StaticResource Tarjeta}" Padding="12,8">
+                    <VerticalStackLayout Spacing="2">
+                        <Label Text="Categoría" Style="{StaticResource TextoSecundario}" FontSize="11" />
+                        <Picker ItemsSource="{Binding Categorias}"
+                                SelectedItem="{Binding CategoriaSeleccionada}"
+                                ItemDisplayBinding="{Binding Nombre, x:DataType=models:Categoria}"
+                                FontAttributes="Bold" />
+                    </VerticalStackLayout>
+                </Border>
+                <Border Grid.Column="1" Style="{StaticResource Tarjeta}" Padding="12,8">
+                    <VerticalStackLayout Spacing="2">
+                        <Label Text="Cuenta" Style="{StaticResource TextoSecundario}" FontSize="11" />
+                        <Picker ItemsSource="{Binding Cuentas}"
+                                SelectedItem="{Binding CuentaSeleccionada}"
+                                ItemDisplayBinding="{Binding Nombre, x:DataType=models:Cuenta}"
+                                FontAttributes="Bold" />
+                    </VerticalStackLayout>
+                </Border>
+            </Grid>
+
+            <!-- Fecha y nota -->
+            <Border Style="{StaticResource Tarjeta}" Padding="12,8">
+                <VerticalStackLayout Spacing="2">
+                    <Label Text="Fecha" Style="{StaticResource TextoSecundario}" FontSize="11" />
+                    <DatePicker Date="{Binding Fecha}" FontAttributes="Bold" Format="dd/MM/yyyy" />
+                </VerticalStackLayout>
+            </Border>
+
+            <Border Style="{StaticResource Tarjeta}" Padding="12,8">
+                <VerticalStackLayout Spacing="2">
+                    <Label Text="Nota (opcional)" Style="{StaticResource TextoSecundario}" FontSize="11" />
+                    <Entry Text="{Binding Nota}" Placeholder="Ej. menú del día" />
+                </VerticalStackLayout>
+            </Border>
+
+            <!-- Guardar -->
+            <Button Text="Guardar"
+                    Style="{StaticResource BotonPrimario}"
+                    Command="{Binding GuardarCommand}"
+                    IsEnabled="{Binding NoEstaOcupado}" />
+
+        </VerticalStackLayout>
+    </ScrollView>
+</ContentPage>
