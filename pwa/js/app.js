@@ -57,7 +57,14 @@ const App = (() => {
   }
 
   function marcarTab(ruta) {
-    const mapa = { inicio: 'inicio', movimientos: 'movimientos', registrar: 'registrar', reportes: 'reportes', mas: 'mas', cuentas: 'mas', categorias: 'mas', ajustes: 'mas', detalle: 'movimientos' };
+    const mapa = {
+      inicio: 'inicio', movimientos: 'movimientos', registrar: 'registrar', reportes: 'reportes',
+      mas: 'mas', cuentas: 'mas', categorias: 'mas', ajustes: 'mas', detalle: 'movimientos',
+      prestamos: 'mas', prestamoNuevo: 'mas', prestamoDet: 'mas',
+      panderos: 'mas', panderoNuevo: 'mas', panderoDet: 'mas',
+      metas: 'mas', metaNueva: 'mas', recurrentes: 'mas', recurrenteNuevo: 'mas',
+      presupuestos: 'mas', presupuestoNuevo: 'mas',
+    };
     const activa = mapa[ruta] || 'inicio';
     document.querySelectorAll('.tab').forEach((t) => t.classList.toggle('activo', t.dataset.ruta === activa));
   }
@@ -302,20 +309,21 @@ const App = (() => {
   // ============================================================
   registrar('mas', () => `
     <div class="titulo-pagina"><h1>Más</h1></div>
+    <div class="seccion-tit"><h2>Módulos</h2></div>
+    <div class="opciones">
+      ${opcion('🤝', 'Panderos', 'Juntas de ahorro rotativo', "App.ir('panderos')")}
+      ${opcion('💸', 'Préstamos', 'Me deben / debo', "App.ir('prestamos')")}
+      ${opcion('🎯', 'Metas de ahorro', 'Objetivos con progreso', "App.ir('metas')")}
+      ${opcion('🔁', 'Recurrentes', 'Pagos que se repiten', "App.ir('recurrentes')")}
+      ${opcion('📅', 'Presupuestos', 'Límites por categoría', "App.ir('presupuestos')")}
+    </div>
+    <div class="seccion-tit"><h2>Configuración</h2></div>
     <div class="opciones">
       ${opcion('💳', 'Cuentas', 'Efectivo, banco, billeteras', "App.ir('cuentas')")}
       ${opcion('🏷️', 'Categorías', 'Personaliza tus categorías', "App.ir('categorias')")}
       ${opcion('⚙️', 'Ajustes', 'Tema, datos y copia de seguridad', "App.ir('ajustes')")}
     </div>
-    <div class="seccion-tit"><h2>Próximamente</h2></div>
-    <div class="opciones" style="opacity:.6">
-      ${opcion('🤝', 'Panderos', 'Juntas de ahorro rotativo', '', true)}
-      ${opcion('💸', 'Préstamos', 'Me deben / debo', '', true)}
-      ${opcion('🎯', 'Metas de ahorro', 'Objetivos con progreso', '', true)}
-      ${opcion('🔁', 'Recurrentes', 'Pagos que se repiten', '', true)}
-      ${opcion('📅', 'Presupuestos', 'Límites por categoría', '', true)}
-    </div>
-    <p class="pie-marca">Panderito PWA · v1</p>
+    <p class="pie-marca">Panderito PWA · v2</p>
   `);
   function opcion(ic, t, s, onclick, deshab) {
     return `<button class="opcion" ${deshab ? 'disabled' : `onclick="${onclick}"`}>
@@ -388,6 +396,211 @@ const App = (() => {
     `;
   });
 
+  // ---------- Helpers de fecha para módulos ----------
+  function diasHasta(iso) { const hoy = new Date(); hoy.setHours(0, 0, 0, 0); const f = new Date(iso); f.setHours(0, 0, 0, 0); return Math.round((f - hoy) / 86400000); }
+  function fechaLarga(iso) { return new Date(iso).toLocaleDateString('es-PE', { day: '2-digit', month: 'long', year: 'numeric' }); }
+  function etiquetaEstadoPrestamo(e) { return { Pendiente: 'Pendiente', Parcial: 'Abono parcial', Pagado: '✓ Pagado' }[e] || e; }
+  const FRECUENCIAS = [['Semanal', 'Semanal'], ['Quincenal', 'Quincenal'], ['Mensual', 'Mensual']];
+  const opcsFrec = (sel) => FRECUENCIAS.map(([v, t]) => `<option value="${v}" ${sel === v ? 'selected' : ''}>${t}</option>`).join('');
+
+  // ============================================================
+  //  PRÉSTAMOS
+  // ============================================================
+  registrar('prestamos', () => {
+    const meDeben = Datos.totalPendientePorTipo('PorCobrar');
+    const debo = Datos.totalPendientePorTipo('PorPagar');
+    const lista = Datos.prestamos();
+    return `
+      <div class="titulo-pagina"><button class="btn-volver" onclick="App.ir('mas')">‹</button><h1>Préstamos</h1></div>
+      <div class="duo">
+        <div class="mini"><p class="etq"><span class="punto ingreso"></span> Me deben</p><p class="val ingreso">${Moneda.fmt(meDeben)}</p></div>
+        <div class="mini"><p class="etq"><span class="punto gasto"></span> Yo debo</p><p class="val gasto">${Moneda.fmt(debo)}</p></div>
+      </div>
+      ${lista.length ? `<div class="lista">${lista.map(itemPrestamo).join('')}</div>` : estadoVacio('🤝', 'Sin préstamos', 'Registra lo que te deben o lo que debes.')}
+      <button class="btn" onclick="App.ir('prestamoNuevo')">＋ Nuevo préstamo</button>
+      <div style="height:14px"></div>`;
+  });
+  function itemPrestamo(p) {
+    const pend = Datos.saldoPendiente(p);
+    const col = p.tipo === 'PorCobrar' ? 'var(--ingreso)' : 'var(--gasto)';
+    return `<button class="item" onclick="App.ir('prestamoDet',{id:${p.id}})">
+      <span class="ic" style="background:${col}22;color:${col}">${p.tipo === 'PorCobrar' ? '📥' : '📤'}</span>
+      <span class="cuerpo"><p class="t">${esc(p.persona)}</p><p class="s">${p.tipo === 'PorCobrar' ? 'Me debe' : 'Le debo'} · ${etiquetaEstadoPrestamo(p.estado)}</p></span>
+      <span class="monto">${Moneda.fmt(pend)}</span></button>`;
+  }
+  registrar('prestamoNuevo', () => `
+    <div class="titulo-pagina"><button class="btn-volver" onclick="App.ir('prestamos')">‹</button><h1>Nuevo préstamo</h1></div>
+    <div class="campo"><label>Persona</label><input class="entrada" id="p-persona" placeholder="ej. Juan" /></div>
+    <div class="campo"><label>Monto (S/)</label><input class="entrada" id="p-monto" type="number" inputmode="decimal" placeholder="0.00" /></div>
+    <div class="campo"><label>Tipo</label><select class="entrada" id="p-tipo"><option value="PorCobrar">Me deben (por cobrar)</option><option value="PorPagar">Yo debo (por pagar)</option></select></div>
+    <div class="campo"><label>Fecha</label><input class="entrada" id="p-fecha" type="date" value="${hoyInput()}" /></div>
+    <div class="campo"><label>Nota (opcional)</label><input class="entrada" id="p-nota" placeholder="Detalle" /></div>
+    <button class="btn" onclick="App.guardarPrestamo()">✓ Registrar</button><div style="height:14px"></div>`);
+  registrar('prestamoDet', (params) => {
+    const p = Datos.prestamo(Number(params.id));
+    if (!p) return `<div class="titulo-pagina"><button class="btn-volver" onclick="App.ir('prestamos')">‹</button><h1>Préstamo</h1></div>${estadoVacio('❓', 'No encontrado', '')}`;
+    const pend = Datos.saldoPendiente(p);
+    const abonos = Datos.abonosDe(p.id);
+    return `
+      <div class="titulo-pagina"><button class="btn-volver" onclick="App.ir('prestamos')">‹</button><h1>${esc(p.persona)}</h1></div>
+      <div class="card" style="text-align:center;padding:24px">
+        <p style="color:var(--texto-suave);margin:0">${p.tipo === 'PorCobrar' ? 'Te debe' : 'Le debes'}</p>
+        <p style="font-size:32px;font-weight:800;margin:6px 0 0;color:${p.tipo === 'PorCobrar' ? 'var(--ingreso)' : 'var(--gasto)'}">${Moneda.fmt(pend)}</p>
+        <p style="color:var(--texto-tenue);margin:6px 0 0;font-size:13px">de ${Moneda.fmt(p.monto)} · ${etiquetaEstadoPrestamo(p.estado)}</p>
+      </div>
+      ${p.estado !== 'Pagado' ? `<button class="btn" onclick="App.abonarPrestamo(${p.id})">＋ Registrar abono</button><div style="height:8px"></div><button class="btn secundario" onclick="App.pagarPrestamo(${p.id})">✓ Marcar como pagado</button>` : '<div class="card" style="text-align:center;color:var(--ingreso);font-weight:700">✓ Préstamo saldado</div>'}
+      <div class="seccion-tit"><h2>Abonos (${abonos.length})</h2></div>
+      ${abonos.length ? `<div class="lista">${abonos.map((a) => `<div class="item"><span class="ic" style="background:var(--ingreso)22;color:var(--ingreso)">💵</span><span class="cuerpo"><p class="t">${Moneda.fmt(a.monto)}</p><p class="s">${fechaCorta(a.fecha)}</p></span></div>`).join('')}</div>` : `<p style="color:var(--texto-tenue);text-align:center;padding:12px">Aún no hay abonos.</p>`}
+      <div style="height:10px"></div><button class="btn peligro" onclick="App.borrarPrestamo(${p.id})">🗑️ Eliminar préstamo</button>`;
+  });
+
+  // ============================================================
+  //  PANDEROS
+  // ============================================================
+  registrar('panderos', () => {
+    const lista = Datos.panderos();
+    return `
+      <div class="titulo-pagina"><button class="btn-volver" onclick="App.ir('mas')">‹</button><h1>Panderos</h1></div>
+      ${lista.length ? `<div class="lista">${lista.map(itemPandero).join('')}</div>` : estadoVacio('🤝', 'Sin panderos', 'Crea una junta de ahorro rotativo con tus turnos.')}
+      <button class="btn" onclick="App.ir('panderoNuevo')">＋ Nuevo pandero</button><div style="height:14px"></div>`;
+  });
+  function itemPandero(p) {
+    const r = Datos.resumenPandero(p);
+    const mi = r.fechaMiTurno ? diasHasta(r.fechaMiTurno) : null;
+    const cuando = mi === null ? '' : mi > 0 ? `Me toca en ${mi} día${mi === 1 ? '' : 's'}` : mi === 0 ? '¡Me toca hoy!' : 'Mi turno ya pasó';
+    return `<button class="item" onclick="App.ir('panderoDet',{id:${p.id}})">
+      <span class="ic" style="background:var(--primary)22;color:var(--primary)">🤝</span>
+      <span class="cuerpo"><p class="t">${esc(p.nombre)}</p><p class="s">${p.numParticipantes} personas · ${Moneda.fmt(p.cuotaMonto)}/${p.frecuencia.toLowerCase()} · ${cuando}</p></span>
+      <span class="monto">${r.turnosCobrados}/${r.totalTurnos}</span></button>`;
+  }
+  registrar('panderoNuevo', () => `
+    <div class="titulo-pagina"><button class="btn-volver" onclick="App.ir('panderos')">‹</button><h1>Nuevo pandero</h1></div>
+    <div class="campo"><label>Nombre</label><input class="entrada" id="pa-nombre" placeholder="ej. Junta de la oficina" /></div>
+    <div class="campo"><label>N.º de participantes</label><input class="entrada" id="pa-num" type="number" inputmode="numeric" value="10" /></div>
+    <div class="campo"><label>Cuota (S/)</label><input class="entrada" id="pa-cuota" type="number" inputmode="decimal" placeholder="0.00" /></div>
+    <div class="campo"><label>Frecuencia</label><select class="entrada" id="pa-frec">${opcsFrec('Mensual')}</select></div>
+    <div class="campo"><label>Fecha de inicio</label><input class="entrada" id="pa-inicio" type="date" value="${hoyInput()}" /></div>
+    <div class="campo"><label>Mi turno (posición)</label><input class="entrada" id="pa-turno" type="number" inputmode="numeric" value="1" /></div>
+    <button class="btn" onclick="App.guardarPandero()">✓ Crear con turnos</button><div style="height:14px"></div>`);
+  registrar('panderoDet', (params) => {
+    const p = Datos.pandero(Number(params.id));
+    if (!p) return `<div class="titulo-pagina"><button class="btn-volver" onclick="App.ir('panderos')">‹</button><h1>Pandero</h1></div>${estadoVacio('❓', 'No encontrado', '')}`;
+    const r = Datos.resumenPandero(p);
+    const turnos = Datos.turnosDe(p.id);
+    const mi = r.fechaMiTurno ? diasHasta(r.fechaMiTurno) : null;
+    return `
+      <div class="titulo-pagina"><button class="btn-volver" onclick="App.ir('panderos')">‹</button><h1>${esc(p.nombre)}</h1></div>
+      <div class="card-saldo"><p class="etq">Cuándo me toca</p><p class="monto" style="font-size:24px">${r.fechaMiTurno ? fechaLarga(r.fechaMiTurno) : '—'}</p><p class="cuentas-min">${mi === null ? '' : mi > 0 ? `en ${mi} días` : mi === 0 ? '¡hoy!' : 'ya pasó'} · recibiré ${Moneda.fmt(r.montoARecibir)}</p></div>
+      <div class="duo">
+        <div class="mini"><p class="etq">Aportado</p><p class="val">${Moneda.fmt(r.aportado)}</p></div>
+        <div class="mini"><p class="etq">Turnos cobrados</p><p class="val">${r.turnosCobrados}/${r.totalTurnos}</p></div>
+      </div>
+      <div class="seccion-tit"><h2>Turnos</h2></div>
+      <div class="lista">${turnos.map((t) => `<div class="item"><span class="ic" style="background:${t.numeroTurno === p.miTurno ? 'var(--primary)22;color:var(--primary)' : 'var(--linea);color:var(--texto-suave)'}">${t.numeroTurno}</span><span class="cuerpo"><p class="t">${esc(t.nombreParticipante)}${t.numeroTurno === p.miTurno ? ' ⭐' : ''}</p><p class="s">${fechaLarga(t.fechaCobro)}</p></span><button class="btn chico ${t.cobrado ? '' : 'secundario'}" onclick="App.cobrarTurno(${p.id},${t.id},${!t.cobrado})">${t.cobrado ? '✓ Cobrado' : 'Marcar'}</button></div>`).join('')}</div>
+      <div style="height:10px"></div><button class="btn peligro" onclick="App.borrarPandero(${p.id})">🗑️ Eliminar pandero</button>`;
+  });
+
+  // ============================================================
+  //  METAS DE AHORRO
+  // ============================================================
+  registrar('metas', () => {
+    const lista = Datos.metas();
+    return `
+      <div class="titulo-pagina"><button class="btn-volver" onclick="App.ir('mas')">‹</button><h1>Metas de ahorro</h1></div>
+      ${lista.length ? lista.map(tarjetaMeta).join('') : estadoVacio('🎯', 'Sin metas', 'Define un objetivo de ahorro y sigue tu progreso.')}
+      <button class="btn" onclick="App.ir('metaNueva')">＋ Nueva meta</button><div style="height:14px"></div>`;
+  });
+  function tarjetaMeta(m) {
+    const pct = Math.min(100, m.montoMeta > 0 ? m.montoActual / m.montoMeta * 100 : 0);
+    const lograda = m.montoActual >= m.montoMeta && m.montoMeta > 0;
+    return `<div class="card">
+      <div class="fila" style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+        <b>🎯 ${esc(m.nombre)}</b><span style="font-size:13px;color:var(--texto-suave)">${Math.round(pct)}%</span>
+      </div>
+      <div class="track" style="height:12px;border-radius:999px;background:var(--linea);overflow:hidden"><div class="relleno" style="height:100%;width:${pct}%;background:${lograda ? 'var(--ingreso)' : 'var(--primary)'}"></div></div>
+      <p style="font-size:13px;color:var(--texto-suave);margin:8px 0 0">${Moneda.fmt(m.montoActual)} de ${Moneda.fmt(m.montoMeta)}${lograda ? ' · ¡Lograda! 🎉' : ''}</p>
+      <div class="acciones-agente" style="display:flex;gap:8px;margin-top:12px">
+        <button class="btn chico" onclick="App.abonarMeta(${m.id})">＋ Abonar</button>
+        <button class="btn chico secundario" onclick="App.borrarMeta(${m.id})">🗑️ Eliminar</button>
+      </div></div>`;
+  }
+  registrar('metaNueva', () => `
+    <div class="titulo-pagina"><button class="btn-volver" onclick="App.ir('metas')">‹</button><h1>Nueva meta</h1></div>
+    <div class="campo"><label>Nombre</label><input class="entrada" id="m-nombre" placeholder="ej. Viaje a Cusco" /></div>
+    <div class="campo"><label>Monto meta (S/)</label><input class="entrada" id="m-meta" type="number" inputmode="decimal" placeholder="0.00" /></div>
+    <div class="campo"><label>Ya tengo ahorrado (opcional)</label><input class="entrada" id="m-actual" type="number" inputmode="decimal" placeholder="0.00" /></div>
+    <div class="campo"><label>Fecha objetivo (opcional)</label><input class="entrada" id="m-fecha" type="date" /></div>
+    <button class="btn" onclick="App.guardarMeta()">✓ Crear meta</button><div style="height:14px"></div>`);
+
+  // ============================================================
+  //  RECURRENTES
+  // ============================================================
+  registrar('recurrentes', () => {
+    const lista = Datos.recurrentes();
+    return `
+      <div class="titulo-pagina"><button class="btn-volver" onclick="App.ir('mas')">‹</button><h1>Recurrentes</h1></div>
+      ${lista.length ? `<div class="lista">${lista.map(itemRecurrente).join('')}</div>` : estadoVacio('🔁', 'Sin gastos recurrentes', 'Agrega pagos que se repiten (alquiler, servicios, suscripciones).')}
+      <button class="btn" onclick="App.ir('recurrenteNuevo')">＋ Nuevo recurrente</button><div style="height:14px"></div>`;
+  });
+  function itemRecurrente(r) {
+    const cat = Datos.categoria(r.categoriaId) || { icono: '🔁', color: '#6B7280' };
+    const d = diasHasta(r.proximaFecha);
+    const vence = d < 0 ? `Vencido hace ${-d} día${d === -1 ? '' : 's'}` : d === 0 ? 'Vence hoy' : `Vence en ${d} día${d === 1 ? '' : 's'}`;
+    return `<div class="item">
+      <span class="ic" style="background:${cat.color}22;color:${cat.color}">${cat.icono}</span>
+      <span class="cuerpo"><p class="t">${esc(r.nombre)}</p><p class="s">${Moneda.fmt(r.monto)} · ${r.frecuencia.toLowerCase()} · ${vence}</p></span>
+      <button class="btn chico" onclick="App.pagarRecurrente(${r.id})">Pagar</button>
+      <button class="btn-volver" style="margin-left:6px" onclick="App.borrarRecurrente(${r.id})">🗑️</button></div>`;
+  }
+  registrar('recurrenteNuevo', () => {
+    const cats = Datos.categorias('Gasto');
+    const ctas = Datos.cuentas(true);
+    return `
+      <div class="titulo-pagina"><button class="btn-volver" onclick="App.ir('recurrentes')">‹</button><h1>Nuevo recurrente</h1></div>
+      <div class="campo"><label>Nombre</label><input class="entrada" id="r-nombre" placeholder="ej. Netflix" /></div>
+      <div class="campo"><label>Monto (S/)</label><input class="entrada" id="r-monto" type="number" inputmode="decimal" placeholder="0.00" /></div>
+      <div class="campo"><label>Categoría</label><select class="entrada" id="r-cat">${cats.map((c) => `<option value="${c.id}">${c.icono} ${esc(c.nombre)}</option>`).join('')}</select></div>
+      <div class="campo"><label>Cuenta</label><select class="entrada" id="r-cuenta">${ctas.map((c) => `<option value="${c.id}">${c.icono} ${esc(c.nombre)}</option>`).join('')}</select></div>
+      <div class="campo"><label>Frecuencia</label><select class="entrada" id="r-frec">${opcsFrec('Mensual')}</select></div>
+      <div class="campo"><label>Próximo pago</label><input class="entrada" id="r-fecha" type="date" value="${hoyInput()}" /></div>
+      <button class="btn" onclick="App.guardarRecurrente()">✓ Guardar</button><div style="height:14px"></div>`;
+  });
+
+  // ============================================================
+  //  PRESUPUESTOS
+  // ============================================================
+  registrar('presupuestos', () => {
+    const lista = Datos.presupuestos();
+    return `
+      <div class="titulo-pagina"><button class="btn-volver" onclick="App.ir('mas')">‹</button><h1>Presupuestos</h1></div>
+      ${lista.length ? lista.map(tarjetaPresupuesto).join('') : estadoVacio('📅', 'Sin presupuestos', 'Pon un límite de gasto por categoría y te avisamos al 80% y 100%.')}
+      <button class="btn" onclick="App.ir('presupuestoNuevo')">＋ Nuevo presupuesto</button><div style="height:14px"></div>`;
+  });
+  function tarjetaPresupuesto(p) {
+    const cat = Datos.categoria(p.categoriaId) || { nombre: '—', icono: '🏷️', color: '#6B7280' };
+    const av = Datos.avancePresupuesto(p);
+    const color = av.nivel === 'Excedido' ? 'var(--gasto)' : av.nivel === 'Alerta' ? 'var(--pendiente)' : 'var(--ingreso)';
+    const aviso = av.nivel === 'Excedido' ? '🔴 Excedido' : av.nivel === 'Alerta' ? '🟡 Cerca del límite' : '🟢 En control';
+    return `<div class="card">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+        <b>${cat.icono} ${esc(cat.nombre)}</b><span style="font-size:12px;color:${color};font-weight:700">${aviso}</span>
+      </div>
+      <div class="track" style="height:12px;border-radius:999px;background:var(--linea);overflow:hidden"><div style="height:100%;width:${Math.min(100, av.pct)}%;background:${color}"></div></div>
+      <p style="font-size:13px;color:var(--texto-suave);margin:8px 0 0">${Moneda.fmt(av.gastado)} de ${Moneda.fmt(av.limite)} · ${p.periodo.toLowerCase()} · ${Math.round(av.pct)}%</p>
+      <div style="margin-top:10px"><button class="btn chico secundario" onclick="App.borrarPresupuesto(${p.id})">🗑️ Eliminar</button></div>
+    </div>`;
+  }
+  registrar('presupuestoNuevo', () => {
+    const cats = Datos.categorias('Gasto');
+    return `
+      <div class="titulo-pagina"><button class="btn-volver" onclick="App.ir('presupuestos')">‹</button><h1>Nuevo presupuesto</h1></div>
+      <div class="campo"><label>Categoría</label><select class="entrada" id="b-cat">${cats.map((c) => `<option value="${c.id}">${c.icono} ${esc(c.nombre)}</option>`).join('')}</select></div>
+      <div class="campo"><label>Límite (S/)</label><input class="entrada" id="b-monto" type="number" inputmode="decimal" placeholder="0.00" /></div>
+      <div class="campo"><label>Período</label><select class="entrada" id="b-periodo">${opcsFrec('Mensual')}</select></div>
+      <p style="font-size:13px;color:var(--texto-tenue);margin:0 2px 14px">Se te avisará al llegar al 80% y al 100% del límite en el período.</p>
+      <button class="btn" onclick="App.guardarPresupuesto()">✓ Guardar</button><div style="height:14px"></div>`;
+  });
+
   // ============================================================
   //  ACCIONES
   // ============================================================
@@ -429,6 +642,83 @@ const App = (() => {
       if (Datos.eliminarCategoria(id)) { toast('Categoría eliminada'); render(); }
       else toast('No se puede: tiene movimientos');
     },
+    // ----- Préstamos -----
+    guardarPrestamo() {
+      const gv = (id) => (document.getElementById(id)?.value || '').trim();
+      const persona = gv('p-persona'); const monto = parseFloat(gv('p-monto'));
+      if (!persona) return toast('Escribe el nombre de la persona');
+      if (!monto || monto <= 0) return toast('Ingresa un monto válido');
+      Datos.guardarPrestamo({ persona, monto, tipo: gv('p-tipo'), fecha: new Date(gv('p-fecha') + 'T12:00:00').toISOString(), nota: gv('p-nota'), estado: 'Pendiente' });
+      toast('Préstamo registrado ✓'); ir('prestamos');
+    },
+    abonarPrestamo(id) {
+      const p = Datos.prestamo(id); if (!p) return;
+      const pend = Datos.saldoPendiente(p);
+      const v = prompt(`¿Cuánto abona? (pendiente: ${Moneda.fmt(pend)})`, '');
+      const monto = parseFloat(v); if (!monto || monto <= 0) return;
+      Datos.registrarAbono(id, monto); toast('Abono registrado ✓'); render();
+    },
+    pagarPrestamo(id) { if (!confirm('¿Marcar como totalmente pagado?')) return; Datos.marcarPagadoPrestamo(id); toast('Préstamo saldado ✓'); render(); },
+    borrarPrestamo(id) { if (!confirm('¿Eliminar este préstamo y sus abonos?')) return; Datos.eliminarPrestamo(id); toast('Préstamo eliminado'); ir('prestamos'); },
+
+    // ----- Panderos -----
+    guardarPandero() {
+      const gv = (id) => (document.getElementById(id)?.value || '').trim();
+      const nombre = gv('pa-nombre'); const num = parseInt(gv('pa-num'), 10); const cuota = parseFloat(gv('pa-cuota')); const turno = parseInt(gv('pa-turno'), 10) || 1;
+      if (!nombre) return toast('Escribe un nombre');
+      if (!num || num < 2) return toast('Debe haber al menos 2 participantes');
+      if (!cuota || cuota <= 0) return toast('Ingresa la cuota');
+      if (turno < 1 || turno > num) return toast('Tu turno debe estar entre 1 y ' + num);
+      Datos.crearPanderoConTurnos({ nombre, numParticipantes: num, cuotaMonto: cuota, frecuencia: gv('pa-frec'), fechaInicio: new Date(gv('pa-inicio') + 'T12:00:00').toISOString(), miTurno: turno, activo: true });
+      toast('Pandero creado ✓'); ir('panderos');
+    },
+    cobrarTurno(panderoId, turnoId, cobrado) { Datos.marcarCobrado(turnoId, cobrado); render(); },
+    borrarPandero(id) { if (!confirm('¿Eliminar este pandero y sus turnos?')) return; Datos.eliminarPandero(id); toast('Pandero eliminado'); ir('panderos'); },
+
+    // ----- Metas -----
+    guardarMeta() {
+      const gv = (id) => (document.getElementById(id)?.value || '').trim();
+      const nombre = gv('m-nombre'); const metaMonto = parseFloat(gv('m-meta')); const actual = parseFloat(gv('m-actual')) || 0; const fecha = gv('m-fecha');
+      if (!nombre) return toast('Escribe un nombre');
+      if (!metaMonto || metaMonto <= 0) return toast('Ingresa el monto meta');
+      Datos.guardarMeta({ nombre, montoMeta: metaMonto, montoActual: actual, fechaMeta: fecha ? new Date(fecha + 'T12:00:00').toISOString() : null });
+      toast('Meta creada ✓'); ir('metas');
+    },
+    abonarMeta(id) {
+      const m = Datos.meta(id); if (!m) return;
+      const v = prompt(`¿Cuánto abonas a «${m.nombre}»?`, ''); const monto = parseFloat(v);
+      if (!monto || monto <= 0) return;
+      Datos.abonarMeta(id, monto); toast('¡Abono a tu meta! 🎯'); render();
+    },
+    borrarMeta(id) { if (!confirm('¿Eliminar esta meta?')) return; Datos.eliminarMeta(id); toast('Meta eliminada'); render(); },
+
+    // ----- Recurrentes -----
+    guardarRecurrente() {
+      const gv = (id) => (document.getElementById(id)?.value || '').trim();
+      const nombre = gv('r-nombre'); const monto = parseFloat(gv('r-monto'));
+      if (!nombre) return toast('Escribe un nombre');
+      if (!monto || monto <= 0) return toast('Ingresa el monto');
+      Datos.guardarRecurrente({ nombre, monto, categoriaId: Number(gv('r-cat')), cuentaId: Number(gv('r-cuenta')), frecuencia: gv('r-frec'), proximaFecha: new Date(gv('r-fecha') + 'T12:00:00').toISOString(), activo: true });
+      toast('Recurrente guardado ✓'); ir('recurrentes');
+    },
+    pagarRecurrente(id) {
+      const r = Datos.recurrente(id); if (!r) return;
+      if (!confirm(`¿Registrar el pago de «${r.nombre}» (${Moneda.fmt(r.monto)}) y avanzar la fecha?`)) return;
+      Datos.registrarPagoRecurrente(id); toast('Pago registrado ✓'); render();
+    },
+    borrarRecurrente(id) { if (!confirm('¿Eliminar este recurrente?')) return; Datos.eliminarRecurrente(id); toast('Recurrente eliminado'); render(); },
+
+    // ----- Presupuestos -----
+    guardarPresupuesto() {
+      const gv = (id) => (document.getElementById(id)?.value || '').trim();
+      const cat = Number(gv('b-cat')); const limite = parseFloat(gv('b-monto'));
+      if (!cat) return toast('Elige una categoría');
+      if (!limite || limite <= 0) return toast('Ingresa el límite');
+      Datos.guardarPresupuesto({ categoriaId: cat, montoLimite: limite, periodo: gv('b-periodo') });
+      toast('Presupuesto guardado ✓'); ir('presupuestos');
+    },
+    borrarPresupuesto(id) { if (!confirm('¿Eliminar este presupuesto?')) return; Datos.eliminarPresupuesto(id); toast('Presupuesto eliminado'); render(); },
+
     setTema(t) { aplicarTema(t); render(); },
     exportarDatos() {
       const blob = new Blob([Datos.exportar()], { type: 'application/json' });

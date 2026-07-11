@@ -18,9 +18,13 @@ datos **solo en el dispositivo** (localStorage) — no hay servidor ni cuenta.
 | **Reportes** (navegación por mes, ahorro/déficit, 6 meses, gasto por categoría) | ✅ |
 | **Cuentas** (lista con saldo calculado, crear) | ✅ |
 | **Categorías** (gastos/ingresos, eliminar las libres) | ✅ |
+| **Préstamos** (Me deben/Yo debo, abonos parciales, marcar pagado) | ✅ |
+| **Panderos** (crear con turnos automáticos, "cuándo me toca", marcar cobrado) | ✅ |
+| **Metas de ahorro** (progreso %, abonar, "¡Lograda! 🎉") | ✅ |
+| **Recurrentes** (próximos pagos, "vence en X días", registrar pago) | ✅ |
+| **Presupuestos** (límite por categoría, alertas 80%/100%) | ✅ |
 | **Ajustes** (tema claro/oscuro/auto, exportar copia JSON, borrar todo) | ✅ |
 | Instalable como PWA (offline, icono, pantalla de inicio) | ✅ |
-| Panderos · Préstamos · Metas · Recurrentes · Presupuestos | ⏳ pendiente (siguiente iteración) |
 
 ## Cómo probarlo
 
