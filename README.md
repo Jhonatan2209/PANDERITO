@@ -25,6 +25,7 @@ metas de ahorro, presupuestos, movimientos recurrentes, reportes y —lo que le 
 │   └── tests/
 │       └── Panderito.Tests/  # Pruebas unitarias
 ├── branding/             # Logo y variaciones (SVG)
+├── docs/                 # ARQUITECTURA.md — mapa del código
 ├── CONTEXTO/             # Contexto y diseño de referencia
 └── INSTRUCCIONES/        # Guía de desarrollo (CLAUDE.md)
 ```

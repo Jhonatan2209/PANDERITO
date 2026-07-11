@@ -9,6 +9,7 @@ Antes se llamaba **Chanchito**; el 2026-07-10 se renombró a **Panderito** (ver 
 2. **`Panderito/PROGRESO.md`** — checklist vivo de fases: qué está hecho y qué falta (fases 0–5 completas; faltan 6 pulido y 7 build final).
 3. **`Panderito/DECISIONES.md`** — decisiones tomadas ante ambigüedades; agrega aquí cada nueva decisión.
 4. **`CAMBIOS.md`** — bitácora de cambios grandes (renombrado, logo, repositorio).
+5. **`docs/ARQUITECTURA.md`** — mapa del código: capas, entidades, servicios, viewmodels y receta para agregar pantallas. Léelo antes de tocar código.
 
 ## Estructura
 
