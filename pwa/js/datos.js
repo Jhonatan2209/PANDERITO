@@ -22,6 +22,15 @@ const Datos = (() => {
     { nombre: 'Otros ingresos',    tipo: 'Ingreso', icono: '💰', color: '#84CC16' },
   ];
 
+  // Tipos de cuenta / método de pago (enum TipoCuenta) con ícono y color sugeridos
+  const TIPOS_CUENTA = [
+    { id: 'Efectivo', etq: 'Efectivo', icono: '💵', color: '#22C55E' },
+    { id: 'Yape', etq: 'Yape', icono: '💜', color: '#742D8B' },
+    { id: 'Plin', etq: 'Plin', icono: '💙', color: '#0EA5B7' },
+    { id: 'Banco', etq: 'Cuenta bancaria / transferencia', icono: '🏦', color: '#1E40AF' },
+    { id: 'Tarjeta', etq: 'Tarjeta', icono: '💳', color: '#6D5AE6' },
+  ];
+
   let estado = null;
 
   function cargar() {
@@ -37,6 +46,9 @@ const Datos = (() => {
         categorias: CATEGORIAS_SEMILLA.map((c) => ({ id: nuevoIdLocal(), ...c })),
         cuentas: [
           { id: 900001, nombre: 'Efectivo', tipo: 'Efectivo', saldoInicial: 0, icono: '💵', color: '#22C55E', activa: true },
+          { id: 900002, nombre: 'Yape', tipo: 'Yape', saldoInicial: 0, icono: '💜', color: '#742D8B', activa: true },
+          { id: 900003, nombre: 'Plin', tipo: 'Plin', saldoInicial: 0, icono: '💙', color: '#0EA5B7', activa: true },
+          { id: 900004, nombre: 'Banco', tipo: 'Banco', saldoInicial: 0, icono: '🏦', color: '#1E40AF', activa: true },
         ],
         movimientos: [],
       };
@@ -52,6 +64,15 @@ const Datos = (() => {
     for (const col of ['prestamos', 'abonos', 'panderos', 'turnos', 'metas', 'recurrentes', 'presupuestos']) {
       if (!Array.isArray(estado[col])) estado[col] = [];
     }
+    // Categoría "Pandero" (gasto e ingreso) para conectar panderos con el saldo
+    let cambiado = false;
+    for (const tipo of ['Gasto', 'Ingreso']) {
+      if (!estado.categorias.some((c) => c.nombre === 'Pandero' && c.tipo === tipo)) {
+        estado.categorias.push({ id: estado.proximoId++, nombre: 'Pandero', tipo, icono: '🤝', color: '#6D5AE6' });
+        cambiado = true;
+      }
+    }
+    if (cambiado) guardar();
     return estado;
   }
 
@@ -229,23 +250,27 @@ const Datos = (() => {
   // ---------- Panderos ----------
   function panderos() { return cargar().panderos.slice(); }
   function pandero(id) { return cargar().panderos.find((p) => p.id === id); }
-  function generarTurnos(p) {
+  function generarTurnos(p, nombres) {
     const turnos = [];
     for (let i = 0; i < p.numParticipantes; i++) {
       const numero = i + 1;
+      const nom = nombres && nombres[i] && String(nombres[i]).trim()
+        ? String(nombres[i]).trim()
+        : (numero === p.miTurno ? 'Yo' : `Participante ${numero}`);
       turnos.push({ id: nuevoId(), panderoId: p.id, numeroTurno: numero,
-        nombreParticipante: numero === p.miTurno ? 'Yo' : `Participante ${numero}`,
+        nombreParticipante: nom, dni: '',
         fechaCobro: fechaDelTurno(p.fechaInicio, p.frecuencia, i), cobrado: false });
     }
     return turnos;
   }
-  function crearPanderoConTurnos(p) {
+  function crearPanderoConTurnos(p, nombres) {
     const e = cargar(); p.id = nuevoId(); if (p.activo === undefined) p.activo = true;
     if (!p.fechaInicio) p.fechaInicio = new Date().toISOString();
-    e.panderos.push(p); e.turnos.push(...generarTurnos(p)); guardar(); return p;
+    e.panderos.push(p); e.turnos.push(...generarTurnos(p, nombres)); guardar(); return p;
   }
   function turnosDe(panderoId) { return cargar().turnos.filter((t) => t.panderoId === panderoId).sort((a, b) => a.numeroTurno - b.numeroTurno); }
   function marcarCobrado(turnoId, cobrado) { const e = cargar(); const t = e.turnos.find((x) => x.id === turnoId); if (t) { t.cobrado = cobrado; guardar(); } }
+  function actualizarTurno(turnoId, datos) { const e = cargar(); const t = e.turnos.find((x) => x.id === turnoId); if (t) { Object.assign(t, datos); guardar(); } return t; }
   function eliminarPandero(id) { const e = cargar(); e.panderos = e.panderos.filter((p) => p.id !== id); e.turnos = e.turnos.filter((t) => t.panderoId !== id); guardar(); }
   function resumenPandero(p) {
     const lista = turnosDe(p.id);
@@ -259,6 +284,20 @@ const Datos = (() => {
       turnosCobrados: cobrados,
       totalTurnos: lista.length,
     };
+  }
+  function categoriaPanderoId(tipo) { const c = cargar().categorias.find((x) => x.nombre === 'Pandero' && x.tipo === tipo); return c ? c.id : null; }
+  // Pagar la cuota del pandero => gasto que descuenta del saldo
+  function pagarCuotaPandero(panderoId, cuentaId) {
+    const p = pandero(panderoId); if (!p) return null;
+    const cta = cuentaId || (cuentas(true)[0] && cuentas(true)[0].id);
+    return guardarMovimiento({ monto: Number(p.cuotaMonto), tipo: 'Gasto', categoriaId: categoriaPanderoId('Gasto'), cuentaId: cta, fecha: new Date().toISOString(), nota: 'Cuota pandero ' + p.nombre });
+  }
+  // Cobrar el pozo (cuando te toca) => ingreso que suma al saldo
+  function cobrarPozoPandero(panderoId, cuentaId) {
+    const p = pandero(panderoId); if (!p) return null;
+    const r = resumenPandero(p);
+    const cta = cuentaId || (cuentas(true)[0] && cuentas(true)[0].id);
+    return guardarMovimiento({ monto: r.montoARecibir, tipo: 'Ingreso', categoriaId: categoriaPanderoId('Ingreso'), cuentaId: cta, fecha: new Date().toISOString(), nota: 'Cobré pandero ' + p.nombre });
   }
 
   // ---------- Metas de ahorro ----------
@@ -330,12 +369,34 @@ const Datos = (() => {
     return { gastado, limite, pct, nivel };
   }
 
+  // ---------- Pendientes (para avisos) ----------
+  function pendientes(dias = 7) {
+    const hoy = new Date(); hoy.setHours(0, 0, 0, 0);
+    const diasHasta = (iso) => Math.round((new Date(new Date(iso).setHours(0, 0, 0, 0)) - hoy) / 86400000);
+    const items = [];
+    for (const p of panderos()) {
+      const r = resumenPandero(p);
+      if (!r.fechaMiTurno) continue;
+      const d = diasHasta(r.fechaMiTurno);
+      if (d >= 0 && d <= dias) items.push({ tipo: 'pandero', titulo: `Te toca el pandero «${p.nombre}»`, detalle: d === 0 ? 'es hoy' : `en ${d} día${d === 1 ? '' : 's'}`, monto: r.montoARecibir, dias: d, emo: '🤝' });
+    }
+    for (const r of recurrentes()) {
+      const d = diasHasta(r.proximaFecha);
+      if (d <= dias) items.push({ tipo: 'recurrente', id: r.id, titulo: r.nombre, detalle: d < 0 ? `vencido hace ${-d} día${d === -1 ? '' : 's'}` : d === 0 ? 'vence hoy' : `vence en ${d} día${d === 1 ? '' : 's'}`, monto: r.monto, dias: d, emo: '🔁' });
+    }
+    for (const p of presupuestos()) {
+      const av = avancePresupuesto(p);
+      if (av.nivel !== 'Normal') { const cat = categoria(p.categoriaId); items.push({ tipo: 'presupuesto', titulo: `Presupuesto ${cat ? cat.nombre : ''}`, detalle: av.nivel === 'Excedido' ? 'excedido' : 'cerca del límite', monto: av.gastado, dias: 0, emo: av.nivel === 'Excedido' ? '🔴' : '🟡' }); }
+    }
+    return items.sort((a, b) => a.dias - b.dias);
+  }
+
   // ---------- Utilidades de datos ----------
   function exportar() { return JSON.stringify(cargar(), null, 2); }
   function reiniciar() { localStorage.removeItem(CLAVE); estado = null; cargar(); }
 
   return {
-    cargar, guardar, siguienteFecha, fechaDelTurno,
+    cargar, guardar, siguienteFecha, fechaDelTurno, TIPOS_CUENTA,
     categorias, categoria, guardarCategoria, eliminarCategoria, categoriaTieneMovimientos,
     cuentas, cuenta, guardarCuenta, eliminarCuenta, cuentaTieneMovimientos, saldoCuenta, saldoTotal,
     movimientos, movimiento, guardarMovimiento, eliminarMovimiento,
@@ -344,7 +405,10 @@ const Datos = (() => {
     prestamos, prestamo, guardarPrestamo, eliminarPrestamo, abonosDe, totalAbonado,
     saldoPendiente, registrarAbono, marcarPagadoPrestamo, totalPendientePorTipo,
     // Panderos
-    panderos, pandero, crearPanderoConTurnos, turnosDe, marcarCobrado, eliminarPandero, resumenPandero,
+    panderos, pandero, crearPanderoConTurnos, turnosDe, marcarCobrado, actualizarTurno, eliminarPandero, resumenPandero,
+    pagarCuotaPandero, cobrarPozoPandero,
+    // Pendientes / avisos
+    pendientes,
     // Metas
     metas, meta, guardarMeta, abonarMeta, eliminarMeta,
     // Recurrentes

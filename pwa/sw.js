@@ -2,7 +2,7 @@
 // Estrategia: cache-first para los archivos propios (la app es offline-first; los datos
 // viven en el dispositivo con localStorage, no dependen de la red).
 
-const CACHE = 'panderito-pwa-v2';
+const CACHE = 'panderito-pwa-v3';
 const ASSETS = [
   './',
   './index.html',

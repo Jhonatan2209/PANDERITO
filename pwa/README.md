@@ -26,6 +26,15 @@ datos **solo en el dispositivo** (localStorage) — no hay servidor ni cuenta.
 | **Ajustes** (tema claro/oscuro/auto, exportar copia JSON, borrar todo) | ✅ |
 | Instalable como PWA (offline, icono, pantalla de inicio) | ✅ |
 
+### Novedades (v3)
+
+- **Métodos de pago**: cuentas semilla Efectivo, Yape, Plin y Banco; cada cuenta es editable (nombre, tipo, ícono) y se usa igual en todo (ingresos, gastos, pagos fijos).
+- **Saldo inicial**: pon el dinero que ya tienes (ej. S/ 8000) en cada cuenta y empieza a llevar el registro desde ahí, sin sustentar movimientos. Se ajusta tocando la tarjeta de saldo o la cuenta.
+- **Panderos conectados al saldo**: botón *Pagar cuota* (gasto que resta del saldo, categoría «Pandero») y *Cobrar el pozo* (ingreso que suma al saldo). Desglose del pozo, total a aportar y **nombres/DNI de participantes** editables por turno.
+- **Pagos fijos** (recurrentes) con proveedor/detalle (internet, línea celular, alquiler…).
+- **Pendientes 🔔** en el inicio + **recordatorios** (notificación local): panderos por cobrar, pagos por vencer y presupuestos en alerta.
+- Arreglos de UI: input de fecha compacto, selects con estilo propio.
+
 ## Cómo probarlo
 
 ### En la PC

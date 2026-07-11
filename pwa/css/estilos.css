@@ -193,6 +193,19 @@ input, select, textarea { font-family: inherit; font-size: 16px; }
 .entrada:focus { border-color: var(--primary); }
 textarea.entrada { resize: vertical; min-height: 70px; }
 
+/* Inputs de fecha: apariencia compacta y uniforme (evita el look nativo enorme en móvil) */
+input[type="date"].entrada {
+  -webkit-appearance: none;
+  appearance: none;
+  height: 50px;
+  padding: 0 14px;
+  line-height: 50px;
+  font-size: 15px;
+}
+input[type="date"].entrada::-webkit-date-and-time-value { text-align: left; margin: 0; }
+input[type="date"].entrada::-webkit-calendar-picker-indicator { opacity: .5; cursor: pointer; padding: 0; margin-left: 4px; }
+select.entrada { -webkit-appearance: none; appearance: none; background-image: linear-gradient(45deg, transparent 50%, var(--texto-suave) 50%), linear-gradient(135deg, var(--texto-suave) 50%, transparent 50%); background-position: calc(100% - 20px) center, calc(100% - 15px) center; background-size: 5px 5px, 5px 5px; background-repeat: no-repeat; padding-right: 40px; }
+
 .toggle-tipo { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; background: var(--superficie); padding: 6px; border-radius: 16px; box-shadow: var(--sombra-sm); margin-bottom: 18px; }
 .toggle-tipo button { padding: 12px; border-radius: 12px; font-weight: 700; color: var(--texto-suave); }
 .toggle-tipo button.sel-gasto { background: var(--gasto-soft); color: var(--gasto); }

@@ -59,7 +59,7 @@ const App = (() => {
   function marcarTab(ruta) {
     const mapa = {
       inicio: 'inicio', movimientos: 'movimientos', registrar: 'registrar', reportes: 'reportes',
-      mas: 'mas', cuentas: 'mas', categorias: 'mas', ajustes: 'mas', detalle: 'movimientos',
+      mas: 'mas', cuentas: 'mas', cuentaEdit: 'mas', categorias: 'mas', ajustes: 'mas', detalle: 'movimientos',
       prestamos: 'mas', prestamoNuevo: 'mas', prestamoDet: 'mas',
       panderos: 'mas', panderoNuevo: 'mas', panderoDet: 'mas',
       metas: 'mas', metaNueva: 'mas', recurrentes: 'mas', recurrenteNuevo: 'mas',
@@ -77,6 +77,7 @@ const App = (() => {
     const r = Datos.resumenMes();
     const movs = Datos.movimientos().slice(0, 6);
     const ctas = Datos.cuentas(true);
+    const pend = Datos.pendientes(7);
 
     return `
       <header class="encabezado">
@@ -93,10 +94,10 @@ const App = (() => {
         <button class="btn chico" id="btn-instalar">Instalar</button>
       </div>
 
-      <div class="card-saldo">
+      <div class="card-saldo" onclick="App.ir('cuentas')" style="cursor:pointer">
         <p class="etq">Saldo total</p>
         <p class="monto">${Moneda.fmt(total)}</p>
-        <p class="cuentas-min">${ctas.length} cuenta${ctas.length === 1 ? '' : 's'} · toca «Más» para gestionarlas</p>
+        <p class="cuentas-min">${ctas.length} cuenta${ctas.length === 1 ? '' : 's'} · toca para ajustar tu saldo inicial ›</p>
       </div>
 
       <div class="duo">
@@ -109,6 +110,15 @@ const App = (() => {
           <p class="val gasto">${Moneda.fmt(r.gastos)}</p>
         </div>
       </div>
+
+      ${pend.length ? `
+      <div class="seccion-tit"><h2>Pendientes 🔔</h2></div>
+      <div class="lista">${pend.map((x) => `
+        <div class="item">
+          <span class="ic" style="background:var(--pendiente-soft);color:var(--pendiente)">${x.emo}</span>
+          <span class="cuerpo"><p class="t">${esc(x.titulo)}</p><p class="s">${esc(x.detalle)}</p></span>
+          <span class="monto">${Moneda.fmt(x.monto)}</span>
+        </div>`).join('')}</div>` : ''}
 
       <div class="seccion-tit">
         <h2>Últimos movimientos</h2>
@@ -314,7 +324,7 @@ const App = (() => {
       ${opcion('🤝', 'Panderos', 'Juntas de ahorro rotativo', "App.ir('panderos')")}
       ${opcion('💸', 'Préstamos', 'Me deben / debo', "App.ir('prestamos')")}
       ${opcion('🎯', 'Metas de ahorro', 'Objetivos con progreso', "App.ir('metas')")}
-      ${opcion('🔁', 'Recurrentes', 'Pagos que se repiten', "App.ir('recurrentes')")}
+      ${opcion('🔁', 'Pagos fijos', 'Internet, línea, alquiler, suscripciones', "App.ir('recurrentes')")}
       ${opcion('📅', 'Presupuestos', 'Límites por categoría', "App.ir('presupuestos')")}
     </div>
     <div class="seccion-tit"><h2>Configuración</h2></div>
@@ -334,22 +344,42 @@ const App = (() => {
   // ============================================================
   //  VISTA: CUENTAS
   // ============================================================
+  const tipoCuentaEtq = (id) => (Datos.TIPOS_CUENTA.find((t) => t.id === id) || { etq: id }).etq;
   registrar('cuentas', () => {
     const ctas = Datos.cuentas(false);
+    const total = Datos.saldoTotal();
     return `
       <div class="titulo-pagina"><button class="btn-volver" onclick="App.ir('mas')">‹</button><h1>Cuentas</h1></div>
+      <div class="card-saldo"><p class="etq">Saldo total (todas las cuentas)</p><p class="monto">${Moneda.fmt(total)}</p><p class="cuentas-min">Toca una cuenta para editar su saldo o método de pago</p></div>
       <div class="lista">
         ${ctas.map((c) => {
           const saldo = Datos.saldoCuenta(c.id);
-          const bloq = Datos.cuentaTieneMovimientos(c.id);
-          return `<div class="item">
+          return `<button class="item" onclick="App.ir('cuentaEdit',{id:${c.id}})">
             <span class="ic" style="background:${c.color}22;color:${c.color}">${c.icono}</span>
-            <span class="cuerpo"><p class="t">${esc(c.nombre)}</p><p class="s">${esc(c.tipo)}${bloq ? ' · con movimientos' : ''}</p></span>
+            <span class="cuerpo"><p class="t">${esc(c.nombre)}</p><p class="s">${esc(tipoCuentaEtq(c.tipo))}</p></span>
             <span class="monto">${Moneda.fmt(saldo)}</span>
-          </div>`;
+          </button>`;
         }).join('')}
       </div>
-      <button class="btn" onclick="App.nuevaCuenta()">＋ Nueva cuenta</button>
+      <button class="btn" onclick="App.ir('cuentaEdit')">＋ Nueva cuenta</button><div style="height:14px"></div>
+    `;
+  });
+  registrar('cuentaEdit', (params) => {
+    const editando = params.id ? Datos.cuenta(Number(params.id)) : null;
+    const tipoActual = editando ? editando.tipo : 'Efectivo';
+    const conMov = editando ? Datos.cuentaTieneMovimientos(editando.id) : false;
+    return `
+      <div class="titulo-pagina"><button class="btn-volver" onclick="App.ir('cuentas')">‹</button><h1>${editando ? 'Editar cuenta' : 'Nueva cuenta'}</h1></div>
+      <div class="campo"><label>Nombre</label><input class="entrada" id="c-nombre" placeholder="ej. BCP, Ahorros, Yape mamá" value="${editando ? esc(editando.nombre) : ''}" /></div>
+      <div class="campo"><label>Método de pago</label>
+        <select class="entrada" id="c-tipo">${Datos.TIPOS_CUENTA.map((t) => `<option value="${t.id}" ${tipoActual === t.id ? 'selected' : ''}>${t.icono} ${esc(t.etq)}</option>`).join('')}</select></div>
+      <div class="campo"><label>Saldo inicial (S/) — lo que ya tienes ahí</label>
+        <input class="entrada" id="c-saldo" type="number" inputmode="decimal" placeholder="0.00" value="${editando ? editando.saldoInicial : ''}" />
+        <p style="font-size:12px;color:var(--texto-tenue);margin:6px 2px 0">Pon aquí tu dinero actual (ej. 8000) para empezar a llevar el registro desde ese monto, sin registrar movimientos.</p></div>
+      <button class="btn" onclick="App.guardarCuentaForm(${editando ? editando.id : 'null'})">${editando ? '💾 Guardar' : '✓ Crear cuenta'}</button>
+      ${editando && !conMov ? `<div style="height:10px"></div><button class="btn peligro" onclick="App.borrarCuenta(${editando.id})">🗑️ Eliminar cuenta</button>` : ''}
+      ${editando && conMov ? `<p style="text-align:center;color:var(--texto-tenue);font-size:13px;margin-top:12px">Tiene movimientos; no se puede eliminar (pero sí ajustar su saldo inicial).</p>` : ''}
+      <div style="height:14px"></div>
     `;
   });
 
@@ -387,6 +417,12 @@ const App = (() => {
           <button class="${tema === 'sistema' ? 'activo' : ''}" onclick="App.setTema('sistema')">⚙️ Auto</button>
         </div>
       </div>
+      <div class="seccion-tit"><h2>Recordatorios</h2></div>
+      <div class="opciones">
+        ${opcion('🔔', 'Activar recordatorios', 'Aviso de panderos y pagos por vencer', 'App.activarNotis()')}
+        ${opcion('👀', 'Ver pendientes ahora', 'Panderos, pagos y presupuestos', 'App.mostrarPendientesNoti(true)')}
+      </div>
+
       <div class="seccion-tit"><h2>Tus datos</h2></div>
       <div class="opciones">
         ${opcion('⬇️', 'Exportar copia (JSON)', 'Descarga un respaldo de tus datos', 'App.exportarDatos()')}
@@ -470,8 +506,8 @@ const App = (() => {
     const cuando = mi === null ? '' : mi > 0 ? `Me toca en ${mi} día${mi === 1 ? '' : 's'}` : mi === 0 ? '¡Me toca hoy!' : 'Mi turno ya pasó';
     return `<button class="item" onclick="App.ir('panderoDet',{id:${p.id}})">
       <span class="ic" style="background:var(--primary)22;color:var(--primary)">🤝</span>
-      <span class="cuerpo"><p class="t">${esc(p.nombre)}</p><p class="s">${p.numParticipantes} personas · ${Moneda.fmt(p.cuotaMonto)}/${p.frecuencia.toLowerCase()} · ${cuando}</p></span>
-      <span class="monto">${r.turnosCobrados}/${r.totalTurnos}</span></button>`;
+      <span class="cuerpo"><p class="t">${esc(p.nombre)}</p><p class="s">${p.numParticipantes} pers. · ${Moneda.fmt(p.cuotaMonto)}/${p.frecuencia.toLowerCase()} · ${cuando} · ${r.turnosCobrados}/${r.totalTurnos} cobrados</p></span>
+      <span class="monto" style="color:var(--primary)">${Moneda.fmt(r.montoARecibir)}</span></button>`;
   }
   registrar('panderoNuevo', () => `
     <div class="titulo-pagina"><button class="btn-volver" onclick="App.ir('panderos')">‹</button><h1>Nuevo pandero</h1></div>
@@ -481,6 +517,9 @@ const App = (() => {
     <div class="campo"><label>Frecuencia</label><select class="entrada" id="pa-frec">${opcsFrec('Mensual')}</select></div>
     <div class="campo"><label>Fecha de inicio</label><input class="entrada" id="pa-inicio" type="date" value="${hoyInput()}" /></div>
     <div class="campo"><label>Mi turno (posición)</label><input class="entrada" id="pa-turno" type="number" inputmode="numeric" value="1" /></div>
+    <div class="campo"><label>Nombres de participantes (opcional)</label>
+      <textarea class="entrada" id="pa-nombres" placeholder="Un nombre por línea, en orden de turno:&#10;Juan Pérez&#10;María López&#10;Yo&#10;…"></textarea>
+      <p style="font-size:12px;color:var(--texto-tenue);margin:6px 2px 0">Cada línea es un turno, en orden. Deja en blanco para autogenerar. Podrás editar cada nombre y DNI después.</p></div>
     <button class="btn" onclick="App.guardarPandero()">✓ Crear con turnos</button><div style="height:14px"></div>`);
   registrar('panderoDet', (params) => {
     const p = Datos.pandero(Number(params.id));
@@ -495,8 +534,18 @@ const App = (() => {
         <div class="mini"><p class="etq">Aportado</p><p class="val">${Moneda.fmt(r.aportado)}</p></div>
         <div class="mini"><p class="etq">Turnos cobrados</p><p class="val">${r.turnosCobrados}/${r.totalTurnos}</p></div>
       </div>
-      <div class="seccion-tit"><h2>Turnos</h2></div>
-      <div class="lista">${turnos.map((t) => `<div class="item"><span class="ic" style="background:${t.numeroTurno === p.miTurno ? 'var(--primary)22;color:var(--primary)' : 'var(--linea);color:var(--texto-suave)'}">${t.numeroTurno}</span><span class="cuerpo"><p class="t">${esc(t.nombreParticipante)}${t.numeroTurno === p.miTurno ? ' ⭐' : ''}</p><p class="s">${fechaLarga(t.fechaCobro)}</p></span><button class="btn chico ${t.cobrado ? '' : 'secundario'}" onclick="App.cobrarTurno(${p.id},${t.id},${!t.cobrado})">${t.cobrado ? '✓ Cobrado' : 'Marcar'}</button></div>`).join('')}</div>
+      <div class="card">
+        ${filaDetalle('Pozo por ronda (lo que recibes)', Moneda.fmt(r.montoARecibir))}
+        ${filaDetalle('Cuota', Moneda.fmt(p.cuotaMonto) + ' / ' + p.frecuencia.toLowerCase())}
+        ${filaDetalle('Participantes', String(p.numParticipantes))}
+        ${filaDetalle('Total que aportarás', Moneda.fmt(p.cuotaMonto * p.numParticipantes))}
+      </div>
+      <button class="btn" onclick="App.pagarCuota(${p.id})">💸 Pagar cuota del mes (${Moneda.fmt(p.cuotaMonto)})</button>
+      <div style="height:8px"></div>
+      <button class="btn secundario" onclick="App.cobrarPozo(${p.id})">📥 Cobrar el pozo (${Moneda.fmt(r.montoARecibir)})</button>
+      <p style="font-size:12px;color:var(--texto-tenue);text-align:center;margin:8px 2px 0">Pagar cuota lo registra como gasto (resta del saldo). Cobrar el pozo lo registra como ingreso (suma al saldo).</p>
+      <div class="seccion-tit"><h2>Turnos</h2><span style="font-size:12px;color:var(--texto-tenue)">✏️ edita nombre/DNI</span></div>
+      <div class="lista">${turnos.map((t) => `<div class="item"><span class="ic" style="background:${t.numeroTurno === p.miTurno ? 'var(--primary)22;color:var(--primary)' : 'var(--linea);color:var(--texto-suave)'}">${t.numeroTurno}</span><span class="cuerpo"><p class="t">${esc(t.nombreParticipante)}${t.numeroTurno === p.miTurno ? ' ⭐' : ''}</p><p class="s">${fechaLarga(t.fechaCobro)}${t.dni ? ' · DNI ' + esc(t.dni) : ''}</p></span><button class="btn-volver" onclick="App.editarTurno(${t.id})">✏️</button><button class="btn chico ${t.cobrado ? '' : 'secundario'}" style="margin-left:6px" onclick="App.cobrarTurno(${p.id},${t.id},${!t.cobrado})">${t.cobrado ? '✓' : 'Marcar'}</button></div>`).join('')}</div>
       <div style="height:10px"></div><button class="btn peligro" onclick="App.borrarPandero(${p.id})">🗑️ Eliminar pandero</button>`;
   });
 
@@ -538,9 +587,9 @@ const App = (() => {
   registrar('recurrentes', () => {
     const lista = Datos.recurrentes();
     return `
-      <div class="titulo-pagina"><button class="btn-volver" onclick="App.ir('mas')">‹</button><h1>Recurrentes</h1></div>
-      ${lista.length ? `<div class="lista">${lista.map(itemRecurrente).join('')}</div>` : estadoVacio('🔁', 'Sin gastos recurrentes', 'Agrega pagos que se repiten (alquiler, servicios, suscripciones).')}
-      <button class="btn" onclick="App.ir('recurrenteNuevo')">＋ Nuevo recurrente</button><div style="height:14px"></div>`;
+      <div class="titulo-pagina"><button class="btn-volver" onclick="App.ir('mas')">‹</button><h1>Pagos fijos</h1></div>
+      ${lista.length ? `<div class="lista">${lista.map(itemRecurrente).join('')}</div>` : estadoVacio('🔁', 'Sin pagos fijos', 'Agrega pagos que se repiten: internet, línea celular, alquiler, servicios, suscripciones.')}
+      <button class="btn" onclick="App.ir('recurrenteNuevo')">＋ Nuevo pago fijo</button><div style="height:14px"></div>`;
   });
   function itemRecurrente(r) {
     const cat = Datos.categoria(r.categoriaId) || { icono: '🔁', color: '#6B7280' };
@@ -548,7 +597,7 @@ const App = (() => {
     const vence = d < 0 ? `Vencido hace ${-d} día${d === -1 ? '' : 's'}` : d === 0 ? 'Vence hoy' : `Vence en ${d} día${d === 1 ? '' : 's'}`;
     return `<div class="item">
       <span class="ic" style="background:${cat.color}22;color:${cat.color}">${cat.icono}</span>
-      <span class="cuerpo"><p class="t">${esc(r.nombre)}</p><p class="s">${Moneda.fmt(r.monto)} · ${r.frecuencia.toLowerCase()} · ${vence}</p></span>
+      <span class="cuerpo"><p class="t">${esc(r.nombre)}${r.proveedor ? ' · ' + esc(r.proveedor) : ''}</p><p class="s">${Moneda.fmt(r.monto)} · ${r.frecuencia.toLowerCase()} · ${vence}</p></span>
       <button class="btn chico" onclick="App.pagarRecurrente(${r.id})">Pagar</button>
       <button class="btn-volver" style="margin-left:6px" onclick="App.borrarRecurrente(${r.id})">🗑️</button></div>`;
   }
@@ -556,8 +605,9 @@ const App = (() => {
     const cats = Datos.categorias('Gasto');
     const ctas = Datos.cuentas(true);
     return `
-      <div class="titulo-pagina"><button class="btn-volver" onclick="App.ir('recurrentes')">‹</button><h1>Nuevo recurrente</h1></div>
-      <div class="campo"><label>Nombre</label><input class="entrada" id="r-nombre" placeholder="ej. Netflix" /></div>
+      <div class="titulo-pagina"><button class="btn-volver" onclick="App.ir('recurrentes')">‹</button><h1>Nuevo pago fijo</h1></div>
+      <div class="campo"><label>Concepto</label><input class="entrada" id="r-nombre" placeholder="ej. Internet, Línea celular, Netflix" /></div>
+      <div class="campo"><label>Proveedor / detalle (opcional)</label><input class="entrada" id="r-prov" placeholder="ej. Movistar, Claro, dueño del depa" /></div>
       <div class="campo"><label>Monto (S/)</label><input class="entrada" id="r-monto" type="number" inputmode="decimal" placeholder="0.00" /></div>
       <div class="campo"><label>Categoría</label><select class="entrada" id="r-cat">${cats.map((c) => `<option value="${c.id}">${c.icono} ${esc(c.nombre)}</option>`).join('')}</select></div>
       <div class="campo"><label>Cuenta</label><select class="entrada" id="r-cuenta">${ctas.map((c) => `<option value="${c.id}">${c.icono} ${esc(c.nombre)}</option>`).join('')}</select></div>
@@ -669,11 +719,44 @@ const App = (() => {
       if (!num || num < 2) return toast('Debe haber al menos 2 participantes');
       if (!cuota || cuota <= 0) return toast('Ingresa la cuota');
       if (turno < 1 || turno > num) return toast('Tu turno debe estar entre 1 y ' + num);
-      Datos.crearPanderoConTurnos({ nombre, numParticipantes: num, cuotaMonto: cuota, frecuencia: gv('pa-frec'), fechaInicio: new Date(gv('pa-inicio') + 'T12:00:00').toISOString(), miTurno: turno, activo: true });
+      const nombres = (document.getElementById('pa-nombres')?.value || '').split('\n').map((s) => s.trim());
+      Datos.crearPanderoConTurnos({ nombre, numParticipantes: num, cuotaMonto: cuota, frecuencia: gv('pa-frec'), fechaInicio: new Date(gv('pa-inicio') + 'T12:00:00').toISOString(), miTurno: turno, activo: true }, nombres);
       toast('Pandero creado ✓'); ir('panderos');
     },
     cobrarTurno(panderoId, turnoId, cobrado) { Datos.marcarCobrado(turnoId, cobrado); render(); },
+    editarTurno(turnoId) {
+      const t = Datos.cargar().turnos.find((x) => x.id === turnoId); if (!t) return;
+      const nombre = prompt('Nombre del participante (quién se lleva este turno):', t.nombreParticipante || '');
+      if (nombre === null) return;
+      const dni = prompt('DNI (opcional):', t.dni || '');
+      Datos.actualizarTurno(turnoId, { nombreParticipante: nombre.trim() || t.nombreParticipante, dni: (dni || '').trim() });
+      toast('Participante actualizado ✓'); render();
+    },
+    // ----- Cuentas -----
+    guardarCuentaForm(id) {
+      const gv = (x) => (document.getElementById(x)?.value || '').trim();
+      const nombre = gv('c-nombre'); const tipo = gv('c-tipo'); const saldo = parseFloat(gv('c-saldo')) || 0;
+      if (!nombre) return toast('Escribe un nombre');
+      const t = Datos.TIPOS_CUENTA.find((x) => x.id === tipo) || Datos.TIPOS_CUENTA[0];
+      Datos.guardarCuenta({ id: id || null, nombre, tipo, saldoInicial: saldo, icono: t.icono, color: t.color, activa: true });
+      toast(id ? 'Cuenta actualizada ✓' : 'Cuenta creada ✓'); ir('cuentas');
+    },
+    borrarCuenta(id) {
+      if (!confirm('¿Eliminar esta cuenta?')) return;
+      if (Datos.eliminarCuenta(id)) { toast('Cuenta eliminada'); ir('cuentas'); } else toast('No se puede: tiene movimientos');
+    },
     borrarPandero(id) { if (!confirm('¿Eliminar este pandero y sus turnos?')) return; Datos.eliminarPandero(id); toast('Pandero eliminado'); ir('panderos'); },
+    pagarCuota(id) {
+      const p = Datos.pandero(id); if (!p) return;
+      if (!confirm(`¿Registrar el pago de tu cuota (${Moneda.fmt(p.cuotaMonto)}) como gasto? Se descontará de tu saldo.`)) return;
+      Datos.pagarCuotaPandero(id); toast('Cuota pagada y descontada ✓'); render();
+    },
+    cobrarPozo(id) {
+      const p = Datos.pandero(id); if (!p) return;
+      const r = Datos.resumenPandero(p);
+      if (!confirm(`¿Registrar el cobro del pozo (${Moneda.fmt(r.montoARecibir)}) como ingreso? Se sumará a tu saldo.`)) return;
+      Datos.cobrarPozoPandero(id); toast('¡Pozo cobrado y sumado! 🎉'); render();
+    },
 
     // ----- Metas -----
     guardarMeta() {
@@ -698,8 +781,8 @@ const App = (() => {
       const nombre = gv('r-nombre'); const monto = parseFloat(gv('r-monto'));
       if (!nombre) return toast('Escribe un nombre');
       if (!monto || monto <= 0) return toast('Ingresa el monto');
-      Datos.guardarRecurrente({ nombre, monto, categoriaId: Number(gv('r-cat')), cuentaId: Number(gv('r-cuenta')), frecuencia: gv('r-frec'), proximaFecha: new Date(gv('r-fecha') + 'T12:00:00').toISOString(), activo: true });
-      toast('Recurrente guardado ✓'); ir('recurrentes');
+      Datos.guardarRecurrente({ nombre, proveedor: gv('r-prov'), monto, categoriaId: Number(gv('r-cat')), cuentaId: Number(gv('r-cuenta')), frecuencia: gv('r-frec'), proximaFecha: new Date(gv('r-fecha') + 'T12:00:00').toISOString(), activo: true });
+      toast('Pago fijo guardado ✓'); ir('recurrentes');
     },
     pagarRecurrente(id) {
       const r = Datos.recurrente(id); if (!r) return;
@@ -719,6 +802,29 @@ const App = (() => {
     },
     borrarPresupuesto(id) { if (!confirm('¿Eliminar este presupuesto?')) return; Datos.eliminarPresupuesto(id); toast('Presupuesto eliminado'); render(); },
 
+    async activarNotis() {
+      if (!('Notification' in window)) return toast('Tu navegador no soporta notificaciones');
+      const perm = await Notification.requestPermission();
+      if (perm === 'granted') { toast('Recordatorios activados 🔔'); acciones.mostrarPendientesNoti(true); }
+      else toast('Permiso de notificaciones denegado');
+    },
+    mostrarPendientesNoti(forzar) {
+      const pend = Datos.pendientes(7);
+      if (!('Notification' in window) || Notification.permission !== 'granted') {
+        if (forzar) return toast(pend.length ? `Tienes ${pend.length} pendiente(s). Activa recordatorios para avisos.` : 'Sin pendientes por ahora ✓');
+        return;
+      }
+      if (!pend.length) { if (forzar) toast('Sin pendientes por ahora ✓'); return; }
+      const hoyClave = new Date().toDateString();
+      if (!forzar && localStorage.getItem('panderito.noti.dia') === hoyClave) return;
+      localStorage.setItem('panderito.noti.dia', hoyClave);
+      const p0 = pend[0];
+      try {
+        new Notification(`Panderito — ${pend.length} pendiente${pend.length === 1 ? '' : 's'}`, {
+          body: `${p0.emo} ${p0.titulo} (${p0.detalle})`, icon: 'icons/panderito-icon.svg', tag: 'panderito-pendientes',
+        });
+      } catch (e) { /* algunos navegadores requieren SW para notificar */ }
+    },
     setTema(t) { aplicarTema(t); render(); },
     exportarDatos() {
       const blob = new Blob([Datos.exportar()], { type: 'application/json' });
@@ -784,6 +890,7 @@ const App = (() => {
     }));
     window.addEventListener('hashchange', () => { if (!location.hash.startsWith('#registrar')) form = {}; render(); });
     render();
+    try { acciones.mostrarPendientesNoti(false); } catch (e) { /* noop */ }
 
     if ('serviceWorker' in navigator) {
       navigator.serviceWorker.register('sw.js').catch((e) => console.warn('SW no registrado:', e));
