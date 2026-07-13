@@ -15,7 +15,24 @@ servidor http. Usa cualquiera de las opciones de abajo.
 
 
 ------------------------------------------------------------
-OPCIÓN A — Levantar en LOCALHOST (solo en tu PC)  ★ recomendada
+OPCIÓN 0 — DOBLE CLIC (la más fácil)  ★★ recomendada
+------------------------------------------------------------
+
+1) Abre la carpeta  D:\PROYECTOS-2026\PANDERITO\pwa
+2) Haz DOBLE CLIC en  LEVANTAR-PANDERITO.bat
+3) Se abre una ventana negra: esa ventana ES el servidor.
+   Ahí mismo te muestra las direcciones:
+      - En la PC:      http://localhost:8080
+      - En el celular: http://<IPv4 que muestra>:8080  (mismo wifi)
+4) Para APAGAR el servidor: cierra esa ventana.
+
+IMPORTANTE (tus datos): la app guarda los datos por DIRECCIÓN
+exacta. localhost, 127.0.0.1 y cada IP son almacenes SEPARADOS.
+Usa siempre la MISMA dirección en cada aparato para ver tus datos.
+
+
+------------------------------------------------------------
+OPCIÓN A — Levantar en LOCALHOST (solo en tu PC)
 ------------------------------------------------------------
 
 Requisito: tener Python instalado (viene con "python" en Windows).
