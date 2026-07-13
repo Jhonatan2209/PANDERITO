@@ -1,0 +1,133 @@
+============================================================
+  LEVANTAR-PANDERO — Cómo levantar la app Panderito PWA
+  Proyecto: D:\PROYECTOS-2026\PANDERITO
+  Última actualización: 2026-07-12
+============================================================
+
+La versión web (PWA) de Panderito está en la carpeta  pwa/  del
+repositorio. Es 100% estática (HTML + CSS + JS): NO necesita base de
+datos, NO necesita internet y NO necesita instalar dependencias.
+Solo hace falta un servidor de archivos estáticos.
+
+IMPORTANTE: no funciona abriendo index.html con doble clic
+(file://), porque el Service Worker y el manifest requieren un
+servidor http. Usa cualquiera de las opciones de abajo.
+
+
+------------------------------------------------------------
+OPCIÓN A — Levantar en LOCALHOST (solo en tu PC)  ★ recomendada
+------------------------------------------------------------
+
+Requisito: tener Python instalado (viene con "python" en Windows).
+
+1) Abre una terminal (PowerShell o CMD).
+
+2) Entra a la carpeta pwa del proyecto:
+
+      cd D:\PROYECTOS-2026\PANDERITO\pwa
+
+3) Levanta el servidor en el puerto 8080, solo local:
+
+      python -m http.server 8080 --bind 127.0.0.1
+
+4) Abre el navegador en:
+
+      http://localhost:8080
+
+5) Para DETENER el servidor: vuelve a la terminal y presiona Ctrl+C.
+
+Notas:
+- Funciona igual en cualquier red/router (casa, de tu tía, etc.)
+  porque localhost no depende del wifi: es tu propia PC.
+- Si el puerto 8080 está ocupado, usa otro (ej. 8081):
+      python -m http.server 8081 --bind 127.0.0.1
+  y abre http://localhost:8081
+- El Service Worker SÍ funciona en localhost (el navegador lo
+  considera origen seguro), así que puedes probar el modo offline.
+
+
+------------------------------------------------------------
+OPCIÓN B — Verla desde el CELULAR (misma red Wi-Fi)
+------------------------------------------------------------
+
+1) Averigua la IP de tu PC en la red actual:
+
+      ipconfig
+
+   Busca "Dirección IPv4" del adaptador Wi-Fi (ej. 192.168.1.35).
+   OJO: esta IP CAMBIA cuando te conectas a otro router (por eso en
+   la casa de tu tía será distinta a la de tu casa).
+
+2) Levanta el servidor abierto a la red (nota el 0.0.0.0):
+
+      cd D:\PROYECTOS-2026\PANDERITO\pwa
+      python -m http.server 8080 --bind 0.0.0.0
+
+3) En el celular, conectado al MISMO wifi, abre:
+
+      http://<IP-de-tu-PC>:8080     (ej. http://192.168.1.35:8080)
+
+4) Si no carga: el Firewall de Windows suele bloquear la primera
+   vez; acepta el aviso de "Permitir acceso" para redes privadas.
+
+5) Para instalarla como app en el celular: menú del navegador →
+   "Agregar a pantalla de inicio" / "Instalar app".
+   (Por http en red local la instalación offline completa puede no
+   estar disponible; para la experiencia total se necesita HTTPS,
+   ver Opción C.)
+
+
+------------------------------------------------------------
+OPCIÓN C — Publicarla en internet (HTTPS, PWA completa)
+------------------------------------------------------------
+
+Publica SOLO la carpeta  pwa/  (nunca la raíz del repo: contiene la
+carpeta ACCESOS/ con credenciales personales).
+
+- Netlify / Vercel: crea el sitio apuntando a la carpeta pwa/ como
+  base ("publish directory").
+- GitHub Pages: publica con la carpeta pwa/ como raíz del sitio.
+
+Con HTTPS la app es instalable al 100% (icono, offline, standalone).
+
+
+------------------------------------------------------------
+OPCIÓN D — Otros servidores estáticos (si no tienes Python)
+------------------------------------------------------------
+
+Con Node.js:      npx serve pwa            (o)  npx http-server pwa -p 8080
+Con PHP:          php -S localhost:8080 -t pwa
+Con VS Code:      extensión "Live Server" → clic derecho en
+                  pwa/index.html → "Open with Live Server".
+
+
+------------------------------------------------------------
+COMPROBAR QUE TODO ESTÁ BIEN
+------------------------------------------------------------
+
+1) http://localhost:8080 debe mostrar la pantalla de Inicio
+   ("Buenos días 👋 / Panderito") con la barra inferior de 5 botones.
+2) En la consola del navegador (F12) no debe haber errores en rojo.
+3) Los datos se guardan en localStorage del navegador: si registras
+   un movimiento y recargas la página, debe seguir ahí.
+4) Prueba offline: con la página ya cargada una vez, apaga el wifi
+   y recarga; la app debe seguir funcionando (Service Worker).
+
+
+------------------------------------------------------------
+DÓNDE ESTÁ CADA COSA (para no perderse)
+------------------------------------------------------------
+
+pwa/index.html            Página única (SPA). Estructura y tabbar.
+pwa/js/datos.js           Capa de datos (localStorage) + formato S/.
+pwa/js/app.js             Router, vistas (pantallas) y acciones.
+pwa/css/estilos.css       Estilos y paleta (tema claro/oscuro).
+pwa/sw.js                 Service Worker (cache offline).
+pwa/manifest.webmanifest  Nombre, iconos y colores de la PWA.
+INFORMES/                 Informes y manual de usuario (MANUAL.docx).
+INSTRUCCIONES/            Este archivo y el CLAUDE.md maestro.
+
+La app NO tiene servidor ni cuentas: todos los datos viven en el
+navegador del dispositivo. Respaldo: Ajustes → "Exportar copia (JSON)".
+
+============================================================

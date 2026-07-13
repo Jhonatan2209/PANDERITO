@@ -2,6 +2,24 @@
    Panderito PWA — capa de datos (offline, en el dispositivo)
    Replica el dominio de Panderito.Core: Movimiento, Categoria, Cuenta.
    Persistencia con localStorage (JSON). Sin servidor, sin internet.
+
+   CÓMO FUNCIONA:
+   - Todo el estado de la app vive en UN solo objeto JSON guardado
+     bajo la clave 'panderito.datos.v1' de localStorage.
+   - Forma del estado: { proximoId, categorias[], cuentas[],
+     movimientos[], prestamos[], abonos[], panderos[], turnos[],
+     metas[], recurrentes[], presupuestos[] }.
+   - Cada colección usa ids numéricos autoincrementales (proximoId).
+   - Este módulo expone el objeto global `Datos` (patrón IIFE/módulo):
+     app.js SOLO habla con los datos a través de estas funciones,
+     nunca toca localStorage directamente.
+   - `Moneda` (al final) formatea montos en soles peruanos (S/).
+
+   INSTRUCCIONES:
+   - Para agregar una colección nueva: inclúyela en el bucle de
+     migración de cargar(), crea sus funciones CRUD y expórtalas
+     en el return del final.
+   - Cualquier cambio de datos debe terminar llamando a guardar().
    ============================================================ */
 
 const Datos = (() => {
@@ -31,8 +49,13 @@ const Datos = (() => {
     { id: 'Tarjeta', etq: 'Tarjeta', icono: '💳', color: '#6D5AE6' },
   ];
 
+  // Estado en memoria (caché). Se llena una sola vez desde localStorage
+  // en cargar(); después todas las funciones trabajan sobre este objeto.
   let estado = null;
 
+  // cargar(): lee el JSON de localStorage (o crea los datos semilla la
+  // primera vez) y aplica "migraciones": agrega colecciones y la
+  // categoría "Pandero" si vienen de una versión anterior, sin perder nada.
   function cargar() {
     if (estado) return estado;
     try {
@@ -76,14 +99,20 @@ const Datos = (() => {
     return estado;
   }
 
+  // nuevoIdLocal(): id aleatorio provisional usado solo al crear la semilla
+  // (luego cargar() los reindexa 1,2,3...). nuevoId(): id definitivo autoincremental.
   function nuevoIdLocal() { return Math.floor(Math.random() * 1e9); }
   function nuevoId() { const e = cargar(); return e.proximoId++; }
 
+  // guardar(): persiste TODO el estado en localStorage. Debe llamarse
+  // después de cada modificación (todas las funciones de abajo lo hacen).
   function guardar() {
     localStorage.setItem(CLAVE, JSON.stringify(estado));
   }
 
   // ---------- Categorías ----------
+  // CRUD de categorías de gasto/ingreso. Regla: una categoría con
+  // movimientos NO se puede eliminar (protege el historial).
   function categorias(tipo) {
     const e = cargar();
     return tipo ? e.categorias.filter((c) => c.tipo === tipo) : e.categorias.slice();
@@ -106,7 +135,10 @@ const Datos = (() => {
     e.categorias = e.categorias.filter((c) => c.id !== id); guardar(); return true;
   }
 
-  // ---------- Cuentas ----------
+  // ---------- Cuentas (métodos de pago) ----------
+  // Efectivo, Yape, Plin, Banco, Tarjeta... El saldo de una cuenta NO se
+  // guarda: se CALCULA = saldoInicial + ingresos - gastos de esa cuenta.
+  // Así nunca se desincroniza con los movimientos.
   function cuentas(soloActivas) {
     const e = cargar();
     return soloActivas ? e.cuentas.filter((c) => c.activa) : e.cuentas.slice();
@@ -140,7 +172,9 @@ const Datos = (() => {
   }
   function saldoTotal() { return cuentas(true).reduce((a, c) => a + saldoCuenta(c.id), 0); }
 
-  // ---------- Movimientos ----------
+  // ---------- Movimientos (ingresos y gastos) ----------
+  // El corazón de la app. Cada movimiento: { id, monto, tipo:'Gasto'|'Ingreso',
+  // categoriaId, cuentaId, fecha (ISO), nota }. Se listan del más reciente al más antiguo.
   function movimientos() {
     return cargar().movimientos.slice().sort((a, b) => new Date(b.fecha) - new Date(a.fecha));
   }
@@ -162,7 +196,10 @@ const Datos = (() => {
     e.movimientos = e.movimientos.filter((m) => m.id !== id); guardar();
   }
 
-  // ---------- Resúmenes ----------
+  // ---------- Resúmenes (alimentan Inicio y Reportes) ----------
+  // resumenMes: totales de ingresos/gastos/balance de un mes.
+  // gastoPorCategoria: cuánto se gastó en cada categoría (con % del total).
+  // serieMeses: últimos N meses para el gráfico de barras.
   function mismoMes(fechaIso, ref) {
     const f = new Date(fechaIso);
     return f.getFullYear() === ref.getFullYear() && f.getMonth() === ref.getMonth();
@@ -202,6 +239,9 @@ const Datos = (() => {
   }
 
   // ---------- Helpers de fechas / frecuencia ----------
+  // siguienteFecha: avanza una fecha según la frecuencia (Semanal +7d,
+  // Quincenal +15d, Mensual +1 mes). fechaDelTurno: fecha del turno N
+  // de un pandero contando desde la fecha de inicio.
   function addDias(fecha, n) { const d = new Date(fecha); d.setDate(d.getDate() + n); return d; }
   function addMeses(fecha, n) { const d = new Date(fecha); d.setMonth(d.getMonth() + n); return d; }
   function siguienteFecha(fechaIso, frecuencia) {
@@ -218,6 +258,9 @@ const Datos = (() => {
   }
 
   // ---------- Préstamos ----------
+  // Préstamo: { persona, monto, tipo:'PorCobrar'(me deben)|'PorPagar'(yo debo),
+  // fecha, nota, estado:'Pendiente'|'Parcial'|'Pagado' }.
+  // Los abonos son pagos parciales; el estado se recalcula con cada abono.
   function prestamos() { return cargar().prestamos.slice().sort((a, b) => new Date(b.fecha) - new Date(a.fecha)); }
   function prestamo(id) { return cargar().prestamos.find((p) => p.id === id); }
   function guardarPrestamo(p) {
@@ -247,7 +290,12 @@ const Datos = (() => {
     return prestamos().filter((p) => p.tipo === tipo && p.estado !== 'Pagado').reduce((s, p) => s + saldoPendiente(p), 0);
   }
 
-  // ---------- Panderos ----------
+  // ---------- Panderos (juntas de ahorro rotativo) ----------
+  // Pandero: { nombre, numParticipantes, cuotaMonto, frecuencia,
+  // fechaInicio, miTurno, activo }. Al crearlo se generan sus TURNOS:
+  // uno por participante, con fecha de cobro calculada según la frecuencia.
+  // "Pagar cuota" registra un GASTO y "Cobrar el pozo" un INGRESO
+  // (categoría «Pandero»), así el pandero afecta el saldo real.
   function panderos() { return cargar().panderos.slice(); }
   function pandero(id) { return cargar().panderos.find((p) => p.id === id); }
   function generarTurnos(p, nombres) {
@@ -301,6 +349,8 @@ const Datos = (() => {
   }
 
   // ---------- Metas de ahorro ----------
+  // Meta: { nombre, montoMeta, montoActual, fechaMeta }. abonarMeta()
+  // suma al progreso; la UI muestra % y celebra al llegar al 100%.
   function metas() { return cargar().metas.slice(); }
   function meta(id) { return cargar().metas.find((m) => m.id === id); }
   function guardarMeta(m) {
@@ -312,7 +362,10 @@ const Datos = (() => {
   function abonarMeta(id, monto) { const m = meta(id); if (!m) return; m.montoActual = Number(m.montoActual) + Number(monto); guardar(); return m; }
   function eliminarMeta(id) { const e = cargar(); e.metas = e.metas.filter((m) => m.id !== id); guardar(); }
 
-  // ---------- Gastos recurrentes ----------
+  // ---------- Gastos recurrentes (pagos fijos) ----------
+  // Recurrente: { nombre, proveedor, monto, categoriaId, cuentaId,
+  // frecuencia, proximaFecha, activo }. registrarPagoRecurrente() crea
+  // el gasto del período y AVANZA proximaFecha a la siguiente fecha.
   function recurrentes() { return cargar().recurrentes.filter((r) => r.activo !== false).sort((a, b) => new Date(a.proximaFecha) - new Date(b.proximaFecha)); }
   function recurrente(id) { return cargar().recurrentes.find((r) => r.id === id); }
   function guardarRecurrente(r) {
@@ -328,7 +381,11 @@ const Datos = (() => {
     r.proximaFecha = siguienteFecha(r.proximaFecha, r.frecuencia); guardar(); return r;
   }
 
-  // ---------- Presupuestos ----------
+  // ---------- Presupuestos (límite de gasto por categoría) ----------
+  // Presupuesto: { categoriaId, montoLimite, periodo:'Semanal'|'Quincenal'|'Mensual' }.
+  // Solo puede existir UN presupuesto por categoría. avancePresupuesto()
+  // suma lo gastado en el período vigente y devuelve el nivel:
+  // Normal (<80%), Alerta (80-99%) o Excedido (>=100%).
   function presupuestos() { return cargar().presupuestos.slice(); }
   function presupuesto(id) { return cargar().presupuestos.find((p) => p.id === id); }
   function presupuestoDeCategoria(categoriaId) { return cargar().presupuestos.find((p) => p.categoriaId === categoriaId); }
@@ -370,6 +427,10 @@ const Datos = (() => {
   }
 
   // ---------- Pendientes (para avisos) ----------
+  // Junta en una sola lista lo que requiere atención en los próximos
+  // `dias`: panderos por cobrar, pagos fijos por vencer/vencidos y
+  // presupuestos en Alerta/Excedido. Alimenta la sección "Pendientes 🔔"
+  // del Inicio y las notificaciones locales.
   function pendientes(dias = 7) {
     const hoy = new Date(); hoy.setHours(0, 0, 0, 0);
     const diasHasta = (iso) => Math.round((new Date(new Date(iso).setHours(0, 0, 0, 0)) - hoy) / 86400000);
@@ -392,9 +453,13 @@ const Datos = (() => {
   }
 
   // ---------- Utilidades de datos ----------
+  // exportar(): devuelve TODO el estado como JSON legible (para el
+  // respaldo descargable de Ajustes). reiniciar(): borra todo y vuelve
+  // a crear los datos semilla (usado por "Borrar todo").
   function exportar() { return JSON.stringify(cargar(), null, 2); }
   function reiniciar() { localStorage.removeItem(CLAVE); estado = null; cargar(); }
 
+  // API pública del módulo: SOLO estas funciones son visibles desde app.js.
   return {
     cargar, guardar, siguienteFecha, fechaDelTurno, TIPOS_CUENTA,
     categorias, categoria, guardarCategoria, eliminarCategoria, categoriaTieneMovimientos,
@@ -420,6 +485,7 @@ const Datos = (() => {
 })();
 
 // ---------- Formato de moneda (S/ Perú), equivalente a FormatoMoneda.cs ----------
+// Moneda.fmt(1234.5) → "S/ 1,234.50" · Moneda.conSigno(50,'Gasto') → "- S/ 50.00"
 const Moneda = {
   fmt(n) {
     const v = Number(n) || 0;

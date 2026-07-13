@@ -2,8 +2,20 @@
    Panderito PWA — estilos
    Paleta y diseño replicados de la app MAUI (prototipo "Bolsillo").
    Móvil primero, tema claro/oscuro, barra de pestañas inferior.
+
+   CÓMO FUNCIONA EL TEMA:
+   - Todos los colores son variables CSS definidas en :root (tema claro).
+   - El bloque :root[data-tema="oscuro"] las REDEFINE; app.js pone
+     data-tema="claro|oscuro" en <html> según Ajustes → Tema.
+   - Para cambiar la paleta de la marca, basta editar estas variables;
+     el resto del archivo solo las consume con var(--nombre).
+
+   ORGANIZACIÓN: variables → reset/base → layout → tarjetas → listas →
+   chips → formularios → botones → tabbar → vacíos → barras de reporte →
+   toast → banner instalar → opciones/segmentos.
    ============================================================ */
 
+/* Variables del TEMA CLARO (por defecto) */
 :root {
   /* Marca */
   --primary: #6D5AE6;
@@ -41,6 +53,7 @@
   --tab-h: 68px;
 }
 
+/* Variables del TEMA OSCURO — mismas claves, colores adaptados a fondo negro */
 :root[data-tema="oscuro"] {
   --primary: #8C7CF0;
   --primary-ink: #B7ADF7;
@@ -64,6 +77,9 @@
   --sombra-sm: 0 2px 8px rgba(0, 0, 0, .3);
 }
 
+/* ---------- Reset y base ----------
+   max-width 520px centra la app en pantallas grandes (se ve como celular);
+   100dvh evita el salto de altura por la barra del navegador móvil. */
 * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
 
 html, body {
@@ -87,7 +103,9 @@ body {
 button { font-family: inherit; cursor: pointer; border: none; background: none; color: inherit; }
 input, select, textarea { font-family: inherit; font-size: 16px; }
 
-/* ---------- Layout de vistas ---------- */
+/* ---------- Layout de vistas ----------
+   El padding inferior reserva espacio para la tabbar fija; .vista aplica
+   una animación sutil de entrada en cada cambio de pantalla. */
 #app { padding: 0 16px calc(var(--tab-h) + 24px); }
 .vista { animation: aparecer .22s ease; }
 @keyframes aparecer { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
@@ -110,7 +128,10 @@ input, select, textarea { font-family: inherit; font-size: 16px; }
   display: grid; place-items: center; font-size: 18px; box-shadow: var(--sombra-sm);
 }
 
-/* ---------- Tarjetas ---------- */
+/* ---------- Tarjetas ----------
+   .card: tarjeta blanca genérica. .card-saldo: tarjeta violeta degradada
+   del saldo total (con círculo decorativo ::after). .duo/.mini: par de
+   tarjetitas Ingresos/Gastos lado a lado. */
 .card {
   background: var(--superficie);
   border-radius: var(--radio);
@@ -154,7 +175,10 @@ input, select, textarea { font-family: inherit; font-size: 16px; }
 .seccion-tit h2 { font-size: 16px; margin: 0; font-weight: 700; }
 .seccion-tit a { font-size: 13px; color: var(--primary); font-weight: 600; text-decoration: none; }
 
-/* ---------- Lista de movimientos ---------- */
+/* ---------- Lista de movimientos ----------
+   .item: fila con ícono redondeado (.ic, coloreado por categoría),
+   cuerpo con título/subtítulo y monto a la derecha (verde=ingreso,
+   rojo=gasto). Se usa en todas las listas de la app. */
 .lista { display: flex; flex-direction: column; gap: 2px; }
 .item {
   display: flex; align-items: center; gap: 12px;
@@ -183,7 +207,10 @@ input, select, textarea { font-family: inherit; font-size: 16px; }
 }
 .chip.activo { background: var(--primary); color: var(--on-primary); }
 
-/* ---------- Formularios ---------- */
+/* ---------- Formularios ----------
+   .campo agrupa label + control. .entrada es el estilo único de
+   inputs/selects/textareas (borde violeta al enfocar). El font-size
+   de 16px evita que iOS haga zoom automático al tocar un input. */
 .campo { margin-bottom: 16px; }
 .campo > label { display: block; font-size: 13px; font-weight: 600; color: var(--texto-suave); margin: 0 0 8px; }
 .entrada, textarea.entrada, select.entrada {
@@ -227,7 +254,9 @@ select.entrada { -webkit-appearance: none; appearance: none; background-image: l
 .cat-op .n { font-size: 11px; color: var(--texto-suave); text-align: center; line-height: 1.1; }
 .cat-op.activo { outline: 2.5px solid var(--primary); }
 
-/* ---------- Botones ---------- */
+/* ---------- Botones ----------
+   .btn: botón principal violeta a lo ancho. Variantes: .secundario
+   (blanco), .peligro (rojo, para eliminar), .chico (compacto, en filas). */
 .btn {
   display: flex; align-items: center; justify-content: center; gap: 8px;
   width: 100%; padding: 16px; border-radius: 16px; font-weight: 700; font-size: 16px;
@@ -238,7 +267,10 @@ select.entrada { -webkit-appearance: none; appearance: none; background-image: l
 .btn.peligro { background: var(--gasto); box-shadow: none; }
 .btn.chico { width: auto; padding: 10px 16px; font-size: 14px; border-radius: 12px; }
 
-/* ---------- Barra de pestañas ---------- */
+/* ---------- Barra de pestañas ----------
+   Fija abajo, 5 columnas. .tab-registrar es el botón dorado ＋ central,
+   sobresale hacia arriba (margin-top negativo). env(safe-area-inset-bottom)
+   respeta la barra de gestos del iPhone. */
 .tabbar {
   position: fixed; left: 50%; transform: translateX(-50%); bottom: 0;
   width: 100%; max-width: 520px; height: var(--tab-h);

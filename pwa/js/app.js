@@ -1,15 +1,37 @@
 /* ============================================================
    Panderito PWA — aplicación (router + vistas)
    SPA sin dependencias. Replica las pantallas de la app MAUI.
+
+   CÓMO FUNCIONA:
+   - Router por hash: la URL lleva la pantalla actual (#inicio,
+     #registrar, #panderoDet?id=5, ...). Cada vista se registra con
+     registrar('nombre', fn) donde fn devuelve el HTML de la pantalla.
+   - render() lee el hash, ejecuta la vista y pinta el resultado en
+     <main id="app">. Después de cualquier cambio de datos se vuelve
+     a llamar a render() para refrescar la pantalla.
+   - Los botones del HTML llaman a acciones públicas vía onclick
+     ("App.guardarMov()", "App.ir('cuentas')", etc.) — están en el
+     objeto `acciones` casi al final del archivo.
+   - Los datos SIEMPRE se leen/escriben a través de `Datos` (datos.js).
+
+   INSTRUCCIONES para agregar una pantalla nueva:
+   1) registrar('miRuta', (params) => `...html...`)
+   2) agrega 'miRuta' al mapa de marcarTab() (qué pestaña se ilumina)
+   3) navega hacia ella con App.ir('miRuta') o href="#miRuta"
+   4) si necesita botones, agrega sus funciones al objeto `acciones`.
    ============================================================ */
 
 const App = (() => {
+  // Contenedor donde se pinta cada vista (el <main id="app"> del index.html)
   const cont = () => document.getElementById('app');
 
   // ---------- Utilidades ----------
+  // esc(): escapa texto del usuario antes de meterlo al HTML
+  // (previene inyección/XSS y HTML roto por caracteres como < > & " ')
   const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) =>
     ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 
+  // toast(): muestra el mensajito flotante de confirmación 2.2 segundos
   function toast(msg) {
     const t = document.getElementById('toast');
     t.textContent = msg; t.classList.add('ver');
@@ -17,6 +39,8 @@ const App = (() => {
   }
 
   const capitalizar = (s) => s ? s.charAt(0).toUpperCase() + s.slice(1) : s;
+  // nombreMes(): "Julio de 2026" · saludo(): según la hora del día
+  // fechaCorta(): "Hoy" / "Ayer" / "12 jul" · hoyInput(): fecha de hoy para <input type="date">
   function nombreMes(ref = new Date()) { return capitalizar(ref.toLocaleDateString('es-PE', { month: 'long', year: 'numeric' })); }
   function saludo() {
     const h = new Date().getHours();
@@ -34,11 +58,17 @@ const App = (() => {
   const hoyInput = () => new Date().toISOString().slice(0, 10);
 
   // ---------- Estado de UI en memoria (formularios) ----------
+  // form: valores a medio escribir del formulario "Registrar" (sobrevive
+  // a los re-render). filtroHist: búsqueda y chip activo de Movimientos.
+  // refReporte: mes que se está viendo en Reportes (se mueve con ‹ ›).
   let form = {};
   let filtroHist = { texto: '', tipo: 'Todos' };
   let refReporte = new Date();
 
   // ---------- Router ----------
+  // rutas = { nombreDeRuta: funciónQueDevuelveHTML }. registrar() agrega
+  // una vista al mapa; ir() navega cambiando el hash de la URL (lo que
+  // dispara 'hashchange' → render()).
   const rutas = {};
   function registrar(nombre, fn) { rutas[nombre] = fn; }
 
@@ -46,6 +76,10 @@ const App = (() => {
     location.hash = '#' + ruta + (params ? '?' + new URLSearchParams(params) : '');
   }
 
+  // render(): corazón de la SPA. 1) separa ruta y parámetros del hash
+  // (#detalle?id=3 → ruta 'detalle', params {id:'3'}), 2) ejecuta la vista
+  // y pinta su HTML, 3) sube el scroll, 4) ilumina la pestaña correcta,
+  // 5) ejecuta el "post-render" de la vista si definió uno (fn._post).
   function render() {
     const [ruta, query] = (location.hash.replace(/^#/, '') || 'inicio').split('?');
     const params = Object.fromEntries(new URLSearchParams(query || ''));
@@ -56,6 +90,8 @@ const App = (() => {
     const post = fn._post; if (post) post(params);
   }
 
+  // marcarTab(): decide qué pestaña de la barra inferior se ve "activa"
+  // según la ruta actual (las subpantallas de "Más" iluminan la pestaña Más).
   function marcarTab(ruta) {
     const mapa = {
       inicio: 'inicio', movimientos: 'movimientos', registrar: 'registrar', reportes: 'reportes',
@@ -71,6 +107,9 @@ const App = (() => {
 
   // ============================================================
   //  VISTA: INICIO (Dashboard)
+  //  Muestra: saludo, banner de instalación PWA, tarjeta de saldo
+  //  total (toca para ajustar cuentas), ingresos/gastos del mes,
+  //  pendientes 🔔 (próximos 7 días) y últimos 6 movimientos.
   // ============================================================
   registrar('inicio', () => {
     const total = Datos.saldoTotal();
@@ -132,6 +171,9 @@ const App = (() => {
   });
   rutas['inicio']._post = () => { configurarBannerInstalar(); };
 
+  // itemMovimiento(): fila reutilizable de un movimiento (ícono de la
+  // categoría, nota, cuenta, fecha y monto en verde/rojo). Al tocarla
+  // abre el detalle. Se usa en Inicio y en Movimientos.
   function itemMovimiento(m) {
     const cat = Datos.categoria(m.categoriaId) || { nombre: 'Sin categoría', icono: '🏷️', color: '#6B7280' };
     const cta = Datos.cuenta(m.cuentaId);
@@ -146,12 +188,16 @@ const App = (() => {
       </button>`;
   }
 
+  // estadoVacio(): placeholder amigable cuando una lista no tiene datos
   function estadoVacio(emo, titulo, texto) {
     return `<div class="vacio"><div class="emo">${emo}</div><h3>${esc(titulo)}</h3><p>${esc(texto)}</p></div>`;
   }
 
   // ============================================================
   //  VISTA: MOVIMIENTOS (Historial)
+  //  Lista completa con buscador (por nota o categoría) y chips de
+  //  filtro Todos/Gastos/Ingresos. El _post reconecta el input de
+  //  búsqueda tras cada render conservando el cursor.
   // ============================================================
   registrar('movimientos', () => {
     let movs = Datos.movimientos();
@@ -180,7 +226,11 @@ const App = (() => {
   };
 
   // ============================================================
-  //  VISTA: REGISTRAR
+  //  VISTA: REGISTRAR (crear o editar un movimiento)
+  //  Doble uso: sin params crea un movimiento nuevo; con ?id=N carga
+  //  ese movimiento para editarlo. El estado se guarda en `form`
+  //  para no perder lo escrito cuando la vista se re-renderiza
+  //  (p. ej. al cambiar Gasto↔Ingreso o elegir categoría).
   // ============================================================
   registrar('registrar', (params) => {
     const editando = params.id ? Datos.movimiento(Number(params.id)) : null;
@@ -242,6 +292,8 @@ const App = (() => {
 
   // ============================================================
   //  VISTA: DETALLE MOVIMIENTO
+  //  Ficha completa de un movimiento (?id=N) con botones Editar
+  //  (reabre Registrar en modo edición) y Eliminar (con confirmación).
   // ============================================================
   registrar('detalle', (params) => {
     const m = Datos.movimiento(Number(params.id));
@@ -272,6 +324,9 @@ const App = (() => {
 
   // ============================================================
   //  VISTA: REPORTES
+  //  Navegación por mes (‹ ›), tarjetas de ingresos/gastos, ahorro o
+  //  déficit del mes, gráfico de barras de los últimos 6 meses y
+  //  ranking de gasto por categoría con barras proporcionales.
   // ============================================================
   registrar('reportes', () => {
     const r = Datos.resumenMes(refReporte);
@@ -315,7 +370,9 @@ const App = (() => {
   });
 
   // ============================================================
-  //  VISTA: MÁS
+  //  VISTA: MÁS (menú de módulos y configuración)
+  //  Puerta de entrada a Panderos, Préstamos, Metas, Pagos fijos,
+  //  Presupuestos, Cuentas, Categorías y Ajustes.
   // ============================================================
   registrar('mas', () => `
     <div class="titulo-pagina"><h1>Más</h1></div>
@@ -342,7 +399,11 @@ const App = (() => {
   }
 
   // ============================================================
-  //  VISTA: CUENTAS
+  //  VISTA: CUENTAS (métodos de pago) + editor de cuenta
+  //  'cuentas': lista con saldo calculado de cada una y saldo total.
+  //  'cuentaEdit': crear (sin ?id) o editar (?id=N) nombre, método de
+  //  pago y SALDO INICIAL (el dinero que ya tenías al empezar a usar
+  //  la app). Una cuenta con movimientos no se puede eliminar.
   // ============================================================
   const tipoCuentaEtq = (id) => (Datos.TIPOS_CUENTA.find((t) => t.id === id) || { etq: id }).etq;
   registrar('cuentas', () => {
@@ -385,6 +446,8 @@ const App = (() => {
 
   // ============================================================
   //  VISTA: CATEGORÍAS
+  //  Listas separadas de Gastos e Ingresos. Solo se pueden eliminar
+  //  las categorías SIN movimientos (las demás muestran "En uso").
   // ============================================================
   registrar('categorias', () => {
     const gastos = Datos.categorias('Gasto');
@@ -404,6 +467,8 @@ const App = (() => {
 
   // ============================================================
   //  VISTA: AJUSTES
+  //  Tema (claro/oscuro/auto), recordatorios (notificaciones locales),
+  //  exportar respaldo JSON y "Borrar todo" (reinicio de fábrica).
   // ============================================================
   registrar('ajustes', () => {
     const tema = localStorage.getItem('panderito.tema') || 'sistema';
@@ -440,7 +505,11 @@ const App = (() => {
   const opcsFrec = (sel) => FRECUENCIAS.map(([v, t]) => `<option value="${v}" ${sel === v ? 'selected' : ''}>${t}</option>`).join('');
 
   // ============================================================
-  //  PRÉSTAMOS
+  //  PRÉSTAMOS (3 vistas)
+  //  'prestamos': totales Me deben / Yo debo + lista.
+  //  'prestamoNuevo': formulario (persona, monto, tipo, fecha, nota).
+  //  'prestamoDet': saldo pendiente, registrar abonos parciales,
+  //  marcar como pagado o eliminar (borra también sus abonos).
   // ============================================================
   registrar('prestamos', () => {
     const meDeben = Datos.totalPendientePorTipo('PorCobrar');
@@ -491,7 +560,13 @@ const App = (() => {
   });
 
   // ============================================================
-  //  PANDEROS
+  //  PANDEROS (3 vistas) — el módulo estrella 🤝
+  //  'panderos': lista con "cuándo me toca" y pozo a recibir.
+  //  'panderoNuevo': crear junta (participantes, cuota, frecuencia,
+  //  mi turno y nombres opcionales, uno por línea).
+  //  'panderoDet': ficha con fechas, botones "Pagar cuota" (gasto) y
+  //  "Cobrar el pozo" (ingreso), y la lista de turnos donde se puede
+  //  editar nombre/DNI de cada participante y marcar turnos cobrados.
   // ============================================================
   registrar('panderos', () => {
     const lista = Datos.panderos();
@@ -550,7 +625,9 @@ const App = (() => {
   });
 
   // ============================================================
-  //  METAS DE AHORRO
+  //  METAS DE AHORRO (2 vistas)
+  //  'metas': tarjetas con barra de progreso, % y "¡Lograda! 🎉";
+  //  botones Abonar y Eliminar. 'metaNueva': formulario de creación.
   // ============================================================
   registrar('metas', () => {
     const lista = Datos.metas();
@@ -582,7 +659,10 @@ const App = (() => {
     <button class="btn" onclick="App.guardarMeta()">✓ Crear meta</button><div style="height:14px"></div>`);
 
   // ============================================================
-  //  RECURRENTES
+  //  RECURRENTES / PAGOS FIJOS (2 vistas)
+  //  'recurrentes': lista con "vence en X días" y botón Pagar (crea el
+  //  gasto y avanza la fecha). 'recurrenteNuevo': concepto, proveedor,
+  //  monto, categoría, cuenta, frecuencia y próximo pago.
   // ============================================================
   registrar('recurrentes', () => {
     const lista = Datos.recurrentes();
@@ -617,7 +697,10 @@ const App = (() => {
   });
 
   // ============================================================
-  //  PRESUPUESTOS
+  //  PRESUPUESTOS (2 vistas)
+  //  'presupuestos': tarjetas por categoría con semáforo 🟢/🟡/🔴
+  //  (En control / Cerca del límite ≥80% / Excedido ≥100%).
+  //  'presupuestoNuevo': categoría + límite + período.
   // ============================================================
   registrar('presupuestos', () => {
     const lista = Datos.presupuestos();
@@ -652,7 +735,10 @@ const App = (() => {
   });
 
   // ============================================================
-  //  ACCIONES
+  //  ACCIONES — funciones públicas que llaman los botones (onclick)
+  //  Patrón general: leer inputs → validar (toast si falta algo) →
+  //  guardar vía Datos.* → toast de confirmación → render()/ir().
+  //  Las eliminaciones siempre piden confirm() antes.
   // ============================================================
   const acciones = {
     ir,
@@ -840,6 +926,9 @@ const App = (() => {
   };
 
   // ---------- Sincronización de inputs del formulario de registro ----------
+  // leerInputsForm(): copia lo que hay en los inputs del DOM hacia `form`
+  // ANTES de re-renderizar (para no perder lo escrito).
+  // sincronizarInputsForm(): devuelve el monto al input después del render.
   function leerInputsForm() {
     const m = document.getElementById('monto'); if (m) form.monto = m.value;
     const c = document.getElementById('cuenta'); if (c) form.cuentaId = Number(c.value);
@@ -851,6 +940,9 @@ const App = (() => {
   }
 
   // ---------- Tema ----------
+  // aplicarTema('claro'|'oscuro'|'sistema'): guarda la preferencia,
+  // resuelve 'sistema' según el SO, marca <html data-tema="..."> (el CSS
+  // cambia las variables de color) y ajusta el color de la barra del navegador.
   function aplicarTema(t) {
     localStorage.setItem('panderito.tema', t);
     let efectivo = t;
@@ -861,6 +953,9 @@ const App = (() => {
   }
 
   // ---------- Instalación PWA ----------
+  // El navegador dispara 'beforeinstallprompt' cuando la app es instalable;
+  // guardamos ese evento y mostramos nuestro banner "Instala Panderito".
+  // Al tocar Instalar se relanza el diálogo nativo del navegador.
   let promptInstalar = null;
   function configurarBannerInstalar() {
     const banner = document.getElementById('banner-instalar');
@@ -879,6 +974,11 @@ const App = (() => {
   });
 
   // ---------- Arranque ----------
+  // iniciar() corre una sola vez al cargar la página (DOMContentLoaded):
+  // aplica el tema guardado, escucha cambios de tema del sistema, conecta
+  // los botones de la barra inferior, engancha el router al 'hashchange',
+  // pinta la primera vista, muestra la notificación diaria de pendientes
+  // y registra el Service Worker (sw.js) para que funcione offline.
   function iniciar() {
     aplicarTema(localStorage.getItem('panderito.tema') || 'sistema');
     window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => {
