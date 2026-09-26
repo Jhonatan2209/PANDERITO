@@ -2,7 +2,7 @@
 
 > **Propósito:** si eres Claude (u otra IA) y abres este proyecto en una
 > sesión nueva, lee este archivo para enterarte de todo y seguir el paso
-> sin repetir trabajo. Actualizado por última vez: **2026-07-12**.
+> sin repetir trabajo. Actualizado por última vez: **2026-09-26**.
 
 ---
 
@@ -13,7 +13,8 @@
 - **Dos apps:** la nativa .NET MAUI Android (`Panderito/`) y la **PWA web**
   (`pwa/`) que replica sus pantallas. También hay un scaffold de bot de
   Telegram (`bot-telegram/`).
-- **Rama de trabajo actual:** `feat/pwa-web` (la principal es `master`).
+- **Prioridad actual del usuario: la PWA** (es la que usa); la APK MAUI queda para después.
+- **Ramas:** `master` (principal; la PWA se fusionó desde `feat/pwa-web` vía PR #1 el 2026-09-26).
 - **Repo privado:** https://github.com/Jhonatan2209/PANDERITO —
   ⚠️ contiene `ACCESOS/` con credenciales personales: NUNCA hacerlo público,
   no leer esa carpeta salvo pedido explícito.
@@ -24,11 +25,12 @@
 2. `INSTRUCCIONES/CLAUDE.md` — instrucciones maestras (fuente de verdad).
 3. Este archivo — estado más reciente.
 4. `INFORMES/INFORME-PROYECTO.md` — visión completa de inicio a fin.
-5. `INFORMES/INFORME-SESION-2026-07-12.md` — última sesión en detalle.
+5. `INFORMES/INFORME-SESION-2026-09-26.md` — última sesión en detalle
+   (la anterior: `INFORME-SESION-2026-07-12.md`).
 6. `docs/ARQUITECTURA.md` — mapa del código .NET (solo si tocarás la app MAUI).
 7. `Panderito/PROGRESO.md` y `Panderito/DECISIONES.md` — checklist y decisiones.
 
-## 3. Estado actual (2026-07-12)
+## 3. Estado actual (2026-09-26)
 
 ### PWA (`pwa/`) — COMPLETA y funcionando
 - Todos los módulos listos: Inicio, Registrar, Movimientos, Detalle, Reportes,
@@ -41,7 +43,17 @@
   → http://localhost:8080 (paso a paso en `INSTRUCCIONES/LEVANTAR-PANDERO.txt`).
 - Datos en localStorage clave `panderito.datos.v1`; sin servidor.
 - Si cambias cualquier archivo de `pwa/`, **sube la versión de `CACHE` en
-  `pwa/sw.js`** (v3 → v4) para que los usuarios reciban la actualización.
+  `pwa/sw.js`** (hoy v4 → v5) para que los usuarios reciban la actualización.
+- **Hosting: Vercel** (cuenta del usuario `jhonatan-god`, plan Hobby), Root
+  Directory = `pwa`, con `pwa/vercel.json` y `pwa/.vercelignore`. Publica en
+  cada push a `master`. Paso a paso en `pwa/README.md`. Decisión 12.
+
+### Servidor propio (Clouding.io, `187.33.148.111`)
+- Cobro por horas con saldo prepago. Reservado para el bot y un futuro backend.
+- Hay archivos locales **sin commit** de un intento de despliegue (Docker Compose,
+  `deploy.py`, `run_compose.py`, `.github/workflows/deploy.yml`): se retoman al
+  trabajar el bot. El workflow fallaría hoy (faltan secretos SSH). Detalle en el
+  informe del 2026-09-26.
 
 ### App MAUI (`Panderito/`)
 - Fases 0–5 completas, 42 pruebas xUnit en verde. Faltan fase 6 (pulido)
@@ -63,21 +75,21 @@
 - El usuario prefiere **explicaciones paso a paso en español** y que se
   documente lo que se hace (carpeta `INFORMES/`).
 
-## 5. Última sesión (2026-07-12) — qué se hizo
+## 5. Última sesión (2026-09-26) — qué se hizo
 
-1. Se levantó la PWA en `http://localhost:8080` (verificada con HTTP 200).
-2. Se comentó a detalle TODO el código de `pwa/` (sin cambiar lógica;
-   `node --check` OK en los 3 JS).
-3. Se creó `INSTRUCCIONES/LEVANTAR-PANDERO.txt` (cómo levantar la app).
-4. Se creó la carpeta `INFORMES/` con: INFORME-PROYECTO.md,
-   INFORME-SESION-2026-07-12.md, este CONTEXTO-PARA-CLAUDE.md y MANUAL.docx
-   (manual de usuario módulo por módulo).
-5. Se hizo commit y push a `feat/pwa-web`.
+1. Se analizó el proyecto y se ubicó el repo (no existe "chanchito" en GitHub).
+2. Se detectó que `panderito.tar.gz` (con `ACCESOS/`) se había subido al
+   servidor; el usuario lo borró. Ahora `*.tar.gz` está en `.gitignore`.
+3. Se decidió publicar la PWA en Vercel y se preparó `pwa/vercel.json`,
+   `pwa/.vercelignore`, CACHE v4 y la guía en `pwa/README.md`.
+4. Se fusionó el PR #1 (`feat/pwa-web` → `master`).
 
 ## 6. Pendientes / ideas para próximas sesiones
 
-- [ ] Desplegar `pwa/` con HTTPS (Netlify/Vercel/GitHub Pages, base = `pwa/`,
-      nunca la raíz del repo) para instalación PWA completa en el celular.
+- [ ] Importar el proyecto en Vercel (Root Directory = `pwa`) y probar la
+      instalación en el celular; anotar aquí la URL final.
+- [ ] Usuario: revisar logs de Apache por accesos a `ACCESOS/` y, si hubo,
+      cambiar esas contraseñas.
 - [ ] Implementar el bot de Telegram (IA lee yapeo/boleta → `Datos`-equivalente).
 - [ ] Fase 6 (pulido) y fase 7 (build final APK) de la app MAUI.
 - [ ] Mantener actualizado este archivo y los informes al final de cada sesión.
