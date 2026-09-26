@@ -25,6 +25,11 @@ artefactos/
 *.apk
 *.aab
 
+## Despliegue — paquetes y entornos locales (el .tar.gz incluía ACCESOS/)
+*.tar.gz
+.venv_deploy/
+.vercel/
+
 ## Otros
 *.log
 .DS_Store

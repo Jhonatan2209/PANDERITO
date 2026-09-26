@@ -53,8 +53,22 @@ python -m http.server 8080
 > HTTPS**. Para la experiencia PWA total, despliégalo (ver abajo).
 
 ### Desplegar en internet (HTTPS, recomendado para instalar en el celular)
-- **Netlify / Vercel:** publica **solo la carpeta `pwa/`** como base del sitio.
-- **GitHub Pages:** publica con la carpeta `pwa/` como raíz.
+
+**Opción elegida: Vercel (plan Hobby, gratis)** — ver decisión 12 en `Panderito/DECISIONES.md`.
+
+1. En vercel.com → **Add New… → Project** → importar el repo **`Jhonatan2209/PANDERITO`**
+   (si no aparece: *Adjust GitHub App Permissions* y dar acceso a ese repo).
+2. **Root Directory: `pwa`** ← obligatorio (así nunca se publica `ACCESOS/`).
+3. **Framework Preset: Other**, sin Build Command ni Output Directory (son archivos estáticos).
+4. **Deploy**. Cada `git push` a `master` publica solo; las otras ramas generan previews.
+
+Archivos de Vercel dentro de `pwa/`:
+- **`vercel.json`** — cabeceras: `sw.js` sin caché (para que las actualizaciones lleguen al
+  celular), tipo correcto del manifest y cabeceras de seguridad básicas.
+- **`.vercelignore`** — no publica `README.md`, `LEVANTAR-PANDERITO.bat`, `Dockerfile` ni `nginx.conf`.
+
+Otras opciones: **Netlify** (misma idea, base = `pwa/`) o **GitHub Pages** (en repos privados
+requiere GitHub Pro).
 
 > 🔒 **Seguridad:** despliega **únicamente la carpeta `pwa/`**, nunca la raíz del repo.
 > El repositorio contiene una carpeta `ACCESOS/` con datos sensibles; publicar la raíz la
