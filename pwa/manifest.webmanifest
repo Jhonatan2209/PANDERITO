@@ -1,0 +1,29 @@
+{
+  "name": "Panderito — Tus finanzas, tu junta",
+  "short_name": "Panderito",
+  "description": "Finanzas personales con soporte de panderos (juntas de ahorro). Ingresos, gastos, cuentas, presupuestos y reportes. Funciona sin internet.",
+  "id": "/",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#EDEFF6",
+  "theme_color": "#6D5AE6",
+  "lang": "es-PE",
+  "dir": "ltr",
+  "categories": ["finance", "productivity"],
+  "icons": [
+    {
+      "src": "icons/panderito-icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    },
+    {
+      "src": "icons/panderito-maskable.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "maskable"
+    }
+  ]
+}

@@ -10,6 +10,9 @@ Antes se llamaba **Chanchito**; el 2026-07-10 se renombró a **Panderito** (ver 
 3. **`Panderito/DECISIONES.md`** — decisiones tomadas ante ambigüedades; agrega aquí cada nueva decisión.
 4. **`CAMBIOS.md`** — bitácora de cambios grandes (renombrado, logo, repositorio).
 5. **`docs/ARQUITECTURA.md`** — mapa del código: capas, entidades, servicios, viewmodels y receta para agregar pantallas. Léelo antes de tocar código.
+6. **`INFORMES/CONTEXTO-PARA-CLAUDE.md`** — estado más reciente del proyecto y de la última sesión; léelo para retomar el trabajo sin repetir nada. Los informes por sesión y el manual de usuario (`MANUAL.docx`) están en `INFORMES/`.
+7. **`INSTRUCCIONES/PLAN-FASES-PWA.md`** — plan por fases vigente: primero la PWA funcional y 100 % gratis (Vercel); bot Telegram/WhatsApp e IA vienen después, como mejoras. Todo debe seguir ligero.
+8. **`INSTRUCCIONES/LEVANTAR-PANDERO.txt`** — paso a paso para levantar la PWA (`pwa/`) en localhost, red local o internet.
 
 ## Estructura
 

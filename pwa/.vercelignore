@@ -1,0 +1,10 @@
+# ============================================================
+# Archivos de pwa/ que NO se publican en Vercel.
+# Solo sirven en local o en el servidor propio (Docker/nginx);
+# publicarlos no rompe nada pero no aportan y revelan detalles
+# internos. Sintaxis igual a .gitignore.
+# ============================================================
+README.md
+LEVANTAR-PANDERITO.bat
+Dockerfile
+nginx.conf

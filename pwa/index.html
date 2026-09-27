@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<!-- ============================================================
+     Panderito PWA — página única (SPA)
+     Este es el ÚNICO archivo HTML de la app. Todas las pantallas
+     (Inicio, Registrar, Movimientos, Reportes, Más, etc.) se
+     dibujan por JavaScript dentro de <main id="app">.
+     Para levantar la app: servir esta carpeta con cualquier
+     servidor estático, p. ej.  python -m http.server 8080
+     y abrir http://localhost:8080 (ver INSTRUCCIONES/LEVANTAR-PANDERO.txt).
+     ============================================================ -->
+<html lang="es-PE">
+<head>
+  <meta charset="UTF-8" />
+  <!-- viewport-fit=cover: respeta el "notch" del celular; maximum-scale=1 evita zoom accidental al tocar inputs -->
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=1" />
+  <title>Panderito — Tus finanzas, tu junta</title>
+  <meta name="description" content="Finanzas personales con panderos (juntas de ahorro). Funciona sin internet." />
+  <!-- Color de la barra del navegador en Android (violeta de la marca) -->
+  <meta name="theme-color" content="#6D5AE6" />
+  <!-- manifest.webmanifest: hace que la app sea INSTALABLE (nombre, icono, color, modo standalone) -->
+  <link rel="manifest" href="manifest.webmanifest" />
+  <link rel="icon" type="image/svg+xml" href="icons/panderito-icon.svg" />
+  <!-- Soporte para "Agregar a pantalla de inicio" en iPhone/iPad (Safari no usa el manifest completo) -->
+  <link rel="apple-touch-icon" href="icons/panderito-icon.svg" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+  <meta name="apple-mobile-web-app-title" content="Panderito" />
+  <link rel="stylesheet" href="css/estilos.css" />
+</head>
+<body>
+  <!-- Contenedor de vistas: app.js reemplaza su contenido según la ruta (#inicio, #registrar, #reportes, ...) -->
+  <main id="app"><!-- Las vistas se renderizan aquí --></main>
+
+  <!-- Barra de pestañas inferior (siempre visible). Cada botón navega con data-ruta;
+       el botón central dorado ＋ abre "Registrar" (gasto/ingreso). -->
+  <nav class="tabbar" id="tabbar">
+    <button class="tab" data-ruta="inicio"><span class="ic">🏠</span><span>Inicio</span></button>
+    <button class="tab" data-ruta="movimientos"><span class="ic">📋</span><span>Movim.</span></button>
+    <button class="tab tab-registrar" data-ruta="registrar"><span class="ic">＋</span></button>
+    <button class="tab" data-ruta="reportes"><span class="ic">📊</span><span>Reportes</span></button>
+    <button class="tab" data-ruta="mas"><span class="ic">⋯</span><span>Más</span></button>
+  </nav>
+
+  <!-- Toast: mensajito flotante de confirmación ("Movimiento registrado ✓", etc.). Lo controla App.toast() -->
+  <div id="toast"></div>
+
+  <!-- Orden importante: primero la capa de datos (Datos/Moneda), luego la app (router + vistas) -->
+  <script src="js/datos.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>
