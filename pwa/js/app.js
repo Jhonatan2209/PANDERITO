@@ -55,7 +55,41 @@ const App = (() => {
     if (f.toDateString() === ayer.toDateString()) return 'Ayer';
     return f.toLocaleDateString('es-PE', { day: '2-digit', month: 'short' });
   }
-  const hoyInput = () => new Date().toISOString().slice(0, 10);
+  // hoyInput(): fecha LOCAL (Perú) en formato YYYY-MM-DD. No usar toISOString():
+  // eso da la fecha en UTC y de 7 pm a medianoche ya es "mañana" (bug real).
+  const hoyInput = () => {
+    const d = new Date();
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+  };
+  // fechaDesdeInput(v): convierte 'YYYY-MM-DD' del <input type=date> a ISO al
+  // mediodía local. Devuelve null si está vacío o es inválido (el selector de
+  // Android tiene botón "Borrar"), para que la acción avise en vez de reventar.
+  function fechaDesdeInput(v) {
+    if (!v || !/^\d{4}-\d{2}-\d{2}$/.test(v)) return null;
+    const d = new Date(v + 'T12:00:00');
+    return isNaN(d) ? null : d.toISOString();
+  }
+  const esFutura = (v) => !!v && v > hoyInput();
+  // numero(v): parsea un monto escrito "a lo peruano": acepta "12,50", "1,234.50"
+  // y "1.234,50". Si hay punto y coma, el ÚLTIMO separador es el decimal y el
+  // otro es de miles. Si solo hay coma, es decimal. Devuelve NaN si no es número.
+  const numero = (v) => {
+    let s = String(v ?? '').trim().replace(/\s/g, '').replace(/[^\d.,-]/g, '');
+    const hayPunto = s.includes('.'), hayComa = s.includes(',');
+    if (hayPunto && hayComa) {
+      if (s.lastIndexOf(',') > s.lastIndexOf('.')) s = s.replace(/\./g, '').replace(',', '.');
+      else s = s.replace(/,/g, '');
+    } else if (hayComa) {
+      s = s.replace(',', '.');
+    }
+    return parseFloat(s);
+  };
+  // fondoSuave(color): fondo translúcido para íconos. Con hex se agrega "22";
+  // con variables CSS (var(--ingreso)) el sufijo no funciona → color-mix.
+  const fondoSuave = (col) => String(col).startsWith('#') ? col + '22' : `color-mix(in srgb, ${col} 13%, transparent)`;
+  // lsGet/lsSet: localStorage protegido (en incógnito estricto puede lanzar)
+  const lsGet = (k) => { try { return localStorage.getItem(k); } catch (e) { return null; } };
+  const lsSet = (k, v) => { try { localStorage.setItem(k, v); return true; } catch (e) { return false; } };
 
   // ---------- Estado de UI en memoria (formularios) ----------
   // form: valores a medio escribir del formulario "Registrar" (sobrevive
@@ -254,7 +288,7 @@ const App = (() => {
 
       <div class="monto-grande">
         <span class="simbolo">S/</span>
-        <input id="monto" class="${form.tipo === 'Gasto' ? 'gasto' : 'ingreso'}" type="number" inputmode="decimal" placeholder="0.00" value="${esc(form.monto)}" />
+        <input id="monto" class="${form.tipo === 'Gasto' ? 'gasto' : 'ingreso'}" type="text" inputmode="decimal" autocomplete="off" placeholder="0.00" value="${esc(form.monto)}" />
       </div>
 
       <div class="campo">
@@ -331,7 +365,7 @@ const App = (() => {
   registrar('reportes', () => {
     const r = Datos.resumenMes(refReporte);
     const porCat = Datos.gastoPorCategoria(refReporte);
-    const serie = Datos.serieMeses(6);
+    const serie = Datos.serieMeses(6, refReporte);
     const maxSerie = Math.max(1, ...serie.map((s) => s.gastos));
     const ahorro = r.ingresos - r.gastos;
     return `
@@ -352,7 +386,7 @@ const App = (() => {
         <p style="font-size:26px;font-weight:800;margin:0;color:${ahorro >= 0 ? 'var(--ingreso)' : 'var(--gasto)'}">${Moneda.fmt(ahorro)}</p>
       </div>
 
-      <div class="seccion-tit"><h2>Últimos 6 meses (gasto)</h2></div>
+      <div class="seccion-tit"><h2>6 meses hasta ${esc(nombreMes(refReporte))} (gasto)</h2></div>
       <div class="card">
         <div class="barras-mes">
           ${serie.map((s) => `<div class="col"><div class="b" style="height:${Math.round(s.gastos / maxSerie * 100)}%"></div><span class="et">${esc(capitalizar(s.etiqueta))}</span></div>`).join('')}
@@ -390,7 +424,7 @@ const App = (() => {
       ${opcion('🏷️', 'Categorías', 'Personaliza tus categorías', "App.ir('categorias')")}
       ${opcion('⚙️', 'Ajustes', 'Tema, datos y copia de seguridad', "App.ir('ajustes')")}
     </div>
-    <p class="pie-marca">Panderito PWA · v2</p>
+    <p class="pie-marca">Panderito PWA · v5</p>
   `);
   function opcion(ic, t, s, onclick, deshab) {
     return `<button class="opcion" ${deshab ? 'disabled' : `onclick="${onclick}"`}>
@@ -435,7 +469,7 @@ const App = (() => {
       <div class="campo"><label>Método de pago</label>
         <select class="entrada" id="c-tipo">${Datos.TIPOS_CUENTA.map((t) => `<option value="${t.id}" ${tipoActual === t.id ? 'selected' : ''}>${t.icono} ${esc(t.etq)}</option>`).join('')}</select></div>
       <div class="campo"><label>Saldo inicial (S/) — lo que ya tienes ahí</label>
-        <input class="entrada" id="c-saldo" type="number" inputmode="decimal" placeholder="0.00" value="${editando ? editando.saldoInicial : ''}" />
+        <input class="entrada" id="c-saldo" type="text" inputmode="decimal" placeholder="0.00" value="${editando ? esc(editando.saldoInicial) : ''}" />
         <p style="font-size:12px;color:var(--texto-tenue);margin:6px 2px 0">Pon aquí tu dinero actual (ej. 8000) para empezar a llevar el registro desde ese monto, sin registrar movimientos.</p></div>
       <button class="btn" onclick="App.guardarCuentaForm(${editando ? editando.id : 'null'})">${editando ? '💾 Guardar' : '✓ Crear cuenta'}</button>
       ${editando && !conMov ? `<div style="height:10px"></div><button class="btn peligro" onclick="App.borrarCuenta(${editando.id})">🗑️ Eliminar cuenta</button>` : ''}
@@ -471,7 +505,7 @@ const App = (() => {
   //  exportar respaldo JSON y "Borrar todo" (reinicio de fábrica).
   // ============================================================
   registrar('ajustes', () => {
-    const tema = localStorage.getItem('panderito.tema') || 'sistema';
+    const tema = lsGet('panderito.tema') || 'sistema';
     return `
       <div class="titulo-pagina"><button class="btn-volver" onclick="App.ir('mas')">‹</button><h1>Ajustes</h1></div>
       <div class="card">
@@ -484,15 +518,18 @@ const App = (() => {
       </div>
       <div class="seccion-tit"><h2>Recordatorios</h2></div>
       <div class="opciones">
-        ${opcion('🔔', 'Activar recordatorios', 'Aviso de panderos y pagos por vencer', 'App.activarNotis()')}
+        ${opcion('🔔', 'Activar recordatorios', 'Aviso al abrir la app: panderos y pagos por vencer', 'App.activarNotis()')}
         ${opcion('👀', 'Ver pendientes ahora', 'Panderos, pagos y presupuestos', 'App.mostrarPendientesNoti(true)')}
       </div>
 
       <div class="seccion-tit"><h2>Tus datos</h2></div>
       <div class="opciones">
         ${opcion('⬇️', 'Exportar copia (JSON)', 'Descarga un respaldo de tus datos', 'App.exportarDatos()')}
+        ${opcion('⬆️', 'Restaurar copia', 'Carga un respaldo JSON (reemplaza lo actual)', "document.getElementById('archivo-restaurar').click()")}
         ${opcion('🗑️', 'Borrar todo', 'Reinicia la app a cero (no se puede deshacer)', 'App.borrarTodo()')}
       </div>
+      <input type="file" id="archivo-restaurar" accept=".json,application/json" style="display:none" onchange="App.importarDatos(this)" />
+      ${Datos.hayCopiaCorrupta() ? `<div class="card" style="border-left:4px solid var(--pendiente)"><b>⚠️ Datos anteriores ilegibles</b><p style="margin:6px 0 0;font-size:13px;color:var(--texto-suave)">Se apartó una copia de datos que no se pudieron leer. Si perdiste información, exporta esa copia para revisarla.</p><div style="margin-top:10px"><button class="btn chico secundario" onclick="App.exportarCorrupto()">⬇️ Descargar copia apartada</button></div></div>` : ''}
       <p class="pie-marca">Tus datos se guardan solo en este dispositivo.<br/>Panderito PWA</p>
     `;
   });
@@ -529,14 +566,14 @@ const App = (() => {
     const pend = Datos.saldoPendiente(p);
     const col = p.tipo === 'PorCobrar' ? 'var(--ingreso)' : 'var(--gasto)';
     return `<button class="item" onclick="App.ir('prestamoDet',{id:${p.id}})">
-      <span class="ic" style="background:${col}22;color:${col}">${p.tipo === 'PorCobrar' ? '📥' : '📤'}</span>
+      <span class="ic" style="background:${fondoSuave(col)};color:${col}">${p.tipo === 'PorCobrar' ? '📥' : '📤'}</span>
       <span class="cuerpo"><p class="t">${esc(p.persona)}</p><p class="s">${p.tipo === 'PorCobrar' ? 'Me debe' : 'Le debo'} · ${etiquetaEstadoPrestamo(p.estado)}</p></span>
       <span class="monto">${Moneda.fmt(pend)}</span></button>`;
   }
   registrar('prestamoNuevo', () => `
     <div class="titulo-pagina"><button class="btn-volver" onclick="App.ir('prestamos')">‹</button><h1>Nuevo préstamo</h1></div>
     <div class="campo"><label>Persona</label><input class="entrada" id="p-persona" placeholder="ej. Juan" /></div>
-    <div class="campo"><label>Monto (S/)</label><input class="entrada" id="p-monto" type="number" inputmode="decimal" placeholder="0.00" /></div>
+    <div class="campo"><label>Monto (S/)</label><input class="entrada" id="p-monto" type="text" inputmode="decimal" placeholder="0.00" /></div>
     <div class="campo"><label>Tipo</label><select class="entrada" id="p-tipo"><option value="PorCobrar">Me deben (por cobrar)</option><option value="PorPagar">Yo debo (por pagar)</option></select></div>
     <div class="campo"><label>Fecha</label><input class="entrada" id="p-fecha" type="date" value="${hoyInput()}" /></div>
     <div class="campo"><label>Nota (opcional)</label><input class="entrada" id="p-nota" placeholder="Detalle" /></div>
@@ -555,7 +592,7 @@ const App = (() => {
       </div>
       ${p.estado !== 'Pagado' ? `<button class="btn" onclick="App.abonarPrestamo(${p.id})">＋ Registrar abono</button><div style="height:8px"></div><button class="btn secundario" onclick="App.pagarPrestamo(${p.id})">✓ Marcar como pagado</button>` : '<div class="card" style="text-align:center;color:var(--ingreso);font-weight:700">✓ Préstamo saldado</div>'}
       <div class="seccion-tit"><h2>Abonos (${abonos.length})</h2></div>
-      ${abonos.length ? `<div class="lista">${abonos.map((a) => `<div class="item"><span class="ic" style="background:var(--ingreso)22;color:var(--ingreso)">💵</span><span class="cuerpo"><p class="t">${Moneda.fmt(a.monto)}</p><p class="s">${fechaCorta(a.fecha)}</p></span></div>`).join('')}</div>` : `<p style="color:var(--texto-tenue);text-align:center;padding:12px">Aún no hay abonos.</p>`}
+      ${abonos.length ? `<div class="lista">${abonos.map((a) => `<div class="item"><span class="ic" style="background:${fondoSuave('var(--ingreso)')};color:var(--ingreso)">💵</span><span class="cuerpo"><p class="t">${Moneda.fmt(a.monto)}</p><p class="s">${fechaCorta(a.fecha)}</p></span></div>`).join('')}</div>` : `<p style="color:var(--texto-tenue);text-align:center;padding:12px">Aún no hay abonos.</p>`}
       <div style="height:10px"></div><button class="btn peligro" onclick="App.borrarPrestamo(${p.id})">🗑️ Eliminar préstamo</button>`;
   });
 
@@ -580,7 +617,7 @@ const App = (() => {
     const mi = r.fechaMiTurno ? diasHasta(r.fechaMiTurno) : null;
     const cuando = mi === null ? '' : mi > 0 ? `Me toca en ${mi} día${mi === 1 ? '' : 's'}` : mi === 0 ? '¡Me toca hoy!' : 'Mi turno ya pasó';
     return `<button class="item" onclick="App.ir('panderoDet',{id:${p.id}})">
-      <span class="ic" style="background:var(--primary)22;color:var(--primary)">🤝</span>
+      <span class="ic" style="background:${fondoSuave('var(--primary)')};color:var(--primary)">🤝</span>
       <span class="cuerpo"><p class="t">${esc(p.nombre)}</p><p class="s">${p.numParticipantes} pers. · ${Moneda.fmt(p.cuotaMonto)}/${p.frecuencia.toLowerCase()} · ${cuando} · ${r.turnosCobrados}/${r.totalTurnos} cobrados</p></span>
       <span class="monto" style="color:var(--primary)">${Moneda.fmt(r.montoARecibir)}</span></button>`;
   }
@@ -588,7 +625,7 @@ const App = (() => {
     <div class="titulo-pagina"><button class="btn-volver" onclick="App.ir('panderos')">‹</button><h1>Nuevo pandero</h1></div>
     <div class="campo"><label>Nombre</label><input class="entrada" id="pa-nombre" placeholder="ej. Junta de la oficina" /></div>
     <div class="campo"><label>N.º de participantes</label><input class="entrada" id="pa-num" type="number" inputmode="numeric" value="10" /></div>
-    <div class="campo"><label>Cuota (S/)</label><input class="entrada" id="pa-cuota" type="number" inputmode="decimal" placeholder="0.00" /></div>
+    <div class="campo"><label>Cuota (S/)</label><input class="entrada" id="pa-cuota" type="text" inputmode="decimal" placeholder="0.00" /></div>
     <div class="campo"><label>Frecuencia</label><select class="entrada" id="pa-frec">${opcsFrec('Mensual')}</select></div>
     <div class="campo"><label>Fecha de inicio</label><input class="entrada" id="pa-inicio" type="date" value="${hoyInput()}" /></div>
     <div class="campo"><label>Mi turno (posición)</label><input class="entrada" id="pa-turno" type="number" inputmode="numeric" value="1" /></div>
@@ -615,12 +652,16 @@ const App = (() => {
         ${filaDetalle('Participantes', String(p.numParticipantes))}
         ${filaDetalle('Total que aportarás', Moneda.fmt(p.cuotaMonto * p.numParticipantes))}
       </div>
-      <button class="btn" onclick="App.pagarCuota(${p.id})">💸 Pagar cuota del mes (${Moneda.fmt(p.cuotaMonto)})</button>
+      ${r.turnosCobrados < r.totalTurnos
+        ? `<button class="btn" onclick="App.pagarCuota(${p.id})">💸 Pagar cuota (${Moneda.fmt(p.cuotaMonto)}) · ronda ${r.turnosCobrados + 1} de ${r.totalTurnos}</button>`
+        : `<div class="card" style="text-align:center;color:var(--ingreso);font-weight:700">✓ Todas las cuotas pagadas</div>`}
       <div style="height:8px"></div>
-      <button class="btn secundario" onclick="App.cobrarPozo(${p.id})">📥 Cobrar el pozo (${Moneda.fmt(r.montoARecibir)})</button>
-      <p style="font-size:12px;color:var(--texto-tenue);text-align:center;margin:8px 2px 0">Pagar cuota lo registra como gasto (resta del saldo). Cobrar el pozo lo registra como ingreso (suma al saldo).</p>
+      ${p.pozoCobrado
+        ? `<div class="card" style="text-align:center;color:var(--ingreso);font-weight:700">✓ Pozo cobrado (${Moneda.fmt(r.montoARecibir)})</div>`
+        : `<button class="btn secundario" onclick="App.cobrarPozo(${p.id})">📥 Cobrar el pozo (${Moneda.fmt(r.montoARecibir)})</button>`}
+      <p style="font-size:12px;color:var(--texto-tenue);text-align:center;margin:8px 2px 0">Pagar cuota registra un gasto y marca la ronda como cobrada. Cobrar el pozo registra un ingreso (una sola vez).</p>
       <div class="seccion-tit"><h2>Turnos</h2><span style="font-size:12px;color:var(--texto-tenue)">✏️ edita nombre/DNI</span></div>
-      <div class="lista">${turnos.map((t) => `<div class="item"><span class="ic" style="background:${t.numeroTurno === p.miTurno ? 'var(--primary)22;color:var(--primary)' : 'var(--linea);color:var(--texto-suave)'}">${t.numeroTurno}</span><span class="cuerpo"><p class="t">${esc(t.nombreParticipante)}${t.numeroTurno === p.miTurno ? ' ⭐' : ''}</p><p class="s">${fechaLarga(t.fechaCobro)}${t.dni ? ' · DNI ' + esc(t.dni) : ''}</p></span><button class="btn-volver" onclick="App.editarTurno(${t.id})">✏️</button><button class="btn chico ${t.cobrado ? '' : 'secundario'}" style="margin-left:6px" onclick="App.cobrarTurno(${p.id},${t.id},${!t.cobrado})">${t.cobrado ? '✓' : 'Marcar'}</button></div>`).join('')}</div>
+      <div class="lista">${turnos.map((t) => `<div class="item"><span class="ic" style="background:${t.numeroTurno === p.miTurno ? fondoSuave('var(--primary)') + ';color:var(--primary)' : 'var(--linea);color:var(--texto-suave)'}">${t.numeroTurno}</span><span class="cuerpo"><p class="t">${esc(t.nombreParticipante)}${t.numeroTurno === p.miTurno ? ' ⭐' : ''}</p><p class="s">${fechaLarga(t.fechaCobro)}${t.dni ? ' · DNI ' + esc(t.dni) : ''}</p></span><button class="btn-volver" onclick="App.editarTurno(${t.id})">✏️</button><button class="btn chico ${t.cobrado ? '' : 'secundario'}" style="margin-left:6px" onclick="App.cobrarTurno(${p.id},${t.id},${!t.cobrado})">${t.cobrado ? '✓' : 'Marcar'}</button></div>`).join('')}</div>
       <div style="height:10px"></div><button class="btn peligro" onclick="App.borrarPandero(${p.id})">🗑️ Eliminar pandero</button>`;
   });
 
@@ -653,8 +694,8 @@ const App = (() => {
   registrar('metaNueva', () => `
     <div class="titulo-pagina"><button class="btn-volver" onclick="App.ir('metas')">‹</button><h1>Nueva meta</h1></div>
     <div class="campo"><label>Nombre</label><input class="entrada" id="m-nombre" placeholder="ej. Viaje a Cusco" /></div>
-    <div class="campo"><label>Monto meta (S/)</label><input class="entrada" id="m-meta" type="number" inputmode="decimal" placeholder="0.00" /></div>
-    <div class="campo"><label>Ya tengo ahorrado (opcional)</label><input class="entrada" id="m-actual" type="number" inputmode="decimal" placeholder="0.00" /></div>
+    <div class="campo"><label>Monto meta (S/)</label><input class="entrada" id="m-meta" type="text" inputmode="decimal" placeholder="0.00" /></div>
+    <div class="campo"><label>Ya tengo ahorrado (opcional)</label><input class="entrada" id="m-actual" type="text" inputmode="decimal" placeholder="0.00" /></div>
     <div class="campo"><label>Fecha objetivo (opcional)</label><input class="entrada" id="m-fecha" type="date" /></div>
     <button class="btn" onclick="App.guardarMeta()">✓ Crear meta</button><div style="height:14px"></div>`);
 
@@ -688,7 +729,7 @@ const App = (() => {
       <div class="titulo-pagina"><button class="btn-volver" onclick="App.ir('recurrentes')">‹</button><h1>Nuevo pago fijo</h1></div>
       <div class="campo"><label>Concepto</label><input class="entrada" id="r-nombre" placeholder="ej. Internet, Línea celular, Netflix" /></div>
       <div class="campo"><label>Proveedor / detalle (opcional)</label><input class="entrada" id="r-prov" placeholder="ej. Movistar, Claro, dueño del depa" /></div>
-      <div class="campo"><label>Monto (S/)</label><input class="entrada" id="r-monto" type="number" inputmode="decimal" placeholder="0.00" /></div>
+      <div class="campo"><label>Monto (S/)</label><input class="entrada" id="r-monto" type="text" inputmode="decimal" placeholder="0.00" /></div>
       <div class="campo"><label>Categoría</label><select class="entrada" id="r-cat">${cats.map((c) => `<option value="${c.id}">${c.icono} ${esc(c.nombre)}</option>`).join('')}</select></div>
       <div class="campo"><label>Cuenta</label><select class="entrada" id="r-cuenta">${ctas.map((c) => `<option value="${c.id}">${c.icono} ${esc(c.nombre)}</option>`).join('')}</select></div>
       <div class="campo"><label>Frecuencia</label><select class="entrada" id="r-frec">${opcsFrec('Mensual')}</select></div>
@@ -728,7 +769,7 @@ const App = (() => {
     return `
       <div class="titulo-pagina"><button class="btn-volver" onclick="App.ir('presupuestos')">‹</button><h1>Nuevo presupuesto</h1></div>
       <div class="campo"><label>Categoría</label><select class="entrada" id="b-cat">${cats.map((c) => `<option value="${c.id}">${c.icono} ${esc(c.nombre)}</option>`).join('')}</select></div>
-      <div class="campo"><label>Límite (S/)</label><input class="entrada" id="b-monto" type="number" inputmode="decimal" placeholder="0.00" /></div>
+      <div class="campo"><label>Límite (S/)</label><input class="entrada" id="b-monto" type="text" inputmode="decimal" placeholder="0.00" /></div>
       <div class="campo"><label>Período</label><select class="entrada" id="b-periodo">${opcsFrec('Mensual')}</select></div>
       <p style="font-size:13px;color:var(--texto-tenue);margin:0 2px 14px">Se te avisará al llegar al 80% y al 100% del límite en el período.</p>
       <button class="btn" onclick="App.guardarPresupuesto()">✓ Guardar</button><div style="height:14px"></div>`;
@@ -744,19 +785,25 @@ const App = (() => {
     ir,
     filtrarHist(tipo) { filtroHist.tipo = tipo; render(); },
     moverMes(delta) { refReporte = new Date(refReporte.getFullYear(), refReporte.getMonth() + delta, 1); render(); },
-    setTipo(t) { form.tipo = t; form.categoriaId = null; render(); sincronizarInputsForm(); },
+    // setTipo lee primero los inputs para NO perder monto/fecha/nota al cambiar Gasto↔Ingreso
+    setTipo(t) { leerInputsForm(); form.tipo = t; form.categoriaId = null; render(); sincronizarInputsForm(); },
     setCategoria(id) { leerInputsForm(); form.categoriaId = id; render(); sincronizarInputsForm(); },
     guardarMov() {
       leerInputsForm();
-      const monto = parseFloat(form.monto);
-      if (!monto || monto <= 0) return toast('Ingresa un monto válido');
+      const monto = numero(form.monto);
+      if (!monto || monto <= 0) return toast('Ingresa un monto válido (ej. 12.50)');
+      if (monto > 99999999) return toast('El monto es demasiado grande');
       if (!form.categoriaId) return toast('Elige una categoría');
       if (!form.cuentaId) return toast('Elige una cuenta');
-      Datos.guardarMovimiento({
+      const fechaIso = fechaDesdeInput(form.fecha);
+      if (!fechaIso) return toast('Elige una fecha');
+      if (esFutura(form.fecha)) return toast('La fecha no puede ser futura');
+      const ok = Datos.guardarMovimiento({
         id: form.id, monto, tipo: form.tipo,
         categoriaId: form.categoriaId, cuentaId: Number(form.cuentaId),
-        fecha: new Date(form.fecha + 'T12:00:00').toISOString(), nota: form.nota || '',
+        fecha: fechaIso, nota: (form.nota || '').slice(0, 200),
       });
+      if (!ok) return; // el evento 'panderito:error-guardado' ya mostró el aviso
       const editaba = !!form.id;
       form = {};
       toast(editaba ? 'Cambios guardados ✓' : 'Movimiento registrado ✓');
@@ -766,32 +813,28 @@ const App = (() => {
       if (!confirm('¿Eliminar este movimiento? No se puede deshacer.')) return;
       Datos.eliminarMovimiento(id); toast('Movimiento eliminado'); ir('movimientos');
     },
-    nuevaCuenta() {
-      const nombre = prompt('Nombre de la cuenta (ej. BCP, Yape, Ahorros):');
-      if (!nombre) return;
-      const saldo = parseFloat(prompt('Saldo inicial (S/):', '0')) || 0;
-      Datos.guardarCuenta({ nombre: nombre.trim(), tipo: 'Otra', saldoInicial: saldo, icono: '🏦', color: '#6D5AE6', activa: true });
-      toast('Cuenta creada ✓'); render();
-    },
     borrarCategoria(id) {
       if (!confirm('¿Eliminar esta categoría?')) return;
       if (Datos.eliminarCategoria(id)) { toast('Categoría eliminada'); render(); }
-      else toast('No se puede: tiene movimientos');
+      else toast('No se puede: está en uso (movimientos, pagos fijos o presupuestos)');
     },
     // ----- Préstamos -----
     guardarPrestamo() {
       const gv = (id) => (document.getElementById(id)?.value || '').trim();
-      const persona = gv('p-persona'); const monto = parseFloat(gv('p-monto'));
+      const persona = gv('p-persona'); const monto = numero(gv('p-monto'));
       if (!persona) return toast('Escribe el nombre de la persona');
       if (!monto || monto <= 0) return toast('Ingresa un monto válido');
-      Datos.guardarPrestamo({ persona, monto, tipo: gv('p-tipo'), fecha: new Date(gv('p-fecha') + 'T12:00:00').toISOString(), nota: gv('p-nota'), estado: 'Pendiente' });
+      const fecha = fechaDesdeInput(gv('p-fecha')); if (!fecha) return toast('Elige una fecha');
+      Datos.guardarPrestamo({ persona, monto: Datos.r2(monto), tipo: gv('p-tipo'), fecha, nota: gv('p-nota'), estado: 'Pendiente' });
       toast('Préstamo registrado ✓'); ir('prestamos');
     },
     abonarPrestamo(id) {
       const p = Datos.prestamo(id); if (!p) return;
       const pend = Datos.saldoPendiente(p);
       const v = prompt(`¿Cuánto abona? (pendiente: ${Moneda.fmt(pend)})`, '');
-      const monto = parseFloat(v); if (!monto || monto <= 0) return;
+      if (v === null) return;
+      const monto = numero(v); if (!monto || monto <= 0) return toast('Monto inválido');
+      if (monto > pend + 0.005) return toast(`El abono supera lo pendiente (${Moneda.fmt(pend)})`);
       Datos.registrarAbono(id, monto); toast('Abono registrado ✓'); render();
     },
     pagarPrestamo(id) { if (!confirm('¿Marcar como totalmente pagado?')) return; Datos.marcarPagadoPrestamo(id); toast('Préstamo saldado ✓'); render(); },
@@ -800,13 +843,15 @@ const App = (() => {
     // ----- Panderos -----
     guardarPandero() {
       const gv = (id) => (document.getElementById(id)?.value || '').trim();
-      const nombre = gv('pa-nombre'); const num = parseInt(gv('pa-num'), 10); const cuota = parseFloat(gv('pa-cuota')); const turno = parseInt(gv('pa-turno'), 10) || 1;
+      const nombre = gv('pa-nombre'); const num = parseInt(gv('pa-num'), 10); const cuota = numero(gv('pa-cuota')); const turno = parseInt(gv('pa-turno'), 10) || 1;
       if (!nombre) return toast('Escribe un nombre');
       if (!num || num < 2) return toast('Debe haber al menos 2 participantes');
+      if (num > 60) return toast('Máximo 60 participantes');
       if (!cuota || cuota <= 0) return toast('Ingresa la cuota');
       if (turno < 1 || turno > num) return toast('Tu turno debe estar entre 1 y ' + num);
+      const fechaInicio = fechaDesdeInput(gv('pa-inicio')); if (!fechaInicio) return toast('Elige la fecha de inicio');
       const nombres = (document.getElementById('pa-nombres')?.value || '').split('\n').map((s) => s.trim());
-      Datos.crearPanderoConTurnos({ nombre, numParticipantes: num, cuotaMonto: cuota, frecuencia: gv('pa-frec'), fechaInicio: new Date(gv('pa-inicio') + 'T12:00:00').toISOString(), miTurno: turno, activo: true }, nombres);
+      Datos.crearPanderoConTurnos({ nombre, numParticipantes: num, cuotaMonto: Datos.r2(cuota), frecuencia: gv('pa-frec'), fechaInicio, miTurno: turno, activo: true }, nombres);
       toast('Pandero creado ✓'); ir('panderos');
     },
     cobrarTurno(panderoId, turnoId, cobrado) { Datos.marcarCobrado(turnoId, cobrado); render(); },
@@ -821,42 +866,47 @@ const App = (() => {
     // ----- Cuentas -----
     guardarCuentaForm(id) {
       const gv = (x) => (document.getElementById(x)?.value || '').trim();
-      const nombre = gv('c-nombre'); const tipo = gv('c-tipo'); const saldo = parseFloat(gv('c-saldo')) || 0;
+      const nombre = gv('c-nombre'); const tipo = gv('c-tipo'); const saldo = numero(gv('c-saldo')) || 0;
       if (!nombre) return toast('Escribe un nombre');
+      if (Datos.existeCuentaConNombre(nombre, id || null)) return toast('Ya tienes una cuenta con ese nombre');
       const t = Datos.TIPOS_CUENTA.find((x) => x.id === tipo) || Datos.TIPOS_CUENTA[0];
       Datos.guardarCuenta({ id: id || null, nombre, tipo, saldoInicial: saldo, icono: t.icono, color: t.color, activa: true });
       toast(id ? 'Cuenta actualizada ✓' : 'Cuenta creada ✓'); ir('cuentas');
     },
     borrarCuenta(id) {
       if (!confirm('¿Eliminar esta cuenta?')) return;
-      if (Datos.eliminarCuenta(id)) { toast('Cuenta eliminada'); ir('cuentas'); } else toast('No se puede: tiene movimientos');
+      if (Datos.eliminarCuenta(id)) { toast('Cuenta eliminada'); ir('cuentas'); } else toast('No se puede: tiene movimientos o pagos fijos');
     },
     borrarPandero(id) { if (!confirm('¿Eliminar este pandero y sus turnos?')) return; Datos.eliminarPandero(id); toast('Pandero eliminado'); ir('panderos'); },
     pagarCuota(id) {
       const p = Datos.pandero(id); if (!p) return;
-      if (!confirm(`¿Registrar el pago de tu cuota (${Moneda.fmt(p.cuotaMonto)}) como gasto? Se descontará de tu saldo.`)) return;
-      Datos.pagarCuotaPandero(id); toast('Cuota pagada y descontada ✓'); render();
+      if (!confirm(`¿Registrar el pago de tu cuota (${Moneda.fmt(p.cuotaMonto)}) como gasto? Se descontará de tu saldo y se marcará la ronda.`)) return;
+      const mov = Datos.pagarCuotaPandero(id);
+      toast(mov ? 'Cuota pagada y descontada ✓' : 'Ya pagaste todas las cuotas de este pandero'); render();
     },
     cobrarPozo(id) {
       const p = Datos.pandero(id); if (!p) return;
+      if (p.pozoCobrado) return toast('El pozo de este pandero ya fue cobrado');
       const r = Datos.resumenPandero(p);
-      if (!confirm(`¿Registrar el cobro del pozo (${Moneda.fmt(r.montoARecibir)}) como ingreso? Se sumará a tu saldo.`)) return;
+      if (!confirm(`¿Registrar el cobro del pozo (${Moneda.fmt(r.montoARecibir)}) como ingreso? Se sumará a tu saldo (solo se puede una vez).`)) return;
       Datos.cobrarPozoPandero(id); toast('¡Pozo cobrado y sumado! 🎉'); render();
     },
 
     // ----- Metas -----
     guardarMeta() {
       const gv = (id) => (document.getElementById(id)?.value || '').trim();
-      const nombre = gv('m-nombre'); const metaMonto = parseFloat(gv('m-meta')); const actual = parseFloat(gv('m-actual')) || 0; const fecha = gv('m-fecha');
+      const nombre = gv('m-nombre'); const metaMonto = numero(gv('m-meta')); const actual = numero(gv('m-actual')) || 0; const fecha = gv('m-fecha');
       if (!nombre) return toast('Escribe un nombre');
       if (!metaMonto || metaMonto <= 0) return toast('Ingresa el monto meta');
-      Datos.guardarMeta({ nombre, montoMeta: metaMonto, montoActual: actual, fechaMeta: fecha ? new Date(fecha + 'T12:00:00').toISOString() : null });
+      if (actual < 0) return toast('Lo ahorrado no puede ser negativo');
+      Datos.guardarMeta({ nombre, montoMeta: Datos.r2(metaMonto), montoActual: Datos.r2(actual), fechaMeta: fechaDesdeInput(fecha) });
       toast('Meta creada ✓'); ir('metas');
     },
     abonarMeta(id) {
       const m = Datos.meta(id); if (!m) return;
-      const v = prompt(`¿Cuánto abonas a «${m.nombre}»?`, ''); const monto = parseFloat(v);
-      if (!monto || monto <= 0) return;
+      const v = prompt(`¿Cuánto abonas a «${m.nombre}»?`, ''); if (v === null) return;
+      const monto = numero(v);
+      if (!monto || monto <= 0) return toast('Monto inválido');
       Datos.abonarMeta(id, monto); toast('¡Abono a tu meta! 🎯'); render();
     },
     borrarMeta(id) { if (!confirm('¿Eliminar esta meta?')) return; Datos.eliminarMeta(id); toast('Meta eliminada'); render(); },
@@ -864,10 +914,13 @@ const App = (() => {
     // ----- Recurrentes -----
     guardarRecurrente() {
       const gv = (id) => (document.getElementById(id)?.value || '').trim();
-      const nombre = gv('r-nombre'); const monto = parseFloat(gv('r-monto'));
+      const nombre = gv('r-nombre'); const monto = numero(gv('r-monto'));
       if (!nombre) return toast('Escribe un nombre');
       if (!monto || monto <= 0) return toast('Ingresa el monto');
-      Datos.guardarRecurrente({ nombre, proveedor: gv('r-prov'), monto, categoriaId: Number(gv('r-cat')), cuentaId: Number(gv('r-cuenta')), frecuencia: gv('r-frec'), proximaFecha: new Date(gv('r-fecha') + 'T12:00:00').toISOString(), activo: true });
+      if (!Number(gv('r-cat'))) return toast('Elige una categoría');
+      if (!Number(gv('r-cuenta'))) return toast('Elige una cuenta');
+      const proximaFecha = fechaDesdeInput(gv('r-fecha')); if (!proximaFecha) return toast('Elige la fecha del próximo pago');
+      Datos.guardarRecurrente({ nombre, proveedor: gv('r-prov'), monto: Datos.r2(monto), categoriaId: Number(gv('r-cat')), cuentaId: Number(gv('r-cuenta')), frecuencia: gv('r-frec'), proximaFecha, activo: true });
       toast('Pago fijo guardado ✓'); ir('recurrentes');
     },
     pagarRecurrente(id) {
@@ -880,21 +933,25 @@ const App = (() => {
     // ----- Presupuestos -----
     guardarPresupuesto() {
       const gv = (id) => (document.getElementById(id)?.value || '').trim();
-      const cat = Number(gv('b-cat')); const limite = parseFloat(gv('b-monto'));
+      const cat = Number(gv('b-cat')); const limite = numero(gv('b-monto'));
       if (!cat) return toast('Elige una categoría');
       if (!limite || limite <= 0) return toast('Ingresa el límite');
-      Datos.guardarPresupuesto({ categoriaId: cat, montoLimite: limite, periodo: gv('b-periodo') });
+      Datos.guardarPresupuesto({ categoriaId: cat, montoLimite: Datos.r2(limite), periodo: gv('b-periodo') });
       toast('Presupuesto guardado ✓'); ir('presupuestos');
     },
     borrarPresupuesto(id) { if (!confirm('¿Eliminar este presupuesto?')) return; Datos.eliminarPresupuesto(id); toast('Presupuesto eliminado'); render(); },
 
     async activarNotis() {
       if (!('Notification' in window)) return toast('Tu navegador no soporta notificaciones');
-      const perm = await Notification.requestPermission();
-      if (perm === 'granted') { toast('Recordatorios activados 🔔'); acciones.mostrarPendientesNoti(true); }
+      let perm;
+      try { perm = await Notification.requestPermission(); } catch (e) { perm = 'denied'; }
+      if (perm === 'granted') { toast('Recordatorios activados 🔔 (te avisamos al abrir la app)'); acciones.mostrarPendientesNoti(true); }
       else toast('Permiso de notificaciones denegado');
     },
-    mostrarPendientesNoti(forzar) {
+    // Chrome Android NO permite `new Notification(...)` (lanza "Illegal constructor"):
+    // hay que notificar a través del Service Worker (registration.showNotification).
+    // El día solo se marca como "ya avisado" cuando la notificación realmente salió.
+    async mostrarPendientesNoti(forzar) {
       const pend = Datos.pendientes(7);
       if (!('Notification' in window) || Notification.permission !== 'granted') {
         if (forzar) return toast(pend.length ? `Tienes ${pend.length} pendiente(s). Activa recordatorios para avisos.` : 'Sin pendientes por ahora ✓');
@@ -902,22 +959,42 @@ const App = (() => {
       }
       if (!pend.length) { if (forzar) toast('Sin pendientes por ahora ✓'); return; }
       const hoyClave = new Date().toDateString();
-      if (!forzar && localStorage.getItem('panderito.noti.dia') === hoyClave) return;
-      localStorage.setItem('panderito.noti.dia', hoyClave);
+      if (!forzar && lsGet('panderito.noti.dia') === hoyClave) return;
       const p0 = pend[0];
+      const titulo = `Panderito — ${pend.length} pendiente${pend.length === 1 ? '' : 's'}`;
+      const opts = { body: `${p0.emo} ${p0.titulo} (${p0.detalle})`, icon: 'icons/panderito-icon.svg', tag: 'panderito-pendientes' };
       try {
-        new Notification(`Panderito — ${pend.length} pendiente${pend.length === 1 ? '' : 's'}`, {
-          body: `${p0.emo} ${p0.titulo} (${p0.detalle})`, icon: 'icons/panderito-icon.svg', tag: 'panderito-pendientes',
-        });
-      } catch (e) { /* algunos navegadores requieren SW para notificar */ }
+        if ('serviceWorker' in navigator) {
+          const reg = await navigator.serviceWorker.ready;
+          await reg.showNotification(titulo, opts);
+        } else {
+          new Notification(titulo, opts);
+        }
+        lsSet('panderito.noti.dia', hoyClave);
+      } catch (e) {
+        if (forzar) toast(`Tienes ${pend.length} pendiente(s) (no se pudo mostrar la notificación)`);
+      }
     },
     setTema(t) { aplicarTema(t); render(); },
-    exportarDatos() {
-      const blob = new Blob([Datos.exportar()], { type: 'application/json' });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url; a.download = 'panderito-respaldo.json'; a.click();
-      URL.revokeObjectURL(url); toast('Copia descargada ✓');
+    // Descarga con fecha en el nombre (no pisa respaldos anteriores); el blob se
+    // libera después de que el navegador tomó el archivo.
+    exportarDatos() { descargarJson(Datos.exportar(), `panderito-respaldo-${hoyInput()}.json`); toast('Copia descargada ✓'); },
+    exportarCorrupto() { const t = lsGet('panderito.datos.v1.corrupto'); if (t) descargarJson(t, `panderito-datos-ilegibles-${hoyInput()}.json`); },
+    // Restaurar: lee el .json elegido, valida y reemplaza (con confirmación).
+    importarDatos(input) {
+      const archivo = input && input.files && input.files[0];
+      if (!archivo) return;
+      input.value = ''; // permite volver a elegir el mismo archivo
+      if (archivo.size > 20 * 1024 * 1024) return toast('El archivo es demasiado grande');
+      if (!confirm(`¿Restaurar «${archivo.name}»? Esto REEMPLAZA todos tus datos actuales.`)) return;
+      const lector = new FileReader();
+      lector.onerror = () => toast('No se pudo leer el archivo');
+      lector.onload = () => {
+        const r = Datos.importar(String(lector.result || ''));
+        if (!r.ok) return toast('No se restauró: ' + r.error);
+        form = {}; toast(`Restaurado ✓ (${r.resumen})`); ir('inicio'); render();
+      };
+      lector.readAsText(archivo);
     },
     borrarTodo() {
       if (!confirm('¿Borrar TODOS tus datos y empezar de cero? No se puede deshacer.')) return;
@@ -938,13 +1015,21 @@ const App = (() => {
   function sincronizarInputsForm() {
     const m = document.getElementById('monto'); if (m) m.value = form.monto || '';
   }
+  // descargarJson(texto, nombre): genera el archivo y dispara la descarga
+  function descargarJson(texto, nombre) {
+    const blob = new Blob([texto], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url; a.download = nombre; document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 1500);
+  }
 
   // ---------- Tema ----------
   // aplicarTema('claro'|'oscuro'|'sistema'): guarda la preferencia,
   // resuelve 'sistema' según el SO, marca <html data-tema="..."> (el CSS
   // cambia las variables de color) y ajusta el color de la barra del navegador.
   function aplicarTema(t) {
-    localStorage.setItem('panderito.tema', t);
+    lsSet('panderito.tema', t);
     let efectivo = t;
     if (t === 'sistema') efectivo = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'oscuro' : 'claro';
     document.documentElement.setAttribute('data-tema', efectivo);
@@ -980,19 +1065,36 @@ const App = (() => {
   // pinta la primera vista, muestra la notificación diaria de pendientes
   // y registra el Service Worker (sw.js) para que funcione offline.
   function iniciar() {
-    aplicarTema(localStorage.getItem('panderito.tema') || 'sistema');
+    aplicarTema(lsGet('panderito.tema') || 'sistema');
     window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => {
-      if ((localStorage.getItem('panderito.tema') || 'sistema') === 'sistema') aplicarTema('sistema');
+      if ((lsGet('panderito.tema') || 'sistema') === 'sistema') aplicarTema('sistema');
     });
     document.querySelectorAll('.tab').forEach((t) => t.addEventListener('click', () => {
-      if (t.dataset.ruta === 'registrar') form = {};
-      ir(t.dataset.ruta);
+      const ruta = t.dataset.ruta;
+      if (ruta === 'registrar') form = {};
+      // Si ya estamos en esa ruta el hash no cambia y no habría 'hashchange':
+      // renderizamos a mano (evita el formulario "fantasma" al tocar ＋ dos veces).
+      if (location.hash.replace(/^#/, '').split('?')[0] === ruta) { render(); return; }
+      ir(ruta);
     }));
     window.addEventListener('hashchange', () => { if (!location.hash.startsWith('#registrar')) form = {}; render(); });
+    // Si guardar() falla (almacenamiento lleno o bloqueado) la capa de datos avisa aquí
+    document.addEventListener('panderito:error-guardado', () => {
+      toast('⚠️ No se pudo guardar: almacenamiento lleno o bloqueado. Exporta una copia.');
+    });
     render();
     try { acciones.mostrarPendientesNoti(false); } catch (e) { /* noop */ }
 
     if ('serviceWorker' in navigator) {
+      // Si ya había un SW controlando la página y entra uno nuevo (subimos CACHE),
+      // recargamos para no mezclar JS viejo con caché nueva. En la primera visita
+      // no había controlador, así que no recarga.
+      const habiaControlador = !!navigator.serviceWorker.controller;
+      navigator.serviceWorker.addEventListener('controllerchange', () => {
+        if (!habiaControlador) return;
+        toast('Actualizando Panderito…');
+        setTimeout(() => location.reload(), 900);
+      });
       navigator.serviceWorker.register('sw.js').catch((e) => console.warn('SW no registrado:', e));
     }
   }
