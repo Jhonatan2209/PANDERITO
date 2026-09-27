@@ -14,10 +14,9 @@
   (`pwa/`) que replica sus pantallas. También hay un scaffold de bot de
   Telegram (`bot-telegram/`).
 - **Prioridad actual del usuario: la PWA** (es la que usa); la APK MAUI queda para después.
-- **Ramas:** `master` (principal, ya incluye `pwa/` desde el PR #1 fusionado el
-  2026-09-27) y `feat/pwa-web` (trabajo en curso; se lleva a `master` por PR).
-  **Claude no puede fusionar PRs** (permiso bloqueado): los fusiona el usuario
-  con el botón verde «Merge pull request» (rojo = cerrado sin fusionar, morado = fusionado).
+- **Rama de trabajo: `master`** (desde 2026-09-27 se hace commit y push directo;
+  el usuario no quiere aprobar PRs y Claude no puede fusionarlos). `feat/pwa-web`
+  ya está fusionada (PR #1 y #2) y no se usa más. Vercel publica en cada push a master.
 - **Repo privado:** https://github.com/Jhonatan2209/PANDERITO —
   ⚠️ contiene `ACCESOS/` con credenciales personales: NUNCA hacerlo público,
   no leer esa carpeta salvo pedido explícito.
@@ -98,7 +97,6 @@
 
 ## 6. Pendientes / ideas para próximas sesiones
 
-- [ ] Usuario: fusionar el PR #2 (correcciones de la auditoría) en GitHub.
 - [ ] Importar el proyecto en Vercel (Root Directory = `pwa`) y probar la
       instalación en el celular; anotar aquí la URL final.
 - [ ] Usuario: revisar logs de Apache por accesos a `ACCESOS/` y, si hubo,
