@@ -42,7 +42,7 @@ Configuración de git que importa (ver decisión 13 en `Panderito/DECISIONES.md`
 git config --global user.name "Jhonatan Adriano Soto"
 git config --global user.email "biblioteca@unas.edu.pe"           # global (trabajo UNAS)
 # SOLO dentro del repo PANDERITO (si no, Vercel bloquea los despliegues):
-git config user.email "97798490+Jhonatan2209@users.noreply.github.com"
+git config user.email "jhonatanadrianosoto@gmail.com"   # personal, vinculado a GitHub
 ```
 
 ---
@@ -115,7 +115,7 @@ futuro **keystore** del APK.
    mkdir -p /d/PROYECTOS-2026 && cd /d/PROYECTOS-2026
    git clone https://github.com/Jhonatan2209/PANDERITO.git
    cd PANDERITO
-   git config user.email "97798490+Jhonatan2209@users.noreply.github.com"
+   git config user.email "jhonatanadrianosoto@gmail.com"
    git config user.name  "Jhonatan Adriano Soto"
    ```
 4. Restaurar la memoria de Claude: abrir la carpeta del proyecto una vez en Claude → Code (eso
