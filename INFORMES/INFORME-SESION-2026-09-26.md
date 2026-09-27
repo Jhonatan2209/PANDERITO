@@ -162,6 +162,21 @@ pagado y 21 sin; Semana Santa 2026 y 2027 detectadas; toque en lunes 21 → falt
 cobro rechazado; calendario cabe en 375 px (celdas de 40 px). Se corrigió un bug detectado
 en la prueba: la actualización parcial de un trabajo (p. ej. pausar) borraba el monto.
 
+## 4.f — v10: pandero compartible al grupo (2026-09-27)
+
+Pedido: compartir la situación del pandero (quién cobró, quién pagó) como imagen al grupo
+de WhatsApp. Implementado:
+- **Pagos por ronda**: en el detalle del pandero, sección «Ronda N: pagos de la cuota» con
+  un chip por participante; se toca cuando pone su cuota (`turno.pagaron = [n…]`). Muestra
+  recaudado vs pozo. La ronda actual es el primer turno no cobrado.
+- **Compartir 🖼️ Imagen**: PNG de 1080 px dibujado con `<canvas>` (cabecera violeta, datos
+  del pandero, ronda actual con pagaron/faltan, tabla de turnos con estado). Se envía con
+  `navigator.share({files})` (Chrome Android) o se descarga en PC. Sin DNI (dato sensible).
+- **Compartir 💬 Texto**: versión WhatsApp con emojis y negritas.
+- Verificado en navegador: pandero de 5 con 1 ronda cobrada y 2 pagos → texto correcto;
+  PNG 1080×1120, 351 KB, nombre `pandero-<nombre>-<fecha>.png`. Se corrigió un error de
+  tipeo en el canvas detectado por la prueba (ReferenceError).
+
 ## 5. Pendiente para el usuario
 
 0. **Cerrar el PR #1** en GitHub (botón *Merge pull request*); Claude no tiene

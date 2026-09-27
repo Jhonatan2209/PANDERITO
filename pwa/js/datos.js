@@ -377,6 +377,18 @@ const Datos = (() => {
   function turnosDe(panderoId) { return cargar().turnos.filter((t) => t.panderoId === panderoId).sort((a, b) => a.numeroTurno - b.numeroTurno); }
   function marcarCobrado(turnoId, cobrado) { const e = cargar(); const t = e.turnos.find((x) => x.id === turnoId); if (t) { t.cobrado = cobrado; guardar(); } }
   function actualizarTurno(turnoId, datos) { const e = cargar(); const t = e.turnos.find((x) => x.id === turnoId); if (t) { Object.assign(t, datos); guardar(); } return t; }
+  // Pagos de una ronda: en cada turno (ronda) se anota qué participantes ya
+  // pusieron su cuota → turno.pagaron = [numeroTurno, ...]. Sirve para el
+  // organizador y para el resumen que se comparte al grupo ("quién pagó").
+  function alternarPagoRonda(turnoId, numeroParticipante) {
+    const e = cargar(); const t = e.turnos.find((x) => x.id === turnoId); if (!t) return;
+    if (!Array.isArray(t.pagaron)) t.pagaron = [];
+    const i = t.pagaron.indexOf(numeroParticipante);
+    if (i >= 0) t.pagaron.splice(i, 1); else t.pagaron.push(numeroParticipante);
+    guardar(); return t;
+  }
+  // Ronda actual = primer turno aún no cobrado (null si el pandero terminó)
+  function rondaActual(panderoId) { return turnosDe(panderoId).find((t) => !t.cobrado) || null; }
   function eliminarPandero(id) { const e = cargar(); e.panderos = e.panderos.filter((p) => p.id !== id); e.turnos = e.turnos.filter((t) => t.panderoId !== id); guardar(); }
   function resumenPandero(p) {
     const lista = turnosDe(p.id);
@@ -715,6 +727,7 @@ const Datos = (() => {
     saldoPendiente, registrarAbono, marcarPagadoPrestamo, totalPendientePorTipo,
     // Panderos
     panderos, pandero, crearPanderoConTurnos, turnosDe, marcarCobrado, actualizarTurno, eliminarPandero, resumenPandero,
+    alternarPagoRonda, rondaActual,
     pagarCuotaPandero, cobrarPozoPandero,
     // Pendientes / avisos
     pendientes,

@@ -18,6 +18,8 @@ sin librerías). No avanzar de fase sin cerrar la anterior.
 
 - [x] Compartir por WhatsApp (v7): resumen con formato de gastos/ingresos de hoy, semana o mes
       desde Movimientos (Web Share API; en PC abre WhatsApp Web). PDF descartado por peso.
+- [x] Panderos para el grupo (v10): pagos de la cuota por ronda (quién pagó/quién falta) y
+      compartir la situación como IMAGEN (canvas, sin librerías) o texto al WhatsApp del grupo.
 - [x] Perfil opcional (v8): nombre para el saludo + profesión (lista/«Otro»).
 - [x] **Módulo Trabajo** (v9, 2026-09-27): trabajos con pago mensual/día/hora, patrón semanal,
       calendario táctil (falta/día extra), feriados Perú, caja «Posibles ingresos» en Inicio y

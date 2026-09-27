@@ -31,8 +31,9 @@ const App = (() => {
   // lenguaje simple ("ahora puedes…"). El Inicio muestra la tarjeta «Novedades»
   // UNA sola vez por versión (se recuerda en localStorage al tocar «Entendido»).
   // Si una versión no trae nada que contar, deja NOVEDADES vacío y no se muestra.
-  const VERSION = 'v9';
+  const VERSION = 'v10';
   const NOVEDADES = [
+    '🤝 <b>Panderos para el grupo</b>: en cada pandero, marca quién ya pagó la cuota de la ronda y comparte la <b>situación como imagen</b> 🖼️ o texto 💬 al WhatsApp del grupo (quién cobra, quién pagó, quién falta).',
     '💼 <b>Nuevo módulo Trabajo</b> (Más → Trabajo): registra tu sueldo (mensual, por día o por hora) y tus días de trabajo; el calendario se prende y apaga con un toque y verás cuánto llevas ganado cada día. En el Inicio aparece la caja <b>Posibles ingresos</b>; cuando te paguen, «Ya me pagaron» lo convierte en ingreso real.',
     '🙋 <b>Perfil</b> (Más → Perfil): ponle tu nombre para que Panderito te salude, y tu profesión (lista o «Otro»). Opcional.',
     '📤 <b>Compartir por WhatsApp</b>: en Movimientos, toca «Hoy», «Esta semana» o «Este mes» para enviar un resumen con formato de tus gastos, ingresos o ambos.',
@@ -813,6 +814,25 @@ const App = (() => {
         ? `<div class="card" style="text-align:center;color:var(--ingreso);font-weight:700">✓ Pozo cobrado (${Moneda.fmt(r.montoARecibir)})</div>`
         : `<button class="btn secundario" onclick="App.cobrarPozo(${p.id})">📥 Cobrar el pozo (${Moneda.fmt(r.montoARecibir)})</button>`}
       <p style="font-size:12px;color:var(--texto-tenue);text-align:center;margin:8px 2px 0">Pagar cuota registra un gasto y marca la ronda como cobrada. Cobrar el pozo registra un ingreso (una sola vez).</p>
+      <div class="chips" style="padding-top:4px">
+        <span style="font-size:12px;color:var(--texto-tenue);align-self:center;white-space:nowrap">📤 Compartir al grupo:</span>
+        <button class="chip" onclick="App.compartirPandero(${p.id},'imagen')">🖼️ Imagen</button>
+        <button class="chip" onclick="App.compartirPandero(${p.id},'texto')">💬 Texto</button>
+      </div>
+      ${(() => {
+        const ronda = Datos.rondaActual(p.id);
+        if (!ronda) return '';
+        const pagaron = Array.isArray(ronda.pagaron) ? ronda.pagaron : [];
+        return `
+      <div class="seccion-tit"><h2>Ronda ${ronda.numeroTurno}: pagos de la cuota</h2><span style="font-size:12px;color:var(--texto-tenue)">${pagaron.length}/${turnos.length} pagaron</span></div>
+      <div class="card">
+        <p style="font-size:12px;color:var(--texto-suave);margin:0 0 10px">Cobra <b>${esc(ronda.nombreParticipante)}</b> el ${fechaLarga(ronda.fechaCobro)}. Toca a cada participante cuando ponga su cuota.</p>
+        <div class="chips" style="flex-wrap:wrap;overflow:visible">
+          ${turnos.map((t) => `<button class="chip ${pagaron.includes(t.numeroTurno) ? 'activo' : ''}" onclick="App.alternarPago(${ronda.id},${t.numeroTurno})">${pagaron.includes(t.numeroTurno) ? '✓ ' : ''}${esc(t.nombreParticipante)}</button>`).join('')}
+        </div>
+        <p style="font-size:12px;color:var(--texto-tenue);margin:10px 2px 0">Recaudado: <b>${Moneda.fmt(pagaron.length * Number(p.cuotaMonto))}</b> de ${Moneda.fmt(r.montoARecibir)}</p>
+      </div>`;
+      })()}
       <div class="seccion-tit"><h2>Turnos</h2><span style="font-size:12px;color:var(--texto-tenue)">✏️ edita nombre/DNI</span></div>
       <div class="lista">${turnos.map((t) => `<div class="item"><span class="ic" style="background:${t.numeroTurno === p.miTurno ? fondoSuave('var(--primary)') + ';color:var(--primary)' : 'var(--linea);color:var(--texto-suave)'}">${t.numeroTurno}</span><span class="cuerpo"><p class="t">${esc(t.nombreParticipante)}${t.numeroTurno === p.miTurno ? ' ⭐' : ''}</p><p class="s">${fechaLarga(t.fechaCobro)}${t.dni ? ' · DNI ' + esc(t.dni) : ''}</p></span><button class="btn-volver" onclick="App.editarTurno(${t.id})">✏️</button><button class="btn chico ${t.cobrado ? '' : 'secundario'}" style="margin-left:6px" onclick="App.cobrarTurno(${p.id},${t.id},${!t.cobrado})">${t.cobrado ? '✓' : 'Marcar'}</button></div>`).join('')}</div>
       <div style="height:10px"></div><button class="btn peligro" onclick="App.borrarPandero(${p.id})">🗑️ Eliminar pandero</button>`;
@@ -927,6 +947,89 @@ const App = (() => {
           </div>`}
       <div style="height:14px"></div>`;
   });
+
+  // ---------- Compartir pandero (texto e imagen) ----------
+  // Texto con formato de WhatsApp y una IMAGEN dibujada con <canvas> (sin
+  // librerías): cabecera violeta, datos del pandero, ronda actual con quién
+  // pagó, y la tabla de turnos (quién cobra, cuándo, estado). No se incluye
+  // el DNI: es un dato sensible y el resumen va a un grupo.
+  function estadoTurno(t, ronda) { return t.cobrado ? 'cobró ✓' : (ronda && t.id === ronda.id) ? 'le toca ahora ➜' : 'pendiente'; }
+  function textoPandero(p) {
+    const r = Datos.resumenPandero(p), turnos = Datos.turnosDe(p.id), ronda = Datos.rondaActual(p.id);
+    const L = [`🤝 *Pandero «${p.nombre}»*`, `👥 ${p.numParticipantes} participantes · cuota ${Moneda.fmt(p.cuotaMonto)} ${p.frecuencia.toLowerCase()} · pozo ${Moneda.fmt(r.montoARecibir)}`, `📊 Rondas cobradas: ${r.turnosCobrados}/${r.totalTurnos}`, ''];
+    if (ronda) {
+      const pag = Array.isArray(ronda.pagaron) ? ronda.pagaron : [];
+      L.push(`🔔 *Ronda ${ronda.numeroTurno}* — cobra *${ronda.nombreParticipante}* el ${fechaLarga(ronda.fechaCobro)}`, `💵 Pagaron ${pag.length}/${turnos.length} (${Moneda.fmt(pag.length * Number(p.cuotaMonto))})`);
+      const faltan = turnos.filter((t) => !pag.includes(t.numeroTurno)).map((t) => t.nombreParticipante);
+      if (faltan.length) L.push(`⏳ Faltan: ${faltan.join(', ')}`);
+      L.push('');
+    } else L.push('🎉 *Pandero completado: todos cobraron.*', '');
+    L.push('*Turnos*');
+    for (const t of turnos) L.push(`${t.cobrado ? '✅' : (ronda && t.id === ronda.id) ? '➡️' : '⬜'} ${t.numeroTurno}. ${t.nombreParticipante} · ${new Date(t.fechaCobro).toLocaleDateString('es-PE', { day: '2-digit', month: 'short' })} · ${estadoTurno(t, ronda)}`);
+    L.push('', '_Enviado desde Panderito_ 🐷');
+    return L.join('\n');
+  }
+  function imagenPandero(p) {
+    const r = Datos.resumenPandero(p), turnos = Datos.turnosDe(p.id), ronda = Datos.rondaActual(p.id);
+    const W = 1080, filaH = 78, cab = 380, rondaH = ronda ? 190 : 120, pie = 90;
+    const H = cab + rondaH + 70 + turnos.length * filaH + pie;
+    const c = document.createElement('canvas'); c.width = W; c.height = H;
+    const g = c.getContext('2d');
+    const F = (peso, px) => `${peso} ${px}px system-ui, -apple-system, "Segoe UI", Roboto, sans-serif`;
+    // Fondo y cabecera
+    g.fillStyle = '#F6F5FB'; g.fillRect(0, 0, W, H);
+    const grad = g.createLinearGradient(0, 0, W, cab); grad.addColorStop(0, '#7D6BF0'); grad.addColorStop(1, '#5342C7');
+    g.fillStyle = grad; g.fillRect(0, 0, W, cab);
+    g.fillStyle = 'rgba(255,255,255,.10)'; g.beginPath(); g.arc(W - 80, 60, 220, 0, Math.PI * 2); g.fill();
+    g.fillStyle = '#fff'; g.font = F(800, 30); g.fillText('🤝 PANDERO', 56, 80);
+    g.font = F(800, 62); g.fillText(recortar(g, p.nombre, W - 112), 56, 160);
+    g.font = F(500, 30); g.fillStyle = 'rgba(255,255,255,.9)';
+    g.fillText(`${p.numParticipantes} participantes · cuota ${Moneda.fmt(p.cuotaMonto)} ${p.frecuencia.toLowerCase()}`, 56, 220);
+    g.fillText(`Pozo por ronda: ${Moneda.fmt(r.montoARecibir)}   ·   Rondas cobradas: ${r.turnosCobrados}/${r.totalTurnos}`, 56, 268);
+    g.font = F(500, 24); g.fillStyle = 'rgba(255,255,255,.75)';
+    g.fillText('Situación al ' + new Date().toLocaleDateString('es-PE', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' }), 56, 330);
+    // Ronda actual
+    let y = cab + 30;
+    tarjeta(g, 40, y, W - 80, rondaH - 30);
+    if (ronda) {
+      const pag = Array.isArray(ronda.pagaron) ? ronda.pagaron : [];
+      g.fillStyle = '#6D5AE6'; g.font = F(800, 30); g.fillText(`RONDA ${ronda.numeroTurno} · cobra ${ronda.nombreParticipante}`, 72, y + 52);
+      g.fillStyle = '#4B5563'; g.font = F(500, 27); g.fillText(`Fecha: ${fechaLarga(ronda.fechaCobro)}`, 72, y + 96);
+      g.fillStyle = '#12B76A'; g.font = F(800, 30); g.fillText(`Pagaron ${pag.length}/${turnos.length} → ${Moneda.fmt(pag.length * Number(p.cuotaMonto))}`, 72, y + 140);
+      const faltan = turnos.filter((t) => !pag.includes(t.numeroTurno)).map((t) => t.nombreParticipante);
+      if (faltan.length) { g.fillStyle = '#B54708'; g.font = F(500, 25); g.fillText(recortar(g, 'Faltan: ' + faltan.join(', '), W - 500), 560, y + 140); }
+    } else { g.fillStyle = '#12B76A'; g.font = F(800, 32); g.fillText('🎉 Pandero completado: todos cobraron', 72, y + 60); }
+    // Tabla de turnos
+    y += rondaH;
+    g.fillStyle = '#6B7280'; g.font = F(700, 24);
+    g.fillText('#', 72, y + 30); g.fillText('PARTICIPANTE', 130, y + 30); g.fillText('FECHA DE COBRO', 600, y + 30); g.fillText('ESTADO', 860, y + 30);
+    y += 50;
+    turnos.forEach((t, i) => {
+      const esRonda = ronda && t.id === ronda.id;
+      g.fillStyle = esRonda ? '#EEEBFF' : i % 2 ? '#FFFFFF' : '#F0EFF7'; g.fillRect(40, y, W - 80, filaH);
+      g.fillStyle = t.cobrado ? '#12B76A' : esRonda ? '#6D5AE6' : '#9CA3AF'; g.beginPath(); g.arc(88, y + filaH / 2, 18, 0, Math.PI * 2); g.fill();
+      g.fillStyle = '#fff'; g.font = F(800, 20); g.textAlign = 'center'; g.fillText(String(t.numeroTurno), 88, y + filaH / 2 + 7); g.textAlign = 'left';
+      g.fillStyle = '#111827'; g.font = F(esRonda ? 800 : 600, 28); g.fillText(recortar(g, t.nombreParticipante, 440), 130, y + filaH / 2 + 10);
+      g.fillStyle = '#4B5563'; g.font = F(500, 26); g.fillText(new Date(t.fechaCobro).toLocaleDateString('es-PE', { day: '2-digit', month: 'short', year: 'numeric' }), 600, y + filaH / 2 + 10);
+      g.fillStyle = t.cobrado ? '#12B76A' : esRonda ? '#6D5AE6' : '#9CA3AF'; g.font = F(700, 26); g.fillText(estadoTurno(t, ronda), 860, y + filaH / 2 + 10);
+      y += filaH;
+    });
+    g.fillStyle = '#9CA3AF'; g.font = F(500, 24); g.fillText('Generado con Panderito · panderito.vercel.app', 56, H - 34);
+    return new Promise((res) => c.toBlob(res, 'image/png'));
+  }
+  function tarjeta(g, x, y, w, h) { g.fillStyle = '#fff'; g.shadowColor = 'rgba(0,0,0,.08)'; g.shadowBlur = 16; g.shadowOffsetY = 6; g.beginPath(); g.roundRect(x, y, w, h, 24); g.fill(); g.shadowColor = 'transparent'; }
+  function recortar(g, txt, maxW) { let s = String(txt); if (g.measureText(s).width <= maxW) return s; while (s.length > 1 && g.measureText(s + '…').width > maxW) s = s.slice(0, -1); return s + '…'; }
+  async function compartirArchivo(blob, nombre, texto) {
+    const archivo = new File([blob], nombre, { type: blob.type });
+    if (navigator.canShare && navigator.canShare({ files: [archivo] })) {
+      try { await navigator.share({ files: [archivo], text: texto }); return; } catch (e) { if (e && e.name === 'AbortError') return; }
+    }
+    // Sin hoja de compartir con archivos (PC): se descarga la imagen
+    const url = URL.createObjectURL(blob); const a = document.createElement('a');
+    a.href = url; a.download = nombre; document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 1500);
+    toast('Imagen descargada; envíala al grupo ✓');
+  }
 
   // ============================================================
   //  METAS DE AHORRO (2 vistas)
@@ -1119,6 +1222,16 @@ const App = (() => {
       toast('Pandero creado ✓'); ir('panderos');
     },
     cobrarTurno(panderoId, turnoId, cobrado) { Datos.marcarCobrado(turnoId, cobrado); render(); },
+    alternarPago(turnoId, numero) { Datos.alternarPagoRonda(turnoId, numero); render(); },
+    async compartirPandero(id, modo) {
+      const p = Datos.pandero(id); if (!p) return;
+      if (modo === 'texto') return compartirTexto(textoPandero(p));
+      try {
+        toast('Generando imagen…');
+        const blob = await imagenPandero(p);
+        await compartirArchivo(blob, `pandero-${p.nombre.replace(/[^\w-]+/g, '_')}-${hoyInput()}.png`, `Pandero «${p.nombre}» · situación al ${hoyInput()}`);
+      } catch (e) { console.warn(e); toast('No se pudo generar la imagen; te comparto el texto'); compartirTexto(textoPandero(p)); }
+    },
     editarTurno(turnoId) {
       const t = Datos.cargar().turnos.find((x) => x.id === turnoId); if (!t) return;
       const nombre = prompt('Nombre del participante (quién se lleva este turno):', t.nombreParticipante || '');
