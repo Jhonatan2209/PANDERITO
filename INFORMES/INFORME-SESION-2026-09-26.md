@@ -110,6 +110,14 @@ real: notificación vía SW e instalación desde Vercel.
 Se eliminó código muerto (`nuevaCuenta()`) y se agregó `.claude/launch.json`
 para levantar la PWA desde el navegador integrado.
 
+## 4.c — Publicación en Vercel (2026-09-27) ✅
+
+El usuario importó el repo en Vercel (proyecto `panderito`, Root Directory `pwa`).
+**URL: https://panderito.vercel.app**. Verificado desde aquí: HTTP 200 en todos los
+archivos, `sw.js` con `Cache-Control: no-cache`, manifest con tipo correcto, cabeceras
+de seguridad (HSTS, nosniff, SAMEORIGIN), `README.md`/`Dockerfile`/`nginx.conf`/`.bat`
+y `ACCESOS/` responden 404, SW v5 registrado y la app renderiza en vista móvil.
+
 ## 5. Pendiente para el usuario
 
 0. **Cerrar el PR #1** en GitHub (botón *Merge pull request*); Claude no tiene

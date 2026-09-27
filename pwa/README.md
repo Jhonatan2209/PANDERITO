@@ -56,6 +56,9 @@ python -m http.server 8080
 
 **Opción elegida: Vercel (plan Hobby, gratis)** — ver decisión 12 en `Panderito/DECISIONES.md`.
 
+> 🌐 **URL pública: https://panderito.vercel.app** (publicada el 2026-09-27; se actualiza sola con cada push a `master`).
+> En el celular: abrir esa URL en Chrome → menú ⋮ → **Instalar app** / **Agregar a pantalla de inicio**.
+
 1. En vercel.com → **Add New… → Project** → importar el repo **`Jhonatan2209/PANDERITO`**
    (si no aparece: *Adjust GitHub App Permissions* y dar acceso a ese repo).
 2. **Root Directory: `pwa`** ← obligatorio (así nunca se publica `ACCESOS/`).

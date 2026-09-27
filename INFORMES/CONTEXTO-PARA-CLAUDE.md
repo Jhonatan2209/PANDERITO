@@ -52,9 +52,10 @@
   locales, restaurar copia, notificaciones vía SW, redondeo a centavos, coma
   decimal, borrado protegido, etc.). Tabla completa en el informe del 2026-09-26,
   sección 4.b. Para probar en el navegador integrado: `.claude/launch.json` → `pwa`.
-- **Hosting: Vercel** (cuenta del usuario `jhonatan-god`, plan Hobby), Root
-  Directory = `pwa`, con `pwa/vercel.json` y `pwa/.vercelignore`. Publica en
-  cada push a `master`. Paso a paso en `pwa/README.md`. Decisión 12.
+- **PUBLICADA: https://panderito.vercel.app** (Vercel, cuenta `jhonatan-god`,
+  proyecto `panderito`, Root Directory = `pwa`, plan Hobby). Publica sola en cada
+  push a `master`. Verificado 2026-09-27: HTTPS, SW v5 registrado, manifest OK,
+  `sw.js` sin caché, README/Dockerfile/ACCESOS no accesibles. Decisión 12.
 
 ### Servidor propio (Clouding.io, `187.33.148.111`)
 - Cobro por horas con saldo prepago. Reservado para el bot y un futuro backend.
@@ -97,8 +98,9 @@
 
 ## 6. Pendientes / ideas para próximas sesiones
 
-- [ ] Importar el proyecto en Vercel (Root Directory = `pwa`) y probar la
-      instalación en el celular; anotar aquí la URL final.
+- [x] Vercel conectado → https://panderito.vercel.app (2026-09-27).
+- [ ] Usuario: instalar desde Chrome Android y usarla unos días; reportar fallos.
+- [ ] Fase B del plan (`INSTRUCCIONES/PLAN-FASES-PWA.md`): robustez + «algo no cuadra».
 - [ ] Usuario: revisar logs de Apache por accesos a `ACCESOS/` y, si hubo,
       cambiar esas contraseñas.
 - [ ] Implementar el bot de Telegram (IA lee yapeo/boleta → `Datos`-equivalente).

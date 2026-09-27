@@ -7,10 +7,10 @@ sin librerías). No avanzar de fase sin cerrar la anterior.
 
 ## Fase A — Publicar y dejar funcionando (AHORA) · costo S/ 0
 
-- [ ] Usuario: cerrar el PR #1 en GitHub (`feat/pwa-web` → `master`).
-- [ ] Usuario: Vercel → Add New → Project → `PANDERITO` → Root Directory `pwa` → Deploy.
-- [ ] Claude: probar la URL (HTTP 200, manifest, sw.js sin caché), anotar la URL
-      en `pwa/README.md` y `INFORMES/CONTEXTO-PARA-CLAUDE.md`.
+- [x] PR #1 y #2 fusionados; desde ahora se trabaja directo en `master`.
+- [x] Vercel conectado (proyecto `panderito`, root `pwa`) → **https://panderito.vercel.app**
+- [x] Claude: URL probada (200, manifest, sw.js no-cache, archivos internos 404) y anotada (2026-09-27).
+- [x] Auditoría de 25 casos límite → 23 corregidos (v5).
 - [ ] Usuario: instalar desde Chrome en el celular («Instalar app») y usarla unos días.
 - [ ] Corregir lo que falle en uso real (bugs, textos, cosas incómodas).
 
