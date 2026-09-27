@@ -177,6 +177,21 @@ de WhatsApp. Implementado:
   PNG 1080×1120, 351 KB, nombre `pandero-<nombre>-<fecha>.png`. Se corrigió un error de
   tipeo en el canvas detectado por la prueba (ReferenceError).
 
+## 4.g — Pre-mortem de los módulos nuevos (skill anticipacion-de-fallas, nivel Estándar 5/8)
+
+Riesgos que valía la pena corregir ya (CACHE v11, sin cambio de VERSION):
+1. [Alta] Borrar el ingreso del sueldo dejaba el mes como «✓ cobrado» sin ingreso →
+   `eliminarMovimiento` también borra el registro de cobro. Probado: sí.
+2. [Alta] Cobrar el sueldo a una cuenta eliminada creaba un ingreso huérfano (saldo
+   descuadrado) → la cuenta se valida y cae a una activa; además una cuenta usada por un
+   trabajo ya no se puede eliminar. Probado: sí.
+3. [Media] Con ‹ › se podía cobrar un mes futuro → bloqueado en datos y en la UI. Probado: sí.
+4. [Media] Monto 0 al cobrar → rechazado. Probado: sí.
+5. [Baja] Pandero de 60 participantes en imagen/turnos → funciona (canvas ~5 400 px). Probado: sí.
+Aceptados sin cambio: nombres de participantes en la imagen (es el propósito; sin DNI);
+excepciones en fechas futuras (sirven para marcar vacaciones); recordatorios solo al abrir.
+Pendiente/no verificado: `navigator.share` con archivo en Android real.
+
 ## 5. Pendiente para el usuario
 
 0. **Cerrar el PR #1** en GitHub (botón *Merge pull request*); Claude no tiene

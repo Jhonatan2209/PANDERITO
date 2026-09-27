@@ -8,15 +8,16 @@
 //
 // INSTRUCCIONES DE MANTENIMIENTO:
 // - Si cambias cualquier archivo de la app (js, css, html, íconos),
-//   sube la versión de CACHE (v5 → v6) para que los usuarios
+//   sube la versión de CACHE (v10 → v11) para que los usuarios
 //   reciban la versión nueva; el evento "activate" borra las cachés viejas.
-//   Sube TAMBIÉN `VERSION` en js/app.js (mismo número) y escribe las
-//   NOVEDADES: el Inicio se las muestra al usuario una vez por versión.
+//   `VERSION` + NOVEDADES en js/app.js se suben SOLO cuando hay algo nuevo
+//   que contarle al usuario (el Inicio las muestra una vez por VERSION);
+//   para correcciones internas basta subir CACHE aquí.
 // - Si agregas un archivo nuevo al proyecto, inclúyelo en ASSETS.
 // - El SW solo se registra sobre HTTPS o sobre http://localhost.
 // ============================================================
 
-const CACHE = 'panderito-pwa-v10';           // nombre + versión de la caché actual
+const CACHE = 'panderito-pwa-v11';           // nombre + versión de la caché actual
 const ASSETS = [                             // "app shell": todo lo necesario para arrancar sin red
   './',
   './index.html',

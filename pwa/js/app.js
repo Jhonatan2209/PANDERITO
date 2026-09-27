@@ -938,6 +938,8 @@ const App = (() => {
       </div>
       ${r.cobrado !== null
         ? `<div class="card" style="text-align:center;color:var(--ingreso);font-weight:700">✓ Sueldo de ${nombreMes(ref)} cobrado: ${Moneda.fmt(r.cobrado)}</div>`
+        : r.mesClave > hoyInput().slice(0, 7)
+        ? `<div class="card" style="text-align:center;color:var(--texto-tenue)">Este mes todavía no empezó; podrás cobrarlo cuando llegue.</div>`
         : `<div class="card">
             <b>¿Ya te pagaron ${nombreMes(ref)}?</b>
             <p style="font-size:13px;color:var(--texto-suave);margin:6px 0 10px">Convierte lo ganado en un ingreso real (suma a tu saldo) y deja de contarse como «posible».</p>
@@ -1292,7 +1294,7 @@ const App = (() => {
       const cuentaId = Number(document.getElementById('tc-cuenta')?.value) || null;
       if (!confirm(`¿Registrar ${Moneda.fmt(monto)} como ingreso real de ${mesClave}?`)) return;
       const mov = Datos.cobrarTrabajo(trabajoId, mesClave, monto, cuentaId);
-      toast(mov ? '¡Sueldo registrado en tus ingresos! 💰' : 'Ese mes ya estaba cobrado'); render();
+      toast(mov ? '¡Sueldo registrado en tus ingresos! 💰' : (mesClave > hoyInput().slice(0, 7) ? 'Ese mes todavía no empezó' : 'Ese mes ya estaba cobrado')); render();
     },
 
     // ----- Metas -----

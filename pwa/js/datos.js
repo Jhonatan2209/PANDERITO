@@ -193,7 +193,8 @@ const Datos = (() => {
   }
   function cuentaTieneMovimientos(id) { return cargar().movimientos.some((m) => m.cuentaId === id); }
   function cuentaEnUso(id) {
-    return cuentaTieneMovimientos(id) || cargar().recurrentes.some((r) => r.cuentaId === id);
+    const e = cargar();
+    return cuentaTieneMovimientos(id) || e.recurrentes.some((r) => r.cuentaId === id) || e.trabajos.some((t) => t.cuentaId === id);
   }
   function eliminarCuenta(id) {
     const e = cargar();
@@ -236,7 +237,11 @@ const Datos = (() => {
   }
   function eliminarMovimiento(id) {
     const e = cargar();
-    e.movimientos = e.movimientos.filter((m) => m.id !== id); guardar();
+    e.movimientos = e.movimientos.filter((m) => m.id !== id);
+    // Si era el ingreso de un sueldo cobrado, el mes vuelve a quedar "por cobrar"
+    // (si no, el Inicio diría «ya cobrado» sin que exista el ingreso).
+    if (Array.isArray(e.cobrosTrabajo)) e.cobrosTrabajo = e.cobrosTrabajo.filter((c) => c.movimientoId !== id);
+    guardar();
   }
 
   // ---------- Resúmenes (alimentan Inicio y Reportes) ----------
@@ -682,8 +687,16 @@ const Datos = (() => {
   function cobrarTrabajo(trabajoId, mesClave, monto, cuentaId) {
     const e = cargar(); const t = trabajo(trabajoId); if (!t) return null;
     if (e.cobrosTrabajo.some((c) => c.trabajoId === trabajoId && c.mes === mesClave)) return null;
+    if (!(r2(monto) > 0)) return null;
+    // No se cobra un mes que aún no empezó (protege contra el ‹ › del calendario)
+    const hoyClave = `${new Date().getFullYear()}-${String(new Date().getMonth() + 1).padStart(2, '0')}`;
+    if (mesClave > hoyClave) return null;
     const cat = e.categorias.find((c) => c.tipo === 'Ingreso' && c.nombre === 'Sueldo') || e.categorias.find((c) => c.tipo === 'Ingreso');
-    const cta = cuentaId || t.cuentaId || (cuentas(true)[0] && cuentas(true)[0].id);
+    // La cuenta debe existir y estar activa; si no, cae a la primera activa
+    const activas = cuentas(true);
+    const existe = (id) => id && activas.some((c) => c.id === id);
+    const cta = existe(cuentaId) ? cuentaId : existe(t.cuentaId) ? t.cuentaId : (activas[0] && activas[0].id);
+    if (!cta) return null;
     const mov = guardarMovimiento({ monto: r2(monto), tipo: 'Ingreso', categoriaId: cat ? cat.id : null, cuentaId: cta, fecha: new Date().toISOString(), nota: `Sueldo ${t.nombre} · ${mesClave}` });
     e.cobrosTrabajo.push({ id: nuevoId(), trabajoId, mes: mesClave, movimientoId: mov.id, monto: r2(monto) });
     guardar(); return mov;
