@@ -58,12 +58,16 @@ const Datos = (() => {
   // categoría "Pandero" si vienen de una versión anterior, sin perder nada.
   function cargar() {
     if (estado) return estado;
+    let bruto = null;
     try {
-      const bruto = localStorage.getItem(CLAVE);
+      bruto = localStorage.getItem(CLAVE);
       if (bruto) { estado = JSON.parse(bruto); }
     } catch (e) { estado = null; }
 
-    if (!estado || !estado.categorias) {
+    if (!estado || !Array.isArray(estado.categorias)) {
+      // Si había algo guardado pero está corrupto, NO lo pisamos: se conserva
+      // una copia en otra clave para poder rescatarlo (Ajustes → Restaurar).
+      if (bruto) { try { localStorage.setItem(CLAVE + '.corrupto', bruto); } catch (e) { /* sin espacio */ } }
       estado = {
         proximoId: 1,
         categorias: CATEGORIAS_SEMILLA.map((c) => ({ id: nuevoIdLocal(), ...c })),
@@ -83,8 +87,9 @@ const Datos = (() => {
       guardar();
     }
     if (typeof estado.proximoId !== 'number') estado.proximoId = 1000;
-    // Colecciones agregadas en versiones posteriores (no perder datos previos)
-    for (const col of ['prestamos', 'abonos', 'panderos', 'turnos', 'metas', 'recurrentes', 'presupuestos']) {
+    // Saneo: toda colección debe ser un array (también las básicas, por si un
+    // respaldo viejo o editado a mano trae algo raro → evita pantalla en blanco).
+    for (const col of ['cuentas', 'movimientos', 'prestamos', 'abonos', 'panderos', 'turnos', 'metas', 'recurrentes', 'presupuestos']) {
       if (!Array.isArray(estado[col])) estado[col] = [];
     }
     // Categoría "Pandero" (gasto e ingreso) para conectar panderos con el saldo
@@ -106,9 +111,22 @@ const Datos = (() => {
 
   // guardar(): persiste TODO el estado en localStorage. Debe llamarse
   // después de cada modificación (todas las funciones de abajo lo hacen).
+  // Si el almacenamiento está lleno (QuotaExceededError) o bloqueado (modo
+  // incógnito estricto), NO se lanza excepción: se avisa a la UI con un evento
+  // para mostrar un toast y se devuelve false.
   function guardar() {
-    localStorage.setItem(CLAVE, JSON.stringify(estado));
+    try {
+      localStorage.setItem(CLAVE, JSON.stringify(estado));
+      return true;
+    } catch (e) {
+      document.dispatchEvent(new CustomEvent('panderito:error-guardado', { detail: e }));
+      return false;
+    }
   }
+
+  // r2(): redondea a centavos. Todo monto se guarda redondeado para que las
+  // sumas cuadren (evita 4.999999999 y comparaciones que fallan por 1e-16).
+  const r2 = (x) => Math.round((Number(x) || 0) * 100) / 100;
 
   // ---------- Categorías ----------
   // CRUD de categorías de gasto/ingreso. Regla: una categoría con
@@ -129,10 +147,19 @@ const Datos = (() => {
     guardar(); return cat;
   }
   function categoriaTieneMovimientos(id) { return cargar().movimientos.some((m) => m.categoriaId === id); }
+  // Una categoría está "en uso" si la referencian movimientos, pagos fijos o
+  // presupuestos. Las categorías «Pandero» son del sistema y no se borran.
+  function categoriaEnUso(id) {
+    const e = cargar();
+    return categoriaTieneMovimientos(id)
+      || e.recurrentes.some((r) => r.categoriaId === id)
+      || e.presupuestos.some((p) => p.categoriaId === id);
+  }
   function eliminarCategoria(id) {
     const e = cargar();
-    if (categoriaTieneMovimientos(id)) return false;
-    e.categorias = e.categorias.filter((c) => c.id !== id); guardar(); return true;
+    const c = categoria(id);
+    if (!c || c.nombre === 'Pandero' || categoriaEnUso(id)) return false;
+    e.categorias = e.categorias.filter((x) => x.id !== id); guardar(); return true;
   }
 
   // ---------- Cuentas (métodos de pago) ----------
@@ -152,12 +179,21 @@ const Datos = (() => {
     } else {
       cta.id = nuevoId(); if (cta.activa === undefined) cta.activa = true; e.cuentas.push(cta);
     }
+    if (cta.saldoInicial !== undefined) cta.saldoInicial = r2(cta.saldoInicial);
     guardar(); return cta;
   }
+  // Nombre repetido (sin distinguir mayúsculas), ignorando la propia cuenta al editar
+  function existeCuentaConNombre(nombre, exceptoId) {
+    const n = String(nombre || '').trim().toLowerCase();
+    return cargar().cuentas.some((c) => c.id !== exceptoId && String(c.nombre).trim().toLowerCase() === n);
+  }
   function cuentaTieneMovimientos(id) { return cargar().movimientos.some((m) => m.cuentaId === id); }
+  function cuentaEnUso(id) {
+    return cuentaTieneMovimientos(id) || cargar().recurrentes.some((r) => r.cuentaId === id);
+  }
   function eliminarCuenta(id) {
     const e = cargar();
-    if (cuentaTieneMovimientos(id)) return false;
+    if (cuentaEnUso(id)) return false;
     e.cuentas = e.cuentas.filter((c) => c.id !== id); guardar(); return true;
   }
   function saldoCuenta(id) {
@@ -168,19 +204,22 @@ const Datos = (() => {
       if (m.cuentaId !== id) continue;
       s += m.tipo === 'Ingreso' ? Number(m.monto) : -Number(m.monto);
     }
-    return s;
+    return r2(s);
   }
-  function saldoTotal() { return cuentas(true).reduce((a, c) => a + saldoCuenta(c.id), 0); }
+  function saldoTotal() { return r2(cuentas(true).reduce((a, c) => a + saldoCuenta(c.id), 0)); }
 
   // ---------- Movimientos (ingresos y gastos) ----------
   // El corazón de la app. Cada movimiento: { id, monto, tipo:'Gasto'|'Ingreso',
   // categoriaId, cuentaId, fecha (ISO), nota }. Se listan del más reciente al más antiguo.
+  // Orden: fecha más reciente primero; a igual fecha, el registrado último
+  // primero (desempate por id) para que lo recién guardado aparezca arriba.
   function movimientos() {
-    return cargar().movimientos.slice().sort((a, b) => new Date(b.fecha) - new Date(a.fecha));
+    return cargar().movimientos.slice().sort((a, b) => (new Date(b.fecha) - new Date(a.fecha)) || (b.id - a.id));
   }
   function movimiento(id) { return cargar().movimientos.find((m) => m.id === id); }
   function guardarMovimiento(mov) {
     const e = cargar();
+    mov.monto = r2(mov.monto);
     if (mov.id) {
       const i = e.movimientos.findIndex((m) => m.id === mov.id);
       if (i >= 0) e.movimientos[i] = { ...e.movimientos[i], ...mov };
@@ -212,7 +251,7 @@ const Datos = (() => {
       if (m.tipo === 'Ingreso') ingresos += Number(m.monto);
       else gastos += Number(m.monto);
     }
-    return { ingresos, gastos, balance: ingresos - gastos };
+    return { ingresos: r2(ingresos), gastos: r2(gastos), balance: r2(ingresos - gastos) };
   }
   function gastoPorCategoria(ref = new Date()) {
     const e = cargar();
@@ -227,9 +266,9 @@ const Datos = (() => {
       .filter((x) => x.categoria)
       .sort((a, b) => b.monto - a.monto);
   }
-  function serieMeses(n = 6) {
+  function serieMeses(n = 6, hasta = new Date()) {
     const salida = [];
-    const hoy = new Date();
+    const hoy = new Date(hasta);
     for (let i = n - 1; i >= 0; i--) {
       const ref = new Date(hoy.getFullYear(), hoy.getMonth() - i, 1);
       const r = resumenMes(ref);
@@ -243,7 +282,17 @@ const Datos = (() => {
   // Quincenal +15d, Mensual +1 mes). fechaDelTurno: fecha del turno N
   // de un pandero contando desde la fecha de inicio.
   function addDias(fecha, n) { const d = new Date(fecha); d.setDate(d.getDate() + n); return d; }
-  function addMeses(fecha, n) { const d = new Date(fecha); d.setMonth(d.getMonth() + n); return d; }
+  // addMeses: si el día no existe en el mes destino se usa el último día de
+  // ese mes (31 ene + 1 mes = 28/29 feb, no 3 mar). Así un alquiler del 31
+  // no se corre al mes siguiente después del primer pago.
+  function addMeses(fecha, n) {
+    const d = new Date(fecha);
+    const dia = d.getDate();
+    d.setDate(1); d.setMonth(d.getMonth() + n);
+    const ultimo = new Date(d.getFullYear(), d.getMonth() + 1, 0).getDate();
+    d.setDate(Math.min(dia, ultimo));
+    return d;
+  }
   function siguienteFecha(fechaIso, frecuencia) {
     const d = new Date(fechaIso);
     if (frecuencia === 'Semanal') return addDias(d, 7).toISOString();
@@ -271,19 +320,24 @@ const Datos = (() => {
   }
   function eliminarPrestamo(id) { const e = cargar(); e.prestamos = e.prestamos.filter((p) => p.id !== id); e.abonos = e.abonos.filter((a) => a.prestamoId !== id); guardar(); }
   function abonosDe(prestamoId) { return cargar().abonos.filter((a) => a.prestamoId === prestamoId).sort((a, b) => new Date(b.fecha) - new Date(a.fecha)); }
-  function totalAbonado(prestamoId) { return cargar().abonos.filter((a) => a.prestamoId === prestamoId).reduce((s, a) => s + Number(a.monto), 0); }
-  function saldoPendiente(p) { return Number(p.monto) - totalAbonado(p.id); }
-  function calcularEstadoPrestamo(monto, total) { if (total <= 0) return 'Pendiente'; if (total >= monto) return 'Pagado'; return 'Parcial'; }
+  function totalAbonado(prestamoId) { return r2(cargar().abonos.filter((a) => a.prestamoId === prestamoId).reduce((s, a) => s + Number(a.monto), 0)); }
+  function saldoPendiente(p) { return Math.max(0, r2(Number(p.monto) - totalAbonado(p.id))); }
+  // Comparación con tolerancia de medio centavo (evita "S/ 0.00 pendiente" con estado Parcial)
+  function calcularEstadoPrestamo(monto, total) { if (total <= 0.005) return 'Pendiente'; if (total >= monto - 0.005) return 'Pagado'; return 'Parcial'; }
+  // El abono nunca supera lo pendiente: se recorta al saldo (la UI además avisa).
   function registrarAbono(prestamoId, monto, fecha) {
     const e = cargar(); const p = prestamo(prestamoId); if (!p) return;
-    e.abonos.push({ id: nuevoId(), prestamoId, monto: Number(monto), fecha: fecha || new Date().toISOString() });
+    const pend = saldoPendiente(p);
+    const m = Math.min(r2(monto), pend);
+    if (m <= 0) return p;
+    e.abonos.push({ id: nuevoId(), prestamoId, monto: m, fecha: fecha || new Date().toISOString() });
     p.estado = calcularEstadoPrestamo(Number(p.monto), totalAbonado(prestamoId));
     guardar(); return p;
   }
   function marcarPagadoPrestamo(prestamoId) {
     const p = prestamo(prestamoId); if (!p) return;
     const pend = saldoPendiente(p);
-    if (pend > 0) return registrarAbono(prestamoId, pend);
+    if (pend > 0.005) return registrarAbono(prestamoId, pend);
     p.estado = 'Pagado'; guardar(); return p;
   }
   function totalPendientePorTipo(tipo) {
@@ -334,17 +388,25 @@ const Datos = (() => {
     };
   }
   function categoriaPanderoId(tipo) { const c = cargar().categorias.find((x) => x.nombre === 'Pandero' && x.tipo === tipo); return c ? c.id : null; }
-  // Pagar la cuota del pandero => gasto que descuenta del saldo
+  // Pagar la cuota del pandero => gasto que descuenta del saldo. Además marca
+  // como "cobrado" el turno pendiente más antiguo: en un pandero cada ronda
+  // todos pagan y uno cobra, así "Aportado" y "Turnos cobrados" avanzan juntos.
+  // Si ya se pagaron todas las rondas, no registra nada (devuelve null).
   function pagarCuotaPandero(panderoId, cuentaId) {
     const p = pandero(panderoId); if (!p) return null;
+    const turnoPend = turnosDe(p.id).find((t) => !t.cobrado);
+    if (!turnoPend) return null;
     const cta = cuentaId || (cuentas(true)[0] && cuentas(true)[0].id);
+    turnoPend.cobrado = true;
     return guardarMovimiento({ monto: Number(p.cuotaMonto), tipo: 'Gasto', categoriaId: categoriaPanderoId('Gasto'), cuentaId: cta, fecha: new Date().toISOString(), nota: 'Cuota pandero ' + p.nombre });
   }
-  // Cobrar el pozo (cuando te toca) => ingreso que suma al saldo
+  // Cobrar el pozo (cuando te toca) => ingreso que suma al saldo. Solo una vez
+  // por pandero: queda marcado en p.pozoCobrado y la UI deshabilita el botón.
   function cobrarPozoPandero(panderoId, cuentaId) {
-    const p = pandero(panderoId); if (!p) return null;
+    const p = pandero(panderoId); if (!p || p.pozoCobrado) return null;
     const r = resumenPandero(p);
     const cta = cuentaId || (cuentas(true)[0] && cuentas(true)[0].id);
+    p.pozoCobrado = true;
     return guardarMovimiento({ monto: r.montoARecibir, tipo: 'Ingreso', categoriaId: categoriaPanderoId('Ingreso'), cuentaId: cta, fecha: new Date().toISOString(), nota: 'Cobré pandero ' + p.nombre });
   }
 
@@ -359,7 +421,7 @@ const Datos = (() => {
     else { m.id = nuevoId(); if (m.montoActual === undefined) m.montoActual = 0; e.metas.push(m); }
     guardar(); return m;
   }
-  function abonarMeta(id, monto) { const m = meta(id); if (!m) return; m.montoActual = Number(m.montoActual) + Number(monto); guardar(); return m; }
+  function abonarMeta(id, monto) { const m = meta(id); if (!m) return; m.montoActual = r2(Number(m.montoActual) + Number(monto)); guardar(); return m; }
   function eliminarMeta(id) { const e = cargar(); e.metas = e.metas.filter((m) => m.id !== id); guardar(); }
 
   // ---------- Gastos recurrentes (pagos fijos) ----------
@@ -458,12 +520,31 @@ const Datos = (() => {
   // a crear los datos semilla (usado por "Borrar todo").
   function exportar() { return JSON.stringify(cargar(), null, 2); }
   function reiniciar() { localStorage.removeItem(CLAVE); estado = null; cargar(); }
+  // importar(texto): restaura un respaldo JSON exportado por la app.
+  // Valida la forma mínima antes de reemplazar nada. Devuelve { ok, error, resumen }.
+  function importar(texto) {
+    let obj;
+    try { obj = JSON.parse(texto); } catch (e) { return { ok: false, error: 'El archivo no es un JSON válido.' }; }
+    if (!obj || typeof obj !== 'object') return { ok: false, error: 'El archivo no tiene datos.' };
+    for (const col of ['categorias', 'cuentas', 'movimientos']) {
+      if (!Array.isArray(obj[col])) return { ok: false, error: `Falta la lista «${col}»: no parece un respaldo de Panderito.` };
+    }
+    const previo = localStorage.getItem(CLAVE);
+    try {
+      localStorage.setItem(CLAVE, JSON.stringify(obj));
+    } catch (e) { return { ok: false, error: 'No hay espacio para guardar el respaldo.' }; }
+    estado = null; cargar(); // cargar() aplica migraciones y saneo
+    if (previo) { try { localStorage.setItem(CLAVE + '.anterior', previo); } catch (e) { /* opcional */ } }
+    return { ok: true, resumen: `${estado.movimientos.length} movimientos, ${estado.cuentas.length} cuentas` };
+  }
+  // hayCopiaCorrupta(): true si cargar() apartó datos ilegibles (para avisar en Ajustes)
+  function hayCopiaCorrupta() { try { return !!localStorage.getItem(CLAVE + '.corrupto'); } catch (e) { return false; } }
 
   // API pública del módulo: SOLO estas funciones son visibles desde app.js.
   return {
     cargar, guardar, siguienteFecha, fechaDelTurno, TIPOS_CUENTA,
-    categorias, categoria, guardarCategoria, eliminarCategoria, categoriaTieneMovimientos,
-    cuentas, cuenta, guardarCuenta, eliminarCuenta, cuentaTieneMovimientos, saldoCuenta, saldoTotal,
+    categorias, categoria, guardarCategoria, eliminarCategoria, categoriaTieneMovimientos, categoriaEnUso,
+    cuentas, cuenta, guardarCuenta, eliminarCuenta, cuentaTieneMovimientos, cuentaEnUso, existeCuentaConNombre, saldoCuenta, saldoTotal,
     movimientos, movimiento, guardarMovimiento, eliminarMovimiento,
     resumenMes, gastoPorCategoria, serieMeses,
     // Préstamos
@@ -480,7 +561,7 @@ const Datos = (() => {
     recurrentes, recurrente, guardarRecurrente, eliminarRecurrente, registrarPagoRecurrente,
     // Presupuestos
     presupuestos, presupuesto, presupuestoDeCategoria, guardarPresupuesto, eliminarPresupuesto, avancePresupuesto,
-    exportar, reiniciar,
+    exportar, importar, reiniciar, hayCopiaCorrupta, r2,
   };
 })();
 

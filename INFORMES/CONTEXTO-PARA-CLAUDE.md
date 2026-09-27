@@ -14,8 +14,10 @@
   (`pwa/`) que replica sus pantallas. También hay un scaffold de bot de
   Telegram (`bot-telegram/`).
 - **Prioridad actual del usuario: la PWA** (es la que usa); la APK MAUI queda para después.
-- **Ramas:** `master` (principal) y `feat/pwa-web` (donde vive la PWA). El PR #1
-  sigue abierto; lo cierra el usuario desde GitHub. Verifica con `gh pr view 1`.
+- **Ramas:** `master` (principal, ya incluye `pwa/` desde el PR #1 fusionado el
+  2026-09-27) y `feat/pwa-web` (trabajo en curso; se lleva a `master` por PR).
+  **Claude no puede fusionar PRs** (permiso bloqueado): los fusiona el usuario
+  con el botón verde «Merge pull request» (rojo = cerrado sin fusionar, morado = fusionado).
 - **Repo privado:** https://github.com/Jhonatan2209/PANDERITO —
   ⚠️ contiene `ACCESOS/` con credenciales personales: NUNCA hacerlo público,
   no leer esa carpeta salvo pedido explícito.
@@ -46,7 +48,11 @@
   → http://localhost:8080 (paso a paso en `INSTRUCCIONES/LEVANTAR-PANDERO.txt`).
 - Datos en localStorage clave `panderito.datos.v1`; sin servidor.
 - Si cambias cualquier archivo de `pwa/`, **sube la versión de `CACHE` en
-  `pwa/sw.js`** (hoy v4 → v5) para que los usuarios reciban la actualización.
+  `pwa/sw.js`** (hoy v5 → v6) para que los usuarios reciban la actualización.
+- **Auditoría 2026-09-27:** 25 casos límite detectados y 23 corregidos (fechas
+  locales, restaurar copia, notificaciones vía SW, redondeo a centavos, coma
+  decimal, borrado protegido, etc.). Tabla completa en el informe del 2026-09-26,
+  sección 4.b. Para probar en el navegador integrado: `.claude/launch.json` → `pwa`.
 - **Hosting: Vercel** (cuenta del usuario `jhonatan-god`, plan Hobby), Root
   Directory = `pwa`, con `pwa/vercel.json` y `pwa/.vercelignore`. Publica en
   cada push a `master`. Paso a paso en `pwa/README.md`. Decisión 12.
@@ -85,12 +91,14 @@
    servidor; el usuario lo borró. Ahora `*.tar.gz` está en `.gitignore`.
 3. Se decidió publicar la PWA en Vercel y se preparó `pwa/vercel.json`,
    `pwa/.vercelignore`, CACHE v4 y la guía en `pwa/README.md`.
-4. Commit y push a `feat/pwa-web`. La fusión del PR #1 quedó a cargo del
-   usuario (Claude no tiene permiso para fusionar PRs).
+4. El usuario fusionó el PR #1 (`master` ya tiene la PWA).
+5. (2026-09-27) Auditoría de casos límite con agente + 23 correcciones
+   verificadas en navegador; CACHE v5; plan por fases en
+   `INSTRUCCIONES/PLAN-FASES-PWA.md`; PR #2 abierto con las correcciones.
 
 ## 6. Pendientes / ideas para próximas sesiones
 
-- [ ] Usuario: fusionar el PR #1 en GitHub (sin esto `master` no tiene `pwa/`).
+- [ ] Usuario: fusionar el PR #2 (correcciones de la auditoría) en GitHub.
 - [ ] Importar el proyecto en Vercel (Root Directory = `pwa`) y probar la
       instalación en el celular; anotar aquí la URL final.
 - [ ] Usuario: revisar logs de Apache por accesos a `ACCESOS/` y, si hubo,
