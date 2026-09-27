@@ -24,6 +24,26 @@ sin librerías). No avanzar de fase sin cerrar la anterior.
 - [ ] Aviso "hay versión nueva, toca para actualizar" cuando cambie `sw.js`.
 - [ ] Revisión de rendimiento en celular gama baja (Lighthouse ≥ 90 en móvil).
 
+### B.2 — «Algo no cuadra»: análisis local, sin servidor ni IA de pago (pedido 2026-09-27)
+
+La app no debe ser solo un guardador de montos: debe **relacionar, detectar y avisar**.
+Todo se calcula en el celular con reglas simples sobre los datos existentes (`Datos`),
+y aparece en la sección Pendientes 🔔 del Inicio con un botón para resolverlo.
+
+- [ ] **Cuadre de caja**: el usuario escribe el saldo real que ve en Yape/efectivo/banco;
+      la app lo compara con el calculado y, si difiere, ofrece crear un «ajuste» y avisa
+      «te faltan S/ X por registrar». Es la verificación más valiosa.
+- [ ] **Saldo negativo** en una cuenta → «gastaste más de lo que tenías: falta un ingreso
+      o el saldo inicial está mal».
+- [ ] **Posible duplicado**: mismo monto, cuenta y categoría en menos de 2 minutos.
+- [ ] **Gasto atípico**: monto > 3× el promedio de esa categoría (¿un cero de más?).
+- [ ] **Fecha futura** o muy antigua en un movimiento nuevo.
+- [ ] **Préstamos**: abonos que superan el monto; préstamo «por cobrar» sin movimiento desde hace 60 días.
+- [ ] **Panderos**: pasó la fecha de tu turno y no marcaste el cobro; cuotas pagadas ≠ turnos transcurridos.
+- [ ] **Pagos fijos vencidos** hace más de N días; mes con gastos pero sin ningún ingreso.
+- [ ] **Tendencia**: «este mes gastas 40 % más que tu promedio en Menú/Comida».
+- [ ] Cada aviso se puede **descartar** («está bien así») para no molestar dos veces.
+
 ## Fase C — Android ligero · costo S/ 0 (o USD 25 una vez si va a Google Play)
 
 - [ ] Generar APK con **Bubblewrap/TWA** sobre la PWA de Vercel (misma base,
