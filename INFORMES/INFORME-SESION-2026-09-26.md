@@ -132,6 +132,11 @@ y `ACCESOS/` responden 404, SW v5 registrado y la app renderiza en vista móvil.
   los commits no estaba vinculado a GitHub → el repo usa ahora el correo personal del
   usuario (decisión 13). Verificado con despliegues exitosos.
 - Nueva guía `INSTRUCCIONES/MIGRACION-Y-HERRAMIENTAS.md` (pedido del usuario).
+- **v8 — Perfil** (Más → Perfil): nombre libre para el saludo del Inicio («Buenas tardes,
+  Jhonatan 👋») y profesión con desplegable (19 opciones comunes en Perú) + «Otro» con
+  texto libre. Opcional; se guarda en `estado.perfil` (migración automática). Base para el
+  futuro **módulo Trabajo** (horas/días → posibles ingresos), pendiente de 3 respuestas
+  del usuario (marcar faltas, reparto por días laborables vs 30 días, cuándo hacerlo).
 
 ## 5. Pendiente para el usuario
 

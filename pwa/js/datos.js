@@ -92,6 +92,10 @@ const Datos = (() => {
     for (const col of ['cuentas', 'movimientos', 'prestamos', 'abonos', 'panderos', 'turnos', 'metas', 'recurrentes', 'presupuestos']) {
       if (!Array.isArray(estado[col])) estado[col] = [];
     }
+    // Perfil del usuario (nombre y profesión, opcionales): objeto, no array
+    if (!estado.perfil || typeof estado.perfil !== 'object' || Array.isArray(estado.perfil)) {
+      estado.perfil = { nombre: '', profesion: '', profesionOtra: '' };
+    }
     // Categoría "Pandero" (gasto e ingreso) para conectar panderos con el saldo
     let cambiado = false;
     for (const tipo of ['Gasto', 'Ingreso']) {
@@ -514,6 +518,22 @@ const Datos = (() => {
     return items.sort((a, b) => a.dias - b.dias);
   }
 
+  // ---------- Perfil ----------
+  // { nombre, profesion, profesionOtra }. Todo opcional. `profesion` es una de
+  // las opciones del desplegable o 'Otro' (y entonces vale `profesionOtra`).
+  // profesionTexto() devuelve lo que se muestra. Servirá también al módulo Trabajo.
+  function perfil() { return { ...cargar().perfil }; }
+  function guardarPerfil(p) {
+    const e = cargar();
+    e.perfil = {
+      nombre: String(p.nombre || '').trim().slice(0, 40),
+      profesion: String(p.profesion || '').trim().slice(0, 60),
+      profesionOtra: String(p.profesionOtra || '').trim().slice(0, 60),
+    };
+    guardar(); return e.perfil;
+  }
+  function profesionTexto() { const p = cargar().perfil; return p.profesion === 'Otro' ? p.profesionOtra : p.profesion; }
+
   // ---------- Utilidades de datos ----------
   // exportar(): devuelve TODO el estado como JSON legible (para el
   // respaldo descargable de Ajustes). reiniciar(): borra todo y vuelve
@@ -561,6 +581,8 @@ const Datos = (() => {
     recurrentes, recurrente, guardarRecurrente, eliminarRecurrente, registrarPagoRecurrente,
     // Presupuestos
     presupuestos, presupuesto, presupuestoDeCategoria, guardarPresupuesto, eliminarPresupuesto, avancePresupuesto,
+    // Perfil
+    perfil, guardarPerfil, profesionTexto,
     exportar, importar, reiniciar, hayCopiaCorrupta, r2,
   };
 })();

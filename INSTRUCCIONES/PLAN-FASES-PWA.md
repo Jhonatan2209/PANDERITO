@@ -18,6 +18,10 @@ sin librerías). No avanzar de fase sin cerrar la anterior.
 
 - [x] Compartir por WhatsApp (v7): resumen con formato de gastos/ingresos de hoy, semana o mes
       desde Movimientos (Web Share API; en PC abre WhatsApp Web). PDF descartado por peso.
+- [x] Perfil opcional (v8): nombre para el saludo + profesión (lista/«Otro»).
+- [ ] **Módulo Trabajo** (pedido 2026-09-27): trabajos con pago mensual/día/hora, días
+      laborables, feriados Perú, acumulado del mes → caja «Posibles ingresos» en Inicio y
+      botón «Ya me pagaron» que lo convierte en ingreso real. Diseño propuesto; esperando OK.
 - [ ] Copia de seguridad fácil: exportar/importar JSON desde Ajustes ya existe;
       agregar recordatorio periódico de respaldo y compartir el archivo (Web Share API).
 - [ ] Pasar de localStorage a **IndexedDB** (límite ~5 MB → cientos de MB y no se

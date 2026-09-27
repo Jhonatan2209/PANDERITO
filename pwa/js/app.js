@@ -31,8 +31,9 @@ const App = (() => {
   // lenguaje simple ("ahora puedes…"). El Inicio muestra la tarjeta «Novedades»
   // UNA sola vez por versión (se recuerda en localStorage al tocar «Entendido»).
   // Si una versión no trae nada que contar, deja NOVEDADES vacío y no se muestra.
-  const VERSION = 'v7';
+  const VERSION = 'v8';
   const NOVEDADES = [
+    '🙋 <b>Perfil</b> (Más → Perfil): ponle tu nombre para que Panderito te salude, y tu profesión (lista o «Otro»). Opcional.',
     '📤 <b>Compartir por WhatsApp</b>: en Movimientos, toca «Hoy», «Esta semana» o «Este mes» para enviar un resumen con formato de tus gastos, ingresos o ambos.',
     '🕗 Las fechas ya salen bien de noche: antes, después de las 7 pm el gasto se guardaba con la fecha de mañana.',
     '⬆️ Ajustes → <b>Restaurar copia</b>: recupera tus datos desde un respaldo JSON (cambio de celular, etc.).',
@@ -145,7 +146,7 @@ const App = (() => {
   function marcarTab(ruta) {
     const mapa = {
       inicio: 'inicio', movimientos: 'movimientos', registrar: 'registrar', reportes: 'reportes',
-      mas: 'mas', cuentas: 'mas', cuentaEdit: 'mas', categorias: 'mas', ajustes: 'mas', detalle: 'movimientos',
+      mas: 'mas', cuentas: 'mas', cuentaEdit: 'mas', categorias: 'mas', ajustes: 'mas', perfil: 'mas', detalle: 'movimientos',
       prestamos: 'mas', prestamoNuevo: 'mas', prestamoDet: 'mas',
       panderos: 'mas', panderoNuevo: 'mas', panderoDet: 'mas',
       metas: 'mas', metaNueva: 'mas', recurrentes: 'mas', recurrenteNuevo: 'mas',
@@ -167,13 +168,15 @@ const App = (() => {
     const movs = Datos.movimientos().slice(0, 6);
     const ctas = Datos.cuentas(true);
     const pend = Datos.pendientes(7);
+    const perfil = Datos.perfil();
+    const prof = Datos.profesionTexto();
 
     return `
       <header class="encabezado">
         <div>
-          <p class="saludo">${saludo()} 👋</p>
+          <p class="saludo">${saludo()}${perfil.nombre ? ', ' + esc(perfil.nombre) : ''} 👋</p>
           <h1>Panderito</h1>
-          <p class="sub">${nombreMes()}</p>
+          <p class="sub">${nombreMes()}${prof ? ' · ' + esc(prof) : ''}${perfil.nombre ? '' : ' · <a href="#perfil" style="color:var(--primary)">ponle tu nombre</a>'}</p>
         </div>
       </header>
 
@@ -519,6 +522,7 @@ const App = (() => {
     </div>
     <div class="seccion-tit"><h2>Configuración</h2></div>
     <div class="opciones">
+      ${opcion('🙋', 'Perfil', Datos.perfil().nombre ? `${Datos.perfil().nombre}${Datos.profesionTexto() ? ' · ' + Datos.profesionTexto() : ''}` : 'Tu nombre y profesión (opcional)', "App.ir('perfil')")}
       ${opcion('💳', 'Cuentas', 'Efectivo, banco, billeteras', "App.ir('cuentas')")}
       ${opcion('🏷️', 'Categorías', 'Personaliza tus categorías', "App.ir('categorias')")}
       ${opcion('⚙️', 'Ajustes', 'Tema, datos y copia de seguridad', "App.ir('ajustes')")}
@@ -596,6 +600,36 @@ const App = (() => {
       <div class="seccion-tit"><h2>Gastos</h2></div>${bloque(gastos)}
       <div class="seccion-tit"><h2>Ingresos</h2></div>${bloque(ingresos)}
     `;
+  });
+
+  // ============================================================
+  //  VISTA: PERFIL (opcional)
+  //  Nombre libre (para el saludo del Inicio) y profesión: desplegable
+  //  con opciones comunes en Perú + «Otro» con texto libre. Servirá de
+  //  base al futuro módulo Trabajo.
+  // ============================================================
+  const PROFESIONES = [
+    'Ingeniero/a de sistemas', 'Ingeniero/a (otra especialidad)', 'Contador/a', 'Administrador/a',
+    'Docente / profesor/a', 'Médico/a o salud', 'Enfermero/a', 'Abogado/a', 'Bibliotecario/a',
+    'Comerciante / negocio propio', 'Técnico/a', 'Obrero/a / operario/a', 'Transportista / taxista',
+    'Agricultor/a', 'Independiente / freelance', 'Estudiante', 'Ama de casa', 'Jubilado/a', 'Otro',
+  ];
+  registrar('perfil', () => {
+    const p = Datos.perfil();
+    const esOtro = p.profesion === 'Otro';
+    return `
+      <div class="titulo-pagina"><button class="btn-volver" onclick="App.ir('mas')">‹</button><h1>Perfil</h1></div>
+      <p style="color:var(--texto-suave);font-size:13px;margin:0 2px 14px">Todo es opcional y se guarda solo en tu celular. Tu nombre se usa para saludarte.</p>
+      <div class="campo"><label>¿Cómo te llamas?</label><input class="entrada" id="pf-nombre" placeholder="ej. Jhonatan" maxlength="40" value="${esc(p.nombre)}" /></div>
+      <div class="campo"><label>Profesión u ocupación</label>
+        <select class="entrada" id="pf-prof" onchange="App.cambioProfesion(this.value)">
+          <option value="" ${!p.profesion ? 'selected' : ''}>— Sin especificar —</option>
+          ${PROFESIONES.map((x) => `<option value="${esc(x)}" ${p.profesion === x ? 'selected' : ''}>${esc(x)}</option>`).join('')}
+        </select></div>
+      <div class="campo" id="pf-otro-campo" style="${esOtro ? '' : 'display:none'}"><label>Escribe tu profesión</label><input class="entrada" id="pf-otro" placeholder="ej. Diseñador gráfico" maxlength="60" value="${esc(p.profesionOtra)}" /></div>
+      <button class="btn" onclick="App.guardarPerfilForm()">💾 Guardar</button>
+      ${p.nombre || p.profesion ? `<div style="height:10px"></div><button class="btn secundario" onclick="App.borrarPerfil()">Limpiar perfil</button>` : ''}
+      <div style="height:14px"></div>`;
   });
 
   // ============================================================
@@ -1077,6 +1111,16 @@ const App = (() => {
       }
     },
     setTema(t) { aplicarTema(t); render(); },
+    // ----- Perfil -----
+    cambioProfesion(v) { const c = document.getElementById('pf-otro-campo'); if (c) c.style.display = v === 'Otro' ? '' : 'none'; if (v === 'Otro') document.getElementById('pf-otro')?.focus(); },
+    guardarPerfilForm() {
+      const gv = (x) => (document.getElementById(x)?.value || '').trim();
+      const profesion = gv('pf-prof');
+      if (profesion === 'Otro' && !gv('pf-otro')) return toast('Escribe tu profesión o elige una de la lista');
+      const p = Datos.guardarPerfil({ nombre: gv('pf-nombre'), profesion, profesionOtra: profesion === 'Otro' ? gv('pf-otro') : '' });
+      toast(p.nombre ? `¡Listo, ${p.nombre}! ✓` : 'Perfil guardado ✓'); ir('inicio');
+    },
+    borrarPerfil() { if (!confirm('¿Limpiar tu nombre y profesión?')) return; Datos.guardarPerfil({}); toast('Perfil limpiado'); render(); },
     // Novedades: «Entendido» recuerda la versión vista; «Ver novedades» la vuelve a mostrar en Inicio
     cerrarNovedades() { lsSet('panderito.novedades.vista', VERSION); render(); },
     verNovedades() { try { localStorage.removeItem('panderito.novedades.vista'); } catch (e) { /* noop */ } ir('inicio'); },
