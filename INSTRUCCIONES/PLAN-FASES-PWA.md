@@ -36,10 +36,14 @@ sin librerías). No avanzar de fase sin cerrar la anterior.
 Requisito previo: **datos compartidos en la nube**, porque hoy la PWA guarda
 solo en el celular y ningún bot puede escribir ahí.
 
-- [ ] Backend gratis: **Supabase** (plan Free) o Firebase; la PWA sigue offline-first
-      y sincroniza cuando hay red.
-- [ ] **Telegram** (gratis): bot que recibe texto/foto y registra el movimiento.
-      Hospedarlo como función en Vercel (webhook, gratis) en lugar del servidor Clouding.
+- [ ] Backend en el **servidor propio Clouding** (el usuario aceptó pagar ~9 €/mes
+      para tener su entorno): PocketBase o Postgres + API pequeña, con Docker.
+      Alternativa si se quiere S/ 0: Supabase Free. La PWA sigue offline-first y
+      sincroniza cuando hay red.
+- [ ] **Telegram** (gratis): bot que recibe texto/foto y registra el movimiento,
+      corriendo en el servidor Clouding (Docker, `bot-telegram/`).
+- [ ] Dominio propio (~USD 10/año) + HTTPS gratis (Let's Encrypt) en el servidor,
+      necesario para exponer la API al celular. La PWA se queda en Vercel.
 - [ ] Lectura de boletas/yapeos con IA: el scaffold usa la API de Claude (**paga**).
       Para mantener S/ 0 evaluar capa gratuita de Gemini o registrar por texto
       («gasto 25 almuerzo yape») sin IA.
