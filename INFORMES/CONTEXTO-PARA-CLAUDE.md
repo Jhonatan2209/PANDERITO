@@ -47,7 +47,9 @@
   → http://localhost:8080 (paso a paso en `INSTRUCCIONES/LEVANTAR-PANDERO.txt`).
 - Datos en localStorage clave `panderito.datos.v1`; sin servidor.
 - Si cambias cualquier archivo de `pwa/`, **sube la versión de `CACHE` en
-  `pwa/sw.js`** (hoy v5 → v6) para que los usuarios reciban la actualización.
+  `pwa/sw.js`** (hoy v6 → v7) para que los usuarios reciban la actualización, y
+  **sube `VERSION` en `pwa/js/app.js` + escribe las `NOVEDADES`**: el Inicio las
+  muestra una sola vez por versión (pedido del usuario, 2026-09-27).
 - **Auditoría 2026-09-27:** 25 casos límite detectados y 23 corregidos (fechas
   locales, restaurar copia, notificaciones vía SW, redondeo a centavos, coma
   decimal, borrado protegido, etc.). Tabla completa en el informe del 2026-09-26,

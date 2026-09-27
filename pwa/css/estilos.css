@@ -148,6 +148,7 @@ input, select, textarea { font-family: inherit; font-size: 16px; }
   box-shadow: 0 12px 30px rgba(83, 66, 199, .35);
   position: relative;
   overflow: hidden;
+  margin-bottom: 16px; /* separa la tarjeta de saldo de las de ingresos/gastos */
 }
 .card-saldo::after {
   content: ""; position: absolute; right: -30px; top: -30px;

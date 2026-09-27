@@ -25,6 +25,22 @@ const App = (() => {
   // Contenedor donde se pinta cada vista (el <main id="app"> del index.html)
   const cont = () => document.getElementById('app');
 
+  // ---------- Versión y novedades ----------
+  // AL PUBLICAR UNA VERSIÓN NUEVA: (1) sube CACHE en sw.js, (2) sube VERSION aquí
+  // (mismo número) y (3) escribe en NOVEDADES lo importante para el usuario, en
+  // lenguaje simple ("ahora puedes…"). El Inicio muestra la tarjeta «Novedades»
+  // UNA sola vez por versión (se recuerda en localStorage al tocar «Entendido»).
+  // Si una versión no trae nada que contar, deja NOVEDADES vacío y no se muestra.
+  const VERSION = 'v6';
+  const NOVEDADES = [
+    '🕗 Las fechas ya salen bien de noche: antes, después de las 7 pm el gasto se guardaba con la fecha de mañana.',
+    '⬆️ Ajustes → <b>Restaurar copia</b>: ahora puedes recuperar tus datos desde un respaldo JSON (cambio de celular, etc.).',
+    '🔢 Puedes escribir montos con coma: <b>12,50</b> o <b>1,234.50</b>.',
+    '🤝 Panderos: «Pagar cuota» marca la ronda y «Cobrar el pozo» solo se puede una vez; ya no se duplica.',
+    '⚠️ Si algo no se puede guardar (memoria llena) o un abono supera la deuda, la app te avisa en vez de fallar en silencio.',
+    '🎨 Tarjetas del inicio mejor separadas y esta sección de novedades.',
+  ];
+
   // ---------- Utilidades ----------
   // esc(): escapa texto del usuario antes de meterlo al HTML
   // (previene inyección/XSS y HTML roto por caracteres como < > & " ')
@@ -167,6 +183,8 @@ const App = (() => {
         <button class="btn chico" id="btn-instalar">Instalar</button>
       </div>
 
+      ${tarjetaNovedades()}
+
       <div class="card-saldo" onclick="App.ir('cuentas')" style="cursor:pointer">
         <p class="etq">Saldo total</p>
         <p class="monto">${Moneda.fmt(total)}</p>
@@ -204,6 +222,24 @@ const App = (() => {
     `;
   });
   rutas['inicio']._post = () => { configurarBannerInstalar(); };
+
+  // tarjetaNovedades(): se muestra en Inicio solo si esta VERSION aún no fue
+  // "vista" (Entendido). Los textos de NOVEDADES son propios (no del usuario),
+  // por eso se permiten <b> sin escapar.
+  function tarjetaNovedades() {
+    if (!NOVEDADES.length || lsGet('panderito.novedades.vista') === VERSION) return '';
+    return `
+      <div class="card" style="border-left:4px solid var(--primary)">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+          <b>🆕 Novedades ${esc(VERSION)}</b>
+          <span style="font-size:12px;color:var(--texto-tenue)">solo esta vez</span>
+        </div>
+        <ul style="margin:0 0 12px;padding-left:18px;font-size:13.5px;line-height:1.45;color:var(--texto-suave)">
+          ${NOVEDADES.map((n) => `<li style="margin-bottom:6px">${n}</li>`).join('')}
+        </ul>
+        <button class="btn chico" onclick="App.cerrarNovedades()">Entendido ✓</button>
+      </div>`;
+  }
 
   // itemMovimiento(): fila reutilizable de un movimiento (ícono de la
   // categoría, nota, cuenta, fecha y monto en verde/rojo). Al tocarla
@@ -424,7 +460,7 @@ const App = (() => {
       ${opcion('🏷️', 'Categorías', 'Personaliza tus categorías', "App.ir('categorias')")}
       ${opcion('⚙️', 'Ajustes', 'Tema, datos y copia de seguridad', "App.ir('ajustes')")}
     </div>
-    <p class="pie-marca">Panderito PWA · v5</p>
+    <p class="pie-marca">Panderito PWA · ${esc(VERSION)}</p>
   `);
   function opcion(ic, t, s, onclick, deshab) {
     return `<button class="opcion" ${deshab ? 'disabled' : `onclick="${onclick}"`}>
@@ -524,6 +560,7 @@ const App = (() => {
 
       <div class="seccion-tit"><h2>Tus datos</h2></div>
       <div class="opciones">
+        ${opcion('🆕', 'Ver novedades', `Qué cambió en la versión ${VERSION}`, 'App.verNovedades()')}
         ${opcion('⬇️', 'Exportar copia (JSON)', 'Descarga un respaldo de tus datos', 'App.exportarDatos()')}
         ${opcion('⬆️', 'Restaurar copia', 'Carga un respaldo JSON (reemplaza lo actual)', "document.getElementById('archivo-restaurar').click()")}
         ${opcion('🗑️', 'Borrar todo', 'Reinicia la app a cero (no se puede deshacer)', 'App.borrarTodo()')}
@@ -976,6 +1013,9 @@ const App = (() => {
       }
     },
     setTema(t) { aplicarTema(t); render(); },
+    // Novedades: «Entendido» recuerda la versión vista; «Ver novedades» la vuelve a mostrar en Inicio
+    cerrarNovedades() { lsSet('panderito.novedades.vista', VERSION); render(); },
+    verNovedades() { try { localStorage.removeItem('panderito.novedades.vista'); } catch (e) { /* noop */ } ir('inicio'); },
     // Descarga con fecha en el nombre (no pisa respaldos anteriores); el blob se
     // libera después de que el navegador tomó el archivo.
     exportarDatos() { descargarJson(Datos.exportar(), `panderito-respaldo-${hoyInput()}.json`); toast('Copia descargada ✓'); },
