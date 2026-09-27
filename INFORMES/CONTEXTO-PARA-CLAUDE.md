@@ -31,6 +31,8 @@
    (la anterior: `INFORME-SESION-2026-07-12.md`).
 6. `docs/ARQUITECTURA.md` — mapa del código .NET (solo si tocarás la app MAUI).
 7. `Panderito/PROGRESO.md` y `Panderito/DECISIONES.md` — checklist y decisiones.
+9. `INSTRUCCIONES/MIGRACION-Y-HERRAMIENTAS.md` — herramientas, cuentas y checklist
+   de migración a otra laptop (mantenerlo al día cuando se instale algo nuevo).
 8. `INSTRUCCIONES/PLAN-FASES-PWA.md` — **plan por fases acordado el 2026-09-27**:
    primero todo funcional y 100 % gratis; bot/WhatsApp/IA son mejoras posteriores.
 
