@@ -1,6 +1,6 @@
 # INFORME DE SESIÓN — 26 de septiembre de 2026
 
-**Rama:** `feat/pwa-web` → se fusiona a `master` (PR #1) · **Enfoque:** publicar la
+**Rama:** `feat/pwa-web` (PR #1 → `master`, lo fusiona el usuario) · **Enfoque:** publicar la
 PWA en internet con HTTPS para usarla desde el celular.
 
 ---
@@ -68,6 +68,8 @@ Validación: `vercel.json` es JSON válido; `node --check pwa/sw.js` OK.
 
 ## 5. Pendiente para el usuario
 
+0. **Cerrar el PR #1** en GitHub (botón *Merge pull request*); Claude no tiene
+   permiso para hacerlo. Sin esto `master` no tiene `pwa/` y Vercel no la encuentra.
 1. **Importar el proyecto en Vercel** (Add New → Project → `Jhonatan2209/PANDERITO`,
    **Root Directory = `pwa`**, Framework = Other) — ver `pwa/README.md`.
 2. **Seguridad del servidor:** revisar si alguien descargó `ACCESOS/` mientras estuvo allí:
