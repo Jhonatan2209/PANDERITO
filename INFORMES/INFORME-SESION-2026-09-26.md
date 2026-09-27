@@ -66,6 +66,50 @@ PWA en internet con HTTPS para usarla desde el celular.
 
 Validación: `vercel.json` es JSON válido; `node --check pwa/sw.js` OK.
 
+## 4.b — Auditoría de casos límite y correcciones (2026-09-27, misma sesión)
+
+Se pidió "pensar en qué podría salir mal" antes de publicar. Un revisor
+independiente (agente) auditó `pwa/` y reportó **25 hallazgos** (5 graves);
+se confirmaron leyendo el código y se corrigieron **23** en `datos.js`,
+`app.js` y `sw.js` (CACHE → **v5**). Los otros 2 (nginx.conf) se atienden
+cuando se use el servidor propio.
+
+| # | Problema (qué le pasaba al usuario) | Corrección |
+|---|---|---|
+| 1 | Borrar la fecha y tocar Guardar: el botón "no hacía nada" (excepción silenciosa) | `fechaDesdeInput()` valida; toast «Elige una fecha» en los 5 formularios |
+| 2 | De 7 pm a medianoche la fecha por defecto era **mañana** (se calculaba en UTC) | `hoyInput()` usa fecha local de Perú |
+| 3 | Existía «Exportar copia» pero **no había forma de restaurarla** | Ajustes → **Restaurar copia** (valida el JSON, confirma, reemplaza) |
+| 4 | Las notificaciones **nunca salían en Chrome Android** y la app decía que sí | Se notifican vía Service Worker (`showNotification`) |
+| 5 | Al subir la versión, el SW podía guardar archivos viejos de la caché del navegador | `cache: 'reload'` en `addAll`; aviso «Actualizando…» y recarga |
+| 6 | JSON corrupto → se pisaba con datos vacíos sin aviso | Se aparta en `…v1.corrupto`, la app arranca y Ajustes ofrece descargarlo |
+| 7 | Almacenamiento lleno/bloqueado → el dato "se guardaba" y desaparecía al recargar | `guardar()` con try/catch + evento → toast de advertencia |
+| 8 | Tocar ＋ dos veces dejaba un formulario "fantasma" que borraba lo escrito | Si ya estás en la ruta, se renderiza a mano |
+| 9 | Cambiar Gasto↔Ingreso borraba monto, fecha y nota | `setTipo()` lee los inputs antes de re-renderizar |
+| 10 | Abonar más de lo pendiente → «Te debe S/ -50.00» | La UI avisa y la capa de datos recorta al pendiente |
+| 11 | Centavos: 2.05+1.13+0.94+0.88 = 4.999… → préstamo nunca «Pagado» | Todo monto se redondea (`r2`) y se compara con tolerancia |
+| 12 | Borrar categoría/cuenta usada por pagos fijos o presupuestos → gastos huérfanos | `categoriaEnUso()` / `cuentaEnUso()`; «Pandero» no se borra |
+| 13 | 31 ene + 1 mes = **3 mar** (alquiler se corría de mes) | `addMeses()` recorta al último día del mes |
+| 14 | «Pagar cuota» ilimitado y «Aportado» siempre S/ 0; pozo cobrable dos veces | Pagar cuota marca la ronda; pozo una sola vez (`pozoCobrado`) |
+| 15 | Movimientos del mismo día en orden inverso | Desempate por id (último registrado arriba) |
+| 16 | Recordatorios solo al abrir la app sin decirlo | Texto aclara «te avisamos al abrir la app» |
+| 18 | Fecha futura escrita a mano se guardaba | Toast «La fecha no puede ser futura» |
+| 19 | «12,50» con coma → «monto inválido» sin explicación | Inputs `type=text inputmode=decimal` + `numero()` acepta 12,50 · 1,234.50 · 1.234,50 |
+| 20 | Cuentas con nombre repetido | `existeCuentaConNombre()` |
+| 21 | CSS inválido `var(--ingreso)22` → íconos sin fondo | `fondoSuave()` con `color-mix` |
+| 22 | Exportar pisaba el respaldo anterior | Nombre con fecha; blob liberado después |
+| 24 | Gráfico de 6 meses ignoraba el mes elegido | `serieMeses(6, refReporte)` |
+| 25 | 100000 participantes congelaba la app | Máximo 60 |
+
+Verificación: `node --check` OK en los 3 JS; **pruebas en navegador** (servidor
+local + vista móvil 375 px): 15 comprobaciones de datos en verde (redondeo,
+abonos, orden, borrado protegido, pandero, importar válido/inválido, arranque con
+JSON corrupto) y flujo de UI (coma decimal, fecha vacía/futura, setTipo conserva
+datos, doble toque en ＋, íconos con fondo). Pendiente de probar en un Android
+real: notificación vía SW e instalación desde Vercel.
+
+Se eliminó código muerto (`nuevaCuenta()`) y se agregó `.claude/launch.json`
+para levantar la PWA desde el navegador integrado.
+
 ## 5. Pendiente para el usuario
 
 0. **Cerrar el PR #1** en GitHub (botón *Merge pull request*); Claude no tiene
