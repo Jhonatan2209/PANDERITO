@@ -89,7 +89,7 @@ const Datos = (() => {
     if (typeof estado.proximoId !== 'number') estado.proximoId = 1000;
     // Saneo: toda colección debe ser un array (también las básicas, por si un
     // respaldo viejo o editado a mano trae algo raro → evita pantalla en blanco).
-    for (const col of ['cuentas', 'movimientos', 'prestamos', 'abonos', 'panderos', 'turnos', 'metas', 'recurrentes', 'presupuestos']) {
+    for (const col of ['cuentas', 'movimientos', 'prestamos', 'abonos', 'panderos', 'turnos', 'metas', 'recurrentes', 'presupuestos', 'trabajos', 'diasTrabajo', 'cobrosTrabajo']) {
       if (!Array.isArray(estado[col])) estado[col] = [];
     }
     // Perfil del usuario (nombre y profesión, opcionales): objeto, no array
@@ -534,6 +534,149 @@ const Datos = (() => {
   }
   function profesionTexto() { const p = cargar().perfil; return p.profesion === 'Otro' ? p.profesionOtra : p.profesion; }
 
+  // ---------- Trabajo (horas/días de trabajo → posibles ingresos) ----------
+  // Trabajo: { id, nombre, modo:'Mensual'|'Dia'|'Hora', monto, horasDia,
+  //   dias:[L,M,X,J,V,S,D] (1 = se trabaja por defecto), feriadosPagados,
+  //   cuentaId, activo }.
+  // diasTrabajo: excepciones al patrón, una por día tocado en el calendario:
+  //   { id, trabajoId, fecha:'YYYY-MM-DD', cuenta:true|false }.
+  // cobrosTrabajo: { id, trabajoId, mes:'YYYY-MM', movimientoId, monto } —
+  //   registra que el sueldo de ese mes ya se convirtió en ingreso real.
+  //
+  // REGLAS DE CÁLCULO (decididas con el usuario, 2026-09-27):
+  // - La unidad es el DÍA COMPLETO. valorDia = sueldo mensual ÷ días planificados
+  //   del mes (patrón + feriados pagados), o el monto por día, o monto×horas.
+  // - Un feriado que cae en día de patrón cuenta como pagado si feriadosPagados
+  //   (planilla formal); si no, no cuenta. Feriado en fin de semana no cuenta.
+  // - Tocar un día en el calendario invierte su estado (falta ↔ día extra).
+  // - Ganado del mes = valorDia × días que cuentan hasta hoy (inclusive).
+  // - Proyección = valorDia × días que cuentan en todo el mes.
+
+  // Feriados nacionales del Perú: fijos + Jueves y Viernes Santo (Pascua calculada).
+  const FERIADOS_FIJOS = ['01-01', '05-01', '06-07', '06-29', '07-23', '07-28', '07-29', '08-06', '08-30', '10-08', '11-01', '12-08', '12-09', '12-25'];
+  function pascua(anio) { // algoritmo de Meeus/Jones/Butcher (calendario gregoriano)
+    const a = anio % 19, b = Math.floor(anio / 100), c = anio % 100, d = Math.floor(b / 4), e = b % 4;
+    const f = Math.floor((b + 8) / 25), g = Math.floor((b - f + 1) / 3), h = (19 * a + b - d - g + 15) % 30;
+    const i = Math.floor(c / 4), k = c % 4, l = (32 + 2 * e + 2 * i - h - k) % 7, m = Math.floor((a + 11 * h + 22 * l) / 451);
+    const mes = Math.floor((h + l - 7 * m + 114) / 31), dia = ((h + l - 7 * m + 114) % 31) + 1;
+    return new Date(anio, mes - 1, dia);
+  }
+  const claveDia = (d) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+  const cacheFeriados = {};
+  function feriadosDe(anio) {
+    if (cacheFeriados[anio]) return cacheFeriados[anio];
+    const set = new Set(FERIADOS_FIJOS.map((md) => `${anio}-${md}`));
+    const p = pascua(anio);
+    set.add(claveDia(addDias(p, -3))); // Jueves Santo
+    set.add(claveDia(addDias(p, -2))); // Viernes Santo
+    return (cacheFeriados[anio] = set);
+  }
+  function esFeriado(d) { return feriadosDe(d.getFullYear()).has(claveDia(d)); }
+
+  function trabajos(soloActivos) { const e = cargar(); return soloActivos ? e.trabajos.filter((t) => t.activo !== false) : e.trabajos.slice(); }
+  function trabajo(id) { return cargar().trabajos.find((t) => t.id === id); }
+  // Acepta actualizaciones parciales ({ id, activo:false }): primero se mezcla
+  // con lo guardado y DESPUÉS se normaliza, para no pisar monto/días con vacíos.
+  function guardarTrabajo(t) {
+    const e = cargar();
+    let final;
+    if (t.id) {
+      const i = e.trabajos.findIndex((x) => x.id === t.id);
+      if (i < 0) return null;
+      final = { ...e.trabajos[i], ...t };
+      e.trabajos[i] = final;
+    } else {
+      final = { activo: true, feriadosPagados: true, modo: 'Mensual', ...t, id: nuevoId() };
+      e.trabajos.push(final);
+    }
+    final.monto = r2(final.monto); final.horasDia = Number(final.horasDia) || 8;
+    if (!Array.isArray(final.dias) || final.dias.length !== 7) final.dias = [1, 1, 1, 1, 1, 0, 0];
+    guardar(); return final;
+  }
+  function eliminarTrabajo(id) {
+    const e = cargar();
+    e.trabajos = e.trabajos.filter((t) => t.id !== id);
+    e.diasTrabajo = e.diasTrabajo.filter((x) => x.trabajoId !== id);
+    e.cobrosTrabajo = e.cobrosTrabajo.filter((x) => x.trabajoId !== id);
+    guardar();
+  }
+  // ¿Cuenta este día según el PATRÓN (sin excepciones)? Índice L=0 … D=6.
+  function diaPlanificado(t, d) {
+    const idx = (d.getDay() + 6) % 7;
+    if (!t.dias[idx]) return false;
+    if (esFeriado(d)) return !!t.feriadosPagados;
+    return true;
+  }
+  function excepcionDe(trabajoId, clave) { return cargar().diasTrabajo.find((x) => x.trabajoId === trabajoId && x.fecha === clave); }
+  // ¿Cuenta este día en la realidad? (excepción manda sobre el patrón)
+  function diaCuenta(t, d) {
+    const ex = excepcionDe(t.id, claveDia(d));
+    return ex ? !!ex.cuenta : diaPlanificado(t, d);
+  }
+  // Tocar un día: si ya había excepción se quita (vuelve al patrón); si no, se
+  // crea con el estado contrario al patrón.
+  function alternarDiaTrabajo(trabajoId, clave) {
+    const e = cargar(); const t = trabajo(trabajoId); if (!t) return;
+    const i = e.diasTrabajo.findIndex((x) => x.trabajoId === trabajoId && x.fecha === clave);
+    if (i >= 0) e.diasTrabajo.splice(i, 1);
+    else e.diasTrabajo.push({ id: nuevoId(), trabajoId, fecha: clave, cuenta: !diaPlanificado(t, new Date(clave + 'T12:00:00')) });
+    guardar();
+  }
+  function valorDiaTrabajo(t, ref = new Date()) {
+    if (t.modo === 'Dia') return r2(t.monto);
+    if (t.modo === 'Hora') return r2(t.monto * (Number(t.horasDia) || 8));
+    // Mensual: sueldo ÷ días planificados del mes de referencia
+    const y = ref.getFullYear(), m = ref.getMonth();
+    const ultimo = new Date(y, m + 1, 0).getDate();
+    let plan = 0;
+    for (let d = 1; d <= ultimo; d++) if (diaPlanificado(t, new Date(y, m, d))) plan++;
+    return plan ? r2(t.monto / plan) : 0;
+  }
+  // Resumen del mes de `ref` para un trabajo: ganado hasta hoy, proyección, días.
+  function resumenTrabajo(t, ref = new Date()) {
+    const hoy = new Date(); hoy.setHours(0, 0, 0, 0);
+    const y = ref.getFullYear(), m = ref.getMonth();
+    const ultimo = new Date(y, m + 1, 0).getDate();
+    const valorDia = valorDiaTrabajo(t, ref);
+    let contados = 0, planTotal = 0, contadosHastaHoy = 0, hoyCuenta = false;
+    for (let d = 1; d <= ultimo; d++) {
+      const f = new Date(y, m, d);
+      const cuenta = diaCuenta(t, f);
+      if (cuenta) { planTotal++; if (f <= hoy) contadosHastaHoy++; }
+      if (diaPlanificado(t, f)) contados++;
+      if (cuenta && f.getTime() === hoy.getTime()) hoyCuenta = true;
+    }
+    const mesClave = `${y}-${String(m + 1).padStart(2, '0')}`;
+    const cobro = cargar().cobrosTrabajo.find((c) => c.trabajoId === t.id && c.mes === mesClave);
+    // En modo Mensual se prorratea sobre el sueldo completo (sueldo × días/planificados)
+    // para que, sin faltas ni extras, la proyección sea EXACTAMENTE el sueldo (no 2999.92).
+    const importe = (n) => (t.modo === 'Mensual' && contados > 0) ? r2(t.monto * n / contados) : r2(valorDia * n);
+    return {
+      valorDia, valorHora: r2(valorDia / (Number(t.horasDia) || 8)),
+      ganado: importe(contadosHastaHoy), proyeccion: importe(planTotal),
+      diasContados: contadosHastaHoy, diasMes: planTotal, diasPatron: contados, hoyCuenta,
+      mesClave, cobrado: cobro ? cobro.monto : null, cobro,
+    };
+  }
+  // Total "posibles ingresos" del mes actual: lo ganado en trabajos activos
+  // que todavía NO se cobraron (al cobrar pasa a ser ingreso real).
+  function posiblesIngresosMes() {
+    let total = 0;
+    for (const t of trabajos(true)) { const r = resumenTrabajo(t); if (r.cobrado === null) total += r.ganado; }
+    return r2(total);
+  }
+  // «Ya me pagaron»: crea el INGRESO real (categoría Sueldo si existe) y deja
+  // constancia del cobro del mes para no contarlo dos veces.
+  function cobrarTrabajo(trabajoId, mesClave, monto, cuentaId) {
+    const e = cargar(); const t = trabajo(trabajoId); if (!t) return null;
+    if (e.cobrosTrabajo.some((c) => c.trabajoId === trabajoId && c.mes === mesClave)) return null;
+    const cat = e.categorias.find((c) => c.tipo === 'Ingreso' && c.nombre === 'Sueldo') || e.categorias.find((c) => c.tipo === 'Ingreso');
+    const cta = cuentaId || t.cuentaId || (cuentas(true)[0] && cuentas(true)[0].id);
+    const mov = guardarMovimiento({ monto: r2(monto), tipo: 'Ingreso', categoriaId: cat ? cat.id : null, cuentaId: cta, fecha: new Date().toISOString(), nota: `Sueldo ${t.nombre} · ${mesClave}` });
+    e.cobrosTrabajo.push({ id: nuevoId(), trabajoId, mes: mesClave, movimientoId: mov.id, monto: r2(monto) });
+    guardar(); return mov;
+  }
+
   // ---------- Utilidades de datos ----------
   // exportar(): devuelve TODO el estado como JSON legible (para el
   // respaldo descargable de Ajustes). reiniciar(): borra todo y vuelve
@@ -583,6 +726,9 @@ const Datos = (() => {
     presupuestos, presupuesto, presupuestoDeCategoria, guardarPresupuesto, eliminarPresupuesto, avancePresupuesto,
     // Perfil
     perfil, guardarPerfil, profesionTexto,
+    // Trabajo
+    trabajos, trabajo, guardarTrabajo, eliminarTrabajo, diaPlanificado, diaCuenta, excepcionDe,
+    alternarDiaTrabajo, valorDiaTrabajo, resumenTrabajo, posiblesIngresosMes, cobrarTrabajo, esFeriado, claveDia,
     exportar, importar, reiniciar, hayCopiaCorrupta, r2,
   };
 })();

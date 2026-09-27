@@ -138,6 +138,30 @@ y `ACCESOS/` responden 404, SW v5 registrado y la app renderiza en vista móvil.
   futuro **módulo Trabajo** (horas/días → posibles ingresos), pendiente de 3 respuestas
   del usuario (marcar faltas, reparto por días laborables vs 30 días, cuándo hacerlo).
 
+## 4.e — v9: módulo Trabajo (2026-09-27)
+
+Pedido: convertir días/horas de trabajo en «posibles ingresos». Decisiones del usuario:
+calendario que se prende/apaga con un toque, patrón por defecto L–V, día completo como
+unidad, prorrateo sobre los días laborables reales del mes (no 30 fijos), hacerlo ya.
+
+Implementado (`datos.js` + `app.js` + CSS):
+- Trabajos con modo Mensual / por Día / por Hora, horas por día, días de la semana,
+  feriados pagados (sí/no) y cuenta de cobro. Pausar / eliminar.
+- Calendario mensual (semana desde lunes): verde = cuenta, rojo tachado = falté,
+  violeta = día extra, gris = descanso, ★ = feriado; navegación por meses.
+- Feriados del Perú: 14 fijos + Jueves y Viernes Santo por algoritmo de Pascua.
+- Tarjeta «Ganado hasta hoy / proyección», valor de tu día y de tu hora, barra de avance.
+- Inicio: caja **Posibles ingresos** (ganado del mes aún no cobrado; «✓ Ya cobrado» si se cobró).
+- «Ya me pagaron»: monto editable (por defecto la proyección) + cuenta → crea el ingreso
+  real (categoría Sueldo) y marca el mes; no se puede cobrar dos veces.
+
+Verificado en navegador: setiembre 2026 con S/ 3 000 L–V → 22 días planificados,
+valor día S/ 136.36, hora S/ 17.05, 19 días contados al 27/09; octubre 22 días con feriado
+pagado y 21 sin; Semana Santa 2026 y 2027 detectadas; toque en lunes 21 → falta, en sábado
+26 → extra, segundo toque vuelve al patrón; cobro crea ingreso y deja posibles en 0; segundo
+cobro rechazado; calendario cabe en 375 px (celdas de 40 px). Se corrigió un bug detectado
+en la prueba: la actualización parcial de un trabajo (p. ej. pausar) borraba el monto.
+
 ## 5. Pendiente para el usuario
 
 0. **Cerrar el PR #1** en GitHub (botón *Merge pull request*); Claude no tiene

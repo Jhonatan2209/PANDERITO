@@ -31,8 +31,9 @@ const App = (() => {
   // lenguaje simple ("ahora puedes…"). El Inicio muestra la tarjeta «Novedades»
   // UNA sola vez por versión (se recuerda en localStorage al tocar «Entendido»).
   // Si una versión no trae nada que contar, deja NOVEDADES vacío y no se muestra.
-  const VERSION = 'v8';
+  const VERSION = 'v9';
   const NOVEDADES = [
+    '💼 <b>Nuevo módulo Trabajo</b> (Más → Trabajo): registra tu sueldo (mensual, por día o por hora) y tus días de trabajo; el calendario se prende y apaga con un toque y verás cuánto llevas ganado cada día. En el Inicio aparece la caja <b>Posibles ingresos</b>; cuando te paguen, «Ya me pagaron» lo convierte en ingreso real.',
     '🙋 <b>Perfil</b> (Más → Perfil): ponle tu nombre para que Panderito te salude, y tu profesión (lista o «Otro»). Opcional.',
     '📤 <b>Compartir por WhatsApp</b>: en Movimientos, toca «Hoy», «Esta semana» o «Este mes» para enviar un resumen con formato de tus gastos, ingresos o ambos.',
     '🕗 Las fechas ya salen bien de noche: antes, después de las 7 pm el gasto se guardaba con la fecha de mañana.',
@@ -149,6 +150,7 @@ const App = (() => {
       mas: 'mas', cuentas: 'mas', cuentaEdit: 'mas', categorias: 'mas', ajustes: 'mas', perfil: 'mas', detalle: 'movimientos',
       prestamos: 'mas', prestamoNuevo: 'mas', prestamoDet: 'mas',
       panderos: 'mas', panderoNuevo: 'mas', panderoDet: 'mas',
+      trabajo: 'mas', trabajoNuevo: 'mas', trabajoDet: 'mas',
       metas: 'mas', metaNueva: 'mas', recurrentes: 'mas', recurrenteNuevo: 'mas',
       presupuestos: 'mas', presupuestoNuevo: 'mas',
     };
@@ -204,6 +206,7 @@ const App = (() => {
           <p class="val gasto">${Moneda.fmt(r.gastos)}</p>
         </div>
       </div>
+      ${tarjetaPosiblesIngresos()}
 
       ${pend.length ? `
       <div class="seccion-tit"><h2>Pendientes 🔔</h2></div>
@@ -225,6 +228,21 @@ const App = (() => {
     `;
   });
   rutas['inicio']._post = () => { configurarBannerInstalar(); };
+
+  // tarjetaPosiblesIngresos(): caja «Posibles ingresos» del Inicio. Solo si hay
+  // trabajos activos. Muestra lo ganado del mes que aún no se cobró.
+  function tarjetaPosiblesIngresos() {
+    const lista = Datos.trabajos(true);
+    if (!lista.length) return '';
+    const posible = Datos.posiblesIngresosMes();
+    const todoCobrado = lista.every((t) => Datos.resumenTrabajo(t).cobrado !== null);
+    return `
+      <button class="mini" style="width:100%;text-align:left;margin-bottom:14px;border-left:4px solid var(--pendiente)" onclick="App.ir('trabajo')">
+        <p class="etq"><span class="punto" style="background:var(--pendiente)"></span> Posibles ingresos (trabajo, este mes)</p>
+        <p class="val" style="color:var(--pendiente)">${todoCobrado ? '✓ Ya cobrado' : Moneda.fmt(posible)}</p>
+        <p style="font-size:12px;color:var(--texto-tenue);margin:4px 0 0">${todoCobrado ? 'El sueldo de este mes ya está en tus ingresos' : 'Ganado hasta hoy y aún no cobrado · toca para ver'}</p>
+      </button>`;
+  }
 
   // tarjetaNovedades(): se muestra en Inicio solo si esta VERSION aún no fue
   // "vista" (Entendido). Los textos de NOVEDADES son propios (no del usuario),
@@ -514,6 +532,7 @@ const App = (() => {
     <div class="titulo-pagina"><h1>Más</h1></div>
     <div class="seccion-tit"><h2>Módulos</h2></div>
     <div class="opciones">
+      ${opcion('💼', 'Trabajo', 'Tus días trabajados convertidos en posibles ingresos', "App.ir('trabajo')")}
       ${opcion('🤝', 'Panderos', 'Juntas de ahorro rotativo', "App.ir('panderos')")}
       ${opcion('💸', 'Préstamos', 'Me deben / debo', "App.ir('prestamos')")}
       ${opcion('🎯', 'Metas de ahorro', 'Objetivos con progreso', "App.ir('metas')")}
@@ -800,6 +819,116 @@ const App = (() => {
   });
 
   // ============================================================
+  //  TRABAJO (3 vistas) — días trabajados → posibles ingresos
+  //  'trabajo': lista de trabajos con lo ganado del mes.
+  //  'trabajoNuevo' (?id para editar): nombre, forma de pago, monto,
+  //  horas/día, días de la semana por defecto, feriados pagados, cuenta.
+  //  'trabajoDet': calendario del mes (toca un día para prender/apagar),
+  //  ganado vs proyección, valor de tu día y tu hora, «Ya me pagaron».
+  // ============================================================
+  const DIAS_SEMANA = ['L', 'M', 'X', 'J', 'V', 'S', 'D'];
+  let refTrabajo = new Date();
+  const modoTexto = (t) => t.modo === 'Dia' ? `${Moneda.fmt(t.monto)} por día` : t.modo === 'Hora' ? `${Moneda.fmt(t.monto)} por hora · ${t.horasDia} h/día` : `${Moneda.fmt(t.monto)} al mes`;
+  registrar('trabajo', () => {
+    const lista = Datos.trabajos(false);
+    return `
+      <div class="titulo-pagina"><button class="btn-volver" onclick="App.ir('mas')">‹</button><h1>Trabajo</h1></div>
+      ${lista.length ? `<div class="card-saldo"><p class="etq">Posibles ingresos de ${nombreMes()}</p><p class="monto">${Moneda.fmt(Datos.posiblesIngresosMes())}</p><p class="cuentas-min">Ganado hasta hoy y aún no cobrado</p></div>` : ''}
+      ${lista.length ? `<div class="lista">${lista.map((t) => {
+        const r = Datos.resumenTrabajo(t);
+        const pct = r.proyeccion > 0 ? Math.min(100, r.ganado / r.proyeccion * 100) : 0;
+        return `<button class="item" style="flex-wrap:wrap" onclick="App.ir('trabajoDet',{id:${t.id}})">
+          <span class="ic" style="background:${fondoSuave('var(--pendiente)')};color:var(--pendiente)">💼</span>
+          <span class="cuerpo"><p class="t">${esc(t.nombre)}${t.activo === false ? ' (pausado)' : ''}</p><p class="s">${modoTexto(t)} · ${r.diasContados}/${r.diasMes} días</p></span>
+          <span class="monto" style="color:var(--pendiente)">${r.cobrado !== null ? '✓ cobrado' : Moneda.fmt(r.ganado)}</span>
+          <span style="flex-basis:100%;height:6px;border-radius:999px;background:var(--linea);margin-top:10px;overflow:hidden"><span style="display:block;height:100%;width:${pct}%;background:var(--pendiente)"></span></span>
+        </button>`;
+      }).join('')}</div>` : estadoVacio('💼', 'Sin trabajos', 'Registra tu trabajo (sueldo mensual, por día o por hora) y verás cuánto llevas ganado cada día.')}
+      <button class="btn" onclick="App.ir('trabajoNuevo')">＋ Nuevo trabajo</button><div style="height:14px"></div>`;
+  });
+  registrar('trabajoNuevo', (params) => {
+    const t = params.id ? Datos.trabajo(Number(params.id)) : null;
+    const dias = t ? t.dias : [1, 1, 1, 1, 1, 0, 0];
+    const ctas = Datos.cuentas(true);
+    const modo = t ? t.modo : 'Mensual';
+    return `
+      <div class="titulo-pagina"><button class="btn-volver" onclick="App.ir('${t ? 'trabajoDet' : 'trabajo'}'${t ? `,{id:${t.id}}` : ''})">‹</button><h1>${t ? 'Editar trabajo' : 'Nuevo trabajo'}</h1></div>
+      <div class="campo"><label>Nombre</label><input class="entrada" id="t-nombre" placeholder="ej. Biblioteca UNAS, Taller, Freelance" value="${t ? esc(t.nombre) : esc(Datos.profesionTexto() || '')}" /></div>
+      <div class="campo"><label>¿Cómo te pagan?</label>
+        <select class="entrada" id="t-modo" onchange="App.cambioModoTrabajo(this.value)">
+          <option value="Mensual" ${modo === 'Mensual' ? 'selected' : ''}>Sueldo mensual (planilla)</option>
+          <option value="Dia" ${modo === 'Dia' ? 'selected' : ''}>Por día trabajado</option>
+          <option value="Hora" ${modo === 'Hora' ? 'selected' : ''}>Por hora</option>
+        </select></div>
+      <div class="campo"><label id="t-monto-etq">${modo === 'Dia' ? 'Pago por día (S/)' : modo === 'Hora' ? 'Pago por hora (S/)' : 'Sueldo mensual (S/)'}</label><input class="entrada" id="t-monto" type="text" inputmode="decimal" placeholder="ej. 3000" value="${t ? esc(t.monto) : ''}" /></div>
+      <div class="campo"><label>Horas por día (para calcular el valor de tu hora)</label><input class="entrada" id="t-horas" type="number" inputmode="numeric" min="1" max="24" value="${t ? t.horasDia : 8}" /></div>
+      <div class="campo"><label>Días que trabajas normalmente (toca para cambiar)</label>
+        <div class="dias-semana" id="t-dias">${DIAS_SEMANA.map((d, i) => `<button type="button" class="dia-chip ${dias[i] ? 'on' : ''}" data-i="${i}" onclick="this.classList.toggle('on')">${d}</button>`).join('')}</div>
+        <p style="font-size:12px;color:var(--texto-tenue);margin:6px 2px 0">Por defecto lunes a viernes. Después, en el calendario, puedes prender o apagar cualquier día con un toque.</p></div>
+      <div class="campo"><label style="display:flex;align-items:center;gap:10px"><input type="checkbox" id="t-feriados" ${t ? (t.feriadosPagados ? 'checked' : '') : 'checked'} style="width:20px;height:20px" /> Los feriados se me pagan (planilla formal)</label></div>
+      <div class="campo"><label>Cuenta donde recibes el pago</label>
+        <select class="entrada" id="t-cuenta">${ctas.map((c) => `<option value="${c.id}" ${t && t.cuentaId === c.id ? 'selected' : ''}>${c.icono} ${esc(c.nombre)}</option>`).join('')}</select></div>
+      <button class="btn" onclick="App.guardarTrabajoForm(${t ? t.id : 'null'})">${t ? '💾 Guardar' : '✓ Crear trabajo'}</button>
+      ${t ? `<div style="height:10px"></div><button class="btn secundario" onclick="App.pausarTrabajo(${t.id})">${t.activo === false ? '▶️ Reactivar' : '⏸️ Pausar (no contar por ahora)'}</button><div style="height:10px"></div><button class="btn peligro" onclick="App.borrarTrabajo(${t.id})">🗑️ Eliminar trabajo</button>` : ''}
+      <div style="height:14px"></div>`;
+  });
+  registrar('trabajoDet', (params) => {
+    const t = Datos.trabajo(Number(params.id));
+    if (!t) return `<div class="titulo-pagina"><button class="btn-volver" onclick="App.ir('trabajo')">‹</button><h1>Trabajo</h1></div>${estadoVacio('❓', 'No encontrado', '')}`;
+    const ref = refTrabajo;
+    const r = Datos.resumenTrabajo(t, ref);
+    const pct = r.proyeccion > 0 ? Math.min(100, r.ganado / r.proyeccion * 100) : 0;
+    const y = ref.getFullYear(), m = ref.getMonth();
+    const primero = new Date(y, m, 1), ultimo = new Date(y, m + 1, 0).getDate();
+    const hoy = new Date(); hoy.setHours(0, 0, 0, 0);
+    const hueco = (primero.getDay() + 6) % 7; // celdas vacías antes del día 1 (semana empieza lunes)
+    let celdas = '';
+    for (let i = 0; i < hueco; i++) celdas += '<span class="cal-dia vacio"></span>';
+    for (let d = 1; d <= ultimo; d++) {
+      const f = new Date(y, m, d);
+      const clave = Datos.claveDia(f);
+      const plan = Datos.diaPlanificado(t, f), cuenta = Datos.diaCuenta(t, f);
+      const fer = Datos.esFeriado(f);
+      const cls = cuenta ? (plan ? 'on' : 'extra') : (plan ? 'falta' : 'off');
+      const esHoy = f.getTime() === hoy.getTime();
+      celdas += `<button class="cal-dia ${cls} ${esHoy ? 'hoy' : ''} ${fer ? 'feriado' : ''}" onclick="App.alternarDia(${t.id},'${clave}')" title="${fer ? 'Feriado' : ''}">${d}${fer ? '<i>★</i>' : ''}</button>`;
+    }
+    const ctas = Datos.cuentas(true);
+    const esMesActual = y === hoy.getFullYear() && m === hoy.getMonth();
+    return `
+      <div class="titulo-pagina"><button class="btn-volver" onclick="App.ir('trabajo')">‹</button><h1>${esc(t.nombre)}</h1><button class="btn-volver" style="margin-left:auto" onclick="App.ir('trabajoNuevo',{id:${t.id}})">✏️</button></div>
+      <div class="card-saldo" style="background:linear-gradient(135deg,#F79009,#DC6803);box-shadow:0 12px 30px rgba(220,104,3,.3)">
+        <p class="etq">${esMesActual ? 'Ganado hasta hoy' : 'Ganado en ' + nombreMes(ref)}${r.hoyCuenta && esMesActual ? ' · hoy cuenta ✓' : ''}</p>
+        <p class="monto">${Moneda.fmt(r.ganado)}</p>
+        <p class="cuentas-min">de ${Moneda.fmt(r.proyeccion)} proyectados · ${r.diasContados}/${r.diasMes} días</p>
+        <div style="height:8px;border-radius:999px;background:rgba(255,255,255,.25);margin-top:10px;overflow:hidden"><div style="height:100%;width:${pct}%;background:#fff"></div></div>
+      </div>
+      <div class="duo">
+        <div class="mini"><p class="etq">Vale tu día</p><p class="val">${Moneda.fmt(r.valorDia)}</p></div>
+        <div class="mini"><p class="etq">Vale tu hora</p><p class="val">${Moneda.fmt(r.valorHora)}</p></div>
+      </div>
+      <div class="card" style="display:flex;align-items:center;justify-content:space-between;padding:12px 14px">
+        <button class="btn-volver" onclick="App.moverMesTrabajo(-1)">‹</button><b>${nombreMes(ref)}</b><button class="btn-volver" onclick="App.moverMesTrabajo(1)">›</button>
+      </div>
+      <div class="card">
+        <div class="cal-cab">${DIAS_SEMANA.map((d) => `<span>${d}</span>`).join('')}</div>
+        <div class="cal-grid">${celdas}</div>
+        <p class="cal-leyenda"><span class="sw on"></span> cuenta &nbsp; <span class="sw falta"></span> falté &nbsp; <span class="sw extra"></span> día extra &nbsp; <span class="sw off"></span> descanso &nbsp; ★ feriado</p>
+        <p style="font-size:12px;color:var(--texto-tenue);margin:6px 2px 0">Toca un día para prenderlo o apagarlo. ${modoTexto(t)} · ${t.feriadosPagados ? 'feriados pagados' : 'feriados no pagados'}.</p>
+      </div>
+      ${r.cobrado !== null
+        ? `<div class="card" style="text-align:center;color:var(--ingreso);font-weight:700">✓ Sueldo de ${nombreMes(ref)} cobrado: ${Moneda.fmt(r.cobrado)}</div>`
+        : `<div class="card">
+            <b>¿Ya te pagaron ${nombreMes(ref)}?</b>
+            <p style="font-size:13px;color:var(--texto-suave);margin:6px 0 10px">Convierte lo ganado en un ingreso real (suma a tu saldo) y deja de contarse como «posible».</p>
+            <div class="campo"><label>Monto recibido (S/)</label><input class="entrada" id="tc-monto" type="text" inputmode="decimal" value="${r.proyeccion}" /></div>
+            <div class="campo"><label>Cuenta</label><select class="entrada" id="tc-cuenta">${ctas.map((c) => `<option value="${c.id}" ${t.cuentaId === c.id ? 'selected' : ''}>${c.icono} ${esc(c.nombre)}</option>`).join('')}</select></div>
+            <button class="btn" onclick="App.cobrarSueldo(${t.id},'${r.mesClave}')">💰 Ya me pagaron</button>
+          </div>`}
+      <div style="height:14px"></div>`;
+  });
+
+  // ============================================================
   //  METAS DE AHORRO (2 vistas)
   //  'metas': tarjetas con barra de progreso, % y "¡Lograda! 🎉";
   //  botones Abonar y Eliminar. 'metaNueva': formulario de creación.
@@ -1025,6 +1154,32 @@ const App = (() => {
       const r = Datos.resumenPandero(p);
       if (!confirm(`¿Registrar el cobro del pozo (${Moneda.fmt(r.montoARecibir)}) como ingreso? Se sumará a tu saldo (solo se puede una vez).`)) return;
       Datos.cobrarPozoPandero(id); toast('¡Pozo cobrado y sumado! 🎉'); render();
+    },
+
+    // ----- Trabajo -----
+    cambioModoTrabajo(v) { const l = document.getElementById('t-monto-etq'); if (l) l.textContent = v === 'Dia' ? 'Pago por día (S/)' : v === 'Hora' ? 'Pago por hora (S/)' : 'Sueldo mensual (S/)'; },
+    guardarTrabajoForm(id) {
+      const gv = (x) => (document.getElementById(x)?.value || '').trim();
+      const nombre = gv('t-nombre'); const monto = numero(gv('t-monto')); const horas = parseInt(gv('t-horas'), 10) || 8;
+      if (!nombre) return toast('Escribe un nombre para el trabajo');
+      if (!monto || monto <= 0) return toast('Ingresa el monto que te pagan');
+      if (horas < 1 || horas > 24) return toast('Las horas por día deben estar entre 1 y 24');
+      const dias = [...document.querySelectorAll('#t-dias .dia-chip')].map((b) => (b.classList.contains('on') ? 1 : 0));
+      if (!dias.some(Boolean)) return toast('Marca al menos un día de trabajo');
+      Datos.guardarTrabajo({ id: id || null, nombre, modo: gv('t-modo') || 'Mensual', monto, horasDia: horas, dias, feriadosPagados: !!document.getElementById('t-feriados')?.checked, cuentaId: Number(gv('t-cuenta')) || null });
+      toast(id ? 'Trabajo actualizado ✓' : 'Trabajo creado ✓'); ir('trabajo');
+    },
+    pausarTrabajo(id) { const t = Datos.trabajo(id); if (!t) return; Datos.guardarTrabajo({ id, activo: t.activo === false }); toast(t.activo === false ? 'Trabajo reactivado' : 'Trabajo pausado'); ir('trabajo'); },
+    borrarTrabajo(id) { if (!confirm('¿Eliminar este trabajo y su calendario? Los ingresos ya cobrados se conservan.')) return; Datos.eliminarTrabajo(id); toast('Trabajo eliminado'); ir('trabajo'); },
+    moverMesTrabajo(delta) { refTrabajo = new Date(refTrabajo.getFullYear(), refTrabajo.getMonth() + delta, 1); render(); },
+    alternarDia(trabajoId, clave) { Datos.alternarDiaTrabajo(trabajoId, clave); render(); },
+    cobrarSueldo(trabajoId, mesClave) {
+      const monto = numero(document.getElementById('tc-monto')?.value);
+      if (!monto || monto <= 0) return toast('Ingresa el monto recibido');
+      const cuentaId = Number(document.getElementById('tc-cuenta')?.value) || null;
+      if (!confirm(`¿Registrar ${Moneda.fmt(monto)} como ingreso real de ${mesClave}?`)) return;
+      const mov = Datos.cobrarTrabajo(trabajoId, mesClave, monto, cuentaId);
+      toast(mov ? '¡Sueldo registrado en tus ingresos! 💰' : 'Ese mes ya estaba cobrado'); render();
     },
 
     // ----- Metas -----

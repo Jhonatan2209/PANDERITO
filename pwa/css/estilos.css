@@ -342,3 +342,34 @@ select.entrada { -webkit-appearance: none; appearance: none; background-image: l
 .seg button.activo { background: var(--primary); color: var(--on-primary); }
 
 .pie-marca { text-align: center; color: var(--texto-tenue); font-size: 12px; padding: 24px 0 8px; }
+
+/* ---------- Módulo Trabajo: selector de días y calendario ---------- */
+/* Chips L M X J V S D del formulario (on = se trabaja por defecto) */
+.dias-semana { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 6px; }
+.dia-chip { min-width: 0; padding: 0; }
+.dia-chip {
+  height: 40px; border-radius: 12px; font-weight: 700; font-size: 14px;
+  background: var(--linea); color: var(--texto-suave);
+}
+.dia-chip.on { background: var(--primary); color: #fff; }
+
+/* Calendario mensual: 7 columnas, semana empieza en lunes */
+.cal-cab { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 4px; margin-bottom: 6px; }
+.cal-cab span { text-align: center; font-size: 11px; font-weight: 700; color: var(--texto-tenue); }
+.cal-grid { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 4px; }
+.cal-dia {
+  position: relative; aspect-ratio: 1; border-radius: 10px; font-weight: 700; font-size: 13px;
+  display: grid; place-items: center; background: var(--linea); color: var(--texto-tenue);
+  min-width: 0; width: 100%; padding: 0; /* que 7 celdas quepan siempre en el ancho */
+}
+.cal-dia.vacio { background: transparent; }
+.cal-dia.on    { background: var(--ingreso-soft, rgba(18,183,106,.18)); color: var(--ingreso); }   /* cuenta (patrón) */
+.cal-dia.extra { background: rgba(109,90,230,.2); color: var(--primary); }                          /* día extra prendido */
+.cal-dia.falta { background: rgba(240,68,56,.18); color: var(--gasto); text-decoration: line-through; } /* apagado (falta) */
+.cal-dia.off   { opacity: .55; }                                                                     /* descanso */
+.cal-dia.hoy   { outline: 2px solid var(--pendiente); outline-offset: -2px; }
+.cal-dia i { position: absolute; top: 1px; right: 4px; font-size: 9px; font-style: normal; color: var(--pendiente); }
+.cal-leyenda { display: flex; flex-wrap: wrap; align-items: center; gap: 4px; font-size: 11px; color: var(--texto-tenue); margin: 10px 0 0; }
+.cal-leyenda .sw { width: 12px; height: 12px; border-radius: 4px; display: inline-block; }
+.cal-leyenda .sw.on { background: var(--ingreso); } .cal-leyenda .sw.falta { background: var(--gasto); }
+.cal-leyenda .sw.extra { background: var(--primary); } .cal-leyenda .sw.off { background: var(--linea); }

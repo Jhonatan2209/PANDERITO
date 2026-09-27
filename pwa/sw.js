@@ -16,7 +16,7 @@
 // - El SW solo se registra sobre HTTPS o sobre http://localhost.
 // ============================================================
 
-const CACHE = 'panderito-pwa-v8';           // nombre + versión de la caché actual
+const CACHE = 'panderito-pwa-v9';           // nombre + versión de la caché actual
 const ASSETS = [                             // "app shell": todo lo necesario para arrancar sin red
   './',
   './index.html',
