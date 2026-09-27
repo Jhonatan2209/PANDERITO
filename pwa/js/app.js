@@ -31,14 +31,14 @@ const App = (() => {
   // lenguaje simple ("ahora puedes…"). El Inicio muestra la tarjeta «Novedades»
   // UNA sola vez por versión (se recuerda en localStorage al tocar «Entendido»).
   // Si una versión no trae nada que contar, deja NOVEDADES vacío y no se muestra.
-  const VERSION = 'v6';
+  const VERSION = 'v7';
   const NOVEDADES = [
+    '📤 <b>Compartir por WhatsApp</b>: en Movimientos, toca «Hoy», «Esta semana» o «Este mes» para enviar un resumen con formato de tus gastos, ingresos o ambos.',
     '🕗 Las fechas ya salen bien de noche: antes, después de las 7 pm el gasto se guardaba con la fecha de mañana.',
-    '⬆️ Ajustes → <b>Restaurar copia</b>: ahora puedes recuperar tus datos desde un respaldo JSON (cambio de celular, etc.).',
+    '⬆️ Ajustes → <b>Restaurar copia</b>: recupera tus datos desde un respaldo JSON (cambio de celular, etc.).',
     '🔢 Puedes escribir montos con coma: <b>12,50</b> o <b>1,234.50</b>.',
-    '🤝 Panderos: «Pagar cuota» marca la ronda y «Cobrar el pozo» solo se puede una vez; ya no se duplica.',
-    '⚠️ Si algo no se puede guardar (memoria llena) o un abono supera la deuda, la app te avisa en vez de fallar en silencio.',
-    '🎨 Tarjetas del inicio mejor separadas y esta sección de novedades.',
+    '🤝 Panderos: «Pagar cuota» marca la ronda y «Cobrar el pozo» solo se puede una vez.',
+    '⚠️ Si algo no se puede guardar o un abono supera la deuda, la app te avisa en vez de fallar en silencio.',
   ];
 
   // ---------- Utilidades ----------
@@ -286,10 +286,73 @@ const App = (() => {
       <div class="chips">
         ${chips.map((c) => `<button class="chip ${filtroHist.tipo === c ? 'activo' : ''}" onclick="App.filtrarHist('${c}')">${c === 'Todos' ? 'Todos' : c + 's'}</button>`).join('')}
       </div>
+      <div class="chips" style="padding-top:0">
+        <span style="font-size:12px;color:var(--texto-tenue);align-self:center;white-space:nowrap">📤 Compartir:</span>
+        <button class="chip" onclick="App.compartirResumen('hoy')">Hoy</button>
+        <button class="chip" onclick="App.compartirResumen('semana')">Esta semana</button>
+        <button class="chip" onclick="App.compartirResumen('mes')">Este mes</button>
+      </div>
       ${movs.length ? `<div class="lista">${movs.map(itemMovimiento).join('')}</div>`
         : estadoVacio('🔍', 'Sin resultados', 'No hay movimientos con ese filtro. Prueba otra búsqueda.')}
     `;
   });
+
+  // ---------- Compartir resumen (WhatsApp, etc.) ----------
+  // Arma un texto con formato de WhatsApp (*negritas*, emojis) con los
+  // movimientos del período elegido, respetando el chip Todos/Gastos/Ingresos.
+  // Se comparte con la hoja nativa del celular (navigator.share) y, si no
+  // existe (PC), se abre WhatsApp Web con el texto listo. Sin PDF a propósito:
+  // el texto pesa nada, se lee en el chat y no requiere librerías.
+  function rangoCompartir(periodo) {
+    const hoy = new Date(); hoy.setHours(0, 0, 0, 0);
+    const manana = new Date(hoy); manana.setDate(hoy.getDate() + 1);
+    if (periodo === 'hoy') return { desde: hoy, hasta: manana, titulo: 'de hoy', sub: hoy.toLocaleDateString('es-PE', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' }) };
+    if (periodo === 'semana') {
+      const lunes = new Date(hoy); lunes.setDate(hoy.getDate() - ((hoy.getDay() + 6) % 7));
+      return { desde: lunes, hasta: manana, titulo: 'de esta semana', sub: `del ${lunes.toLocaleDateString('es-PE', { day: 'numeric', month: 'short' })} al ${hoy.toLocaleDateString('es-PE', { day: 'numeric', month: 'short' })}` };
+    }
+    const inicioMes = new Date(hoy.getFullYear(), hoy.getMonth(), 1);
+    return { desde: inicioMes, hasta: manana, titulo: 'de este mes', sub: nombreMes(hoy) };
+  }
+  function textoResumen(periodo) {
+    const { desde, hasta, titulo, sub } = rangoCompartir(periodo);
+    let movs = Datos.movimientos().filter((m) => { const f = new Date(m.fecha); return f >= desde && f < hasta; });
+    if (filtroHist.tipo !== 'Todos') movs = movs.filter((m) => m.tipo === filtroHist.tipo);
+    const etq = filtroHist.tipo === 'Gasto' ? 'Gastos' : filtroHist.tipo === 'Ingreso' ? 'Ingresos' : 'Movimientos';
+    const lineas = [`🐷 *Panderito · ${etq} ${titulo}*`, `📅 ${capitalizar(sub)}`, ''];
+    if (!movs.length) { lineas.push(`Sin ${etq.toLowerCase()} en este período.`); return lineas.join('\n'); }
+    const bloque = (tipo, emo, nombre) => {
+      const lista = movs.filter((m) => m.tipo === tipo).slice().sort((a, b) => new Date(a.fecha) - new Date(b.fecha));
+      if (!lista.length) return 0;
+      lineas.push(`${emo} *${nombre}*`);
+      let total = 0;
+      for (const m of lista) {
+        const cat = Datos.categoria(m.categoriaId) || { nombre: 'Sin categoría', icono: '🏷️' };
+        const cta = Datos.cuenta(m.cuentaId);
+        const dia = periodo === 'hoy' ? '' : new Date(m.fecha).toLocaleDateString('es-PE', { day: '2-digit', month: '2-digit' }) + ' · ';
+        lineas.push(`${cat.icono || '•'} ${dia}${cat.nombre}${m.nota && m.nota !== cat.nombre ? ' – ' + m.nota : ''}${cta ? ' (' + cta.nombre + ')' : ''}: *${Moneda.fmt(m.monto)}*`);
+        total += Number(m.monto);
+      }
+      lineas.push(`   ➜ Total ${nombre.toLowerCase()}: *${Moneda.fmt(total)}*`, '');
+      return total;
+    };
+    const ing = bloque('Ingreso', '🟢', 'Ingresos');
+    const gas = bloque('Gasto', '🔴', 'Gastos');
+    if (filtroHist.tipo === 'Todos' && (ing || gas)) {
+      const bal = Datos.r2(ing - gas);
+      lineas.push(`━━━━━━━━━━━━━━`, `${bal >= 0 ? '💚' : '❤️‍🩹'} *Balance: ${bal >= 0 ? '+' : '-'} ${Moneda.fmt(Math.abs(bal))}*`);
+    }
+    while (lineas[lineas.length - 1] === '') lineas.pop(); // sin líneas vacías dobles antes del pie
+    lineas.push('', '_Enviado desde Panderito_ 🐷');
+    return lineas.join('\n');
+  }
+  async function compartirTexto(texto) {
+    if (navigator.share) {
+      try { await navigator.share({ text: texto }); return; } catch (e) { if (e && e.name === 'AbortError') return; }
+    }
+    // PC / navegadores sin hoja de compartir: WhatsApp Web con el texto listo
+    window.open('https://wa.me/?text=' + encodeURIComponent(texto), '_blank', 'noopener');
+  }
   rutas['movimientos']._post = () => {
     const b = document.getElementById('buscar');
     if (b) b.oninput = (e) => { filtroHist.texto = e.target.value; const pos = e.target.selectionStart; render(); const nb = document.getElementById('buscar'); nb.focus(); nb.setSelectionRange(pos, pos); };
@@ -821,6 +884,7 @@ const App = (() => {
   const acciones = {
     ir,
     filtrarHist(tipo) { filtroHist.tipo = tipo; render(); },
+    compartirResumen(periodo) { compartirTexto(textoResumen(periodo)); },
     moverMes(delta) { refReporte = new Date(refReporte.getFullYear(), refReporte.getMonth() + delta, 1); render(); },
     // setTipo lee primero los inputs para NO perder monto/fecha/nota al cambiar Gasto↔Ingreso
     setTipo(t) { leerInputsForm(); form.tipo = t; form.categoriaId = null; render(); sincronizarInputsForm(); },

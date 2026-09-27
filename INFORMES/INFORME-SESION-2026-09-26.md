@@ -118,6 +118,21 @@ archivos, `sw.js` con `Cache-Control: no-cache`, manifest con tipo correcto, cab
 de seguridad (HSTS, nosniff, SAMEORIGIN), `README.md`/`Dockerfile`/`nginx.conf`/`.bat`
 y `ACCESOS/` responden 404, SW v5 registrado y la app renderiza en vista móvil.
 
+## 4.d — v6 y v7: novedades por versión y compartir por WhatsApp (2026-09-27)
+
+- **v6:** tarjeta «🆕 Novedades» en Inicio, una sola vez por versión (`VERSION` +
+  `NOVEDADES` en `app.js`; «Entendido» la oculta; Ajustes → «Ver novedades»). Tarjeta de
+  saldo separada de ingresos/gastos (`margin-bottom`).
+- **v7:** en Movimientos, botones **Compartir: Hoy / Esta semana / Este mes** que arman un
+  texto con formato de WhatsApp (negritas, emojis, totales y balance) respetando el chip
+  Todos/Gastos/Ingresos, y lo envían con la hoja nativa del celular (`navigator.share`) o
+  abren WhatsApp Web en la PC. Se descartó el PDF: requeriría una librería pesada y el
+  texto se lee mejor en el chat. Probado en navegador (texto generado verificado).
+- **Vercel bloqueaba despliegues** («Deployment was blocked») porque el correo de autor de
+  los commits no estaba vinculado a GitHub → el repo usa ahora el correo personal del
+  usuario (decisión 13). Verificado con despliegues exitosos.
+- Nueva guía `INSTRUCCIONES/MIGRACION-Y-HERRAMIENTAS.md` (pedido del usuario).
+
 ## 5. Pendiente para el usuario
 
 0. **Cerrar el PR #1** en GitHub (botón *Merge pull request*); Claude no tiene

@@ -16,6 +16,8 @@ sin librerías). No avanzar de fase sin cerrar la anterior.
 
 ## Fase B — Robustez sin servidor · costo S/ 0
 
+- [x] Compartir por WhatsApp (v7): resumen con formato de gastos/ingresos de hoy, semana o mes
+      desde Movimientos (Web Share API; en PC abre WhatsApp Web). PDF descartado por peso.
 - [ ] Copia de seguridad fácil: exportar/importar JSON desde Ajustes ya existe;
       agregar recordatorio periódico de respaldo y compartir el archivo (Web Share API).
 - [ ] Pasar de localStorage a **IndexedDB** (límite ~5 MB → cientos de MB y no se
