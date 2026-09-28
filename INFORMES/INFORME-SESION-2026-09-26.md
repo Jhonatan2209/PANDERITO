@@ -192,6 +192,27 @@ Aceptados sin cambio: nombres de participantes en la imagen (es el propósito; s
 excepciones en fechas futuras (sirven para marcar vacaciones); recordatorios solo al abrir.
 Pendiente/no verificado: `navigator.share` con archivo en Android real.
 
+## 4.h — v12: Cuotas y créditos (2026-09-27)
+
+Pregunta del usuario: cómo registrar compras con tarjeta en cuotas y créditos. Investigación:
+las apps contables (Actual Budget, YNAB) tratan la tarjeta como cuenta de pasivo y el pago
+como transferencia; las apps de consumo (Mobills, Organizze) generan las cuotas futuras y
+registran el gasto cuando se paga cada una. Se eligió lo segundo (decisión 15).
+
+Implementado: módulo **Más → Cuotas y créditos** (tarjeta/tienda o crédito bancario;
+total a pagar con intereses, n.º de cuotas o cuota mensual, precio al contado opcional →
+costo de financiar; primera fecha; categoría y cuenta de pago), cronograma con estados
+(pagada / próxima / vencida), «Pagar cuota» (crea el gasto `Cuota k/n · nombre`),
+deshacer última cuota, caja **Deudas en cuotas** en Inicio, avisos en Pendientes 🔔,
+enlace desde Registrar, categoría semilla «Cuotas y créditos». Reglas: última cuota
+absorbe el redondeo (1000/3 = 333.33 + 333.33 + 333.34), fechas respetan fin de mes
+(31 ene → 28 feb → 31 mar), validación de que cuota × n ≈ total.
+
+Verificado: 14 pruebas de datos en Node y flujo de UI en navegador (alta, validación de
+cuotas que no cuadran, caja en Inicio, pendiente, costo de financiar, pago de cuota → gasto
+y saldo, enlace en Registrar). Nota: escribir «3.600» se interpreta como 3.60 (el punto es
+decimal); se recomienda 3600 o 3,600.
+
 ## 5. Pendiente para el usuario
 
 0. **Cerrar el PR #1** en GitHub (botón *Merge pull request*); Claude no tiene

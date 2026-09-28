@@ -31,8 +31,9 @@ const App = (() => {
   // lenguaje simple ("ahora puedes…"). El Inicio muestra la tarjeta «Novedades»
   // UNA sola vez por versión (se recuerda en localStorage al tocar «Entendido»).
   // Si una versión no trae nada que contar, deja NOVEDADES vacío y no se muestra.
-  const VERSION = 'v10';
+  const VERSION = 'v12';
   const NOVEDADES = [
+    '💳 <b>Cuotas y créditos</b> (Más → Cuotas y créditos): registra compras con tarjeta en cuotas y créditos de banco o tienda. Cada cuota se registra como gasto cuando la pagas, te avisamos al vencer y ves cuánto te falta y cuánto te cuesta financiar. En Inicio aparece la caja <b>Deudas en cuotas</b>.',
     '🤝 <b>Panderos para el grupo</b>: en cada pandero, marca quién ya pagó la cuota de la ronda y comparte la <b>situación como imagen</b> 🖼️ o texto 💬 al WhatsApp del grupo (quién cobra, quién pagó, quién falta).',
     '💼 <b>Nuevo módulo Trabajo</b> (Más → Trabajo): registra tu sueldo (mensual, por día o por hora) y tus días de trabajo; el calendario se prende y apaga con un toque y verás cuánto llevas ganado cada día. En el Inicio aparece la caja <b>Posibles ingresos</b>; cuando te paguen, «Ya me pagaron» lo convierte en ingreso real.',
     '🙋 <b>Perfil</b> (Más → Perfil): ponle tu nombre para que Panderito te salude, y tu profesión (lista o «Otro»). Opcional.',
@@ -152,6 +153,7 @@ const App = (() => {
       prestamos: 'mas', prestamoNuevo: 'mas', prestamoDet: 'mas',
       panderos: 'mas', panderoNuevo: 'mas', panderoDet: 'mas',
       trabajo: 'mas', trabajoNuevo: 'mas', trabajoDet: 'mas',
+      creditos: 'mas', creditoNuevo: 'mas', creditoDet: 'mas',
       metas: 'mas', metaNueva: 'mas', recurrentes: 'mas', recurrenteNuevo: 'mas',
       presupuestos: 'mas', presupuestoNuevo: 'mas',
     };
@@ -208,6 +210,7 @@ const App = (() => {
         </div>
       </div>
       ${tarjetaPosiblesIngresos()}
+      ${tarjetaDeudasCuotas()}
 
       ${pend.length ? `
       <div class="seccion-tit"><h2>Pendientes 🔔</h2></div>
@@ -242,6 +245,21 @@ const App = (() => {
         <p class="etq"><span class="punto" style="background:var(--pendiente)"></span> Posibles ingresos (trabajo, este mes)</p>
         <p class="val" style="color:var(--pendiente)">${todoCobrado ? '✓ Ya cobrado' : Moneda.fmt(posible)}</p>
         <p style="font-size:12px;color:var(--texto-tenue);margin:4px 0 0">${todoCobrado ? 'El sueldo de este mes ya está en tus ingresos' : 'Ganado hasta hoy y aún no cobrado · toca para ver'}</p>
+      </button>`;
+  }
+
+  // tarjetaDeudasCuotas(): caja «Deudas en cuotas» del Inicio. Solo si hay créditos
+  // activos con saldo. Muestra lo que falta pagar y la cuota más próxima.
+  function tarjetaDeudasCuotas() {
+    const lista = Datos.creditos(true).filter((c) => c.cuotasPagadas < c.numCuotas);
+    if (!lista.length) return '';
+    const prox = lista[0]; // creditos() ya viene ordenado por próxima cuota
+    const f = Datos.proximaCuotaFecha(prox); const d = f ? diasHasta(f) : null;
+    return `
+      <button class="mini" style="width:100%;text-align:left;margin-bottom:14px;border-left:4px solid #B54708" onclick="App.ir('creditos')">
+        <p class="etq"><span class="punto" style="background:#B54708"></span> Deudas en cuotas (${lista.length} ${lista.length === 1 ? 'compra/crédito' : 'compras/créditos'})</p>
+        <p class="val" style="color:#B54708">${Moneda.fmt(Datos.deudaTotalCreditos())}</p>
+        <p style="font-size:12px;color:var(--texto-tenue);margin:4px 0 0">Próxima: ${esc(prox.nombre)} · ${Moneda.fmt(Datos.montoCuota(prox, prox.cuotasPagadas + 1))} · ${d === null ? '' : d < 0 ? `vencida hace ${-d} d` : d === 0 ? 'hoy' : `en ${d} día${d === 1 ? '' : 's'}`}</p>
       </button>`;
   }
 
@@ -441,6 +459,7 @@ const App = (() => {
       </div>
 
       <button class="btn" onclick="App.guardarMov()">${editando ? '💾 Guardar cambios' : '✓ Registrar'}</button>
+      ${!editando && form.tipo === 'Gasto' ? `<p style="text-align:center;font-size:13px;color:var(--texto-tenue);margin:12px 0 0">¿Compra con tarjeta en cuotas o crédito? <a href="#creditoNuevo" style="color:var(--primary);font-weight:600">Regístrala aquí →</a></p>` : ''}
       <div style="height:14px"></div>
     `;
   });
@@ -538,6 +557,7 @@ const App = (() => {
       ${opcion('💸', 'Préstamos', 'Me deben / debo', "App.ir('prestamos')")}
       ${opcion('🎯', 'Metas de ahorro', 'Objetivos con progreso', "App.ir('metas')")}
       ${opcion('🔁', 'Pagos fijos', 'Internet, línea, alquiler, suscripciones', "App.ir('recurrentes')")}
+      ${opcion('💳', 'Cuotas y créditos', 'Compras con tarjeta en cuotas, créditos de banco o tienda', "App.ir('creditos')")}
       ${opcion('📅', 'Presupuestos', 'Límites por categoría', "App.ir('presupuestos')")}
     </div>
     <div class="seccion-tit"><h2>Configuración</h2></div>
@@ -1106,6 +1126,85 @@ const App = (() => {
   });
 
   // ============================================================
+  //  CUOTAS Y CRÉDITOS (3 vistas)
+  //  'creditos': deuda total pendiente + lista ordenada por próxima cuota.
+  //  'creditoNuevo': compra en cuotas (tarjeta/tienda) o crédito bancario:
+  //  total a pagar, n.º de cuotas (o cuota mensual), primera fecha,
+  //  precio al contado (opcional, muestra el costo del financiamiento).
+  //  'creditoDet': cronograma de cuotas, «Pagar cuota» (crea el gasto),
+  //  deshacer, eliminar.
+  // ============================================================
+  registrar('creditos', () => {
+    const lista = Datos.creditos(false);
+    const activos = lista.filter((c) => c.cuotasPagadas < c.numCuotas && c.activo !== false);
+    const terminados = lista.filter((c) => c.cuotasPagadas >= c.numCuotas);
+    const item = (c) => {
+      const f = Datos.proximaCuotaFecha(c); const d = f ? diasHasta(f) : null;
+      const pct = c.numCuotas ? c.cuotasPagadas / c.numCuotas * 100 : 0;
+      return `<button class="item" style="flex-wrap:wrap" onclick="App.ir('creditoDet',{id:${c.id}})">
+        <span class="ic" style="background:${fondoSuave('#B54708')};color:#B54708">${c.tipo === 'Credito' ? '🏦' : '💳'}</span>
+        <span class="cuerpo"><p class="t">${esc(c.nombre)}</p><p class="s">${c.entidad ? esc(c.entidad) + ' · ' : ''}${c.cuotasPagadas}/${c.numCuotas} cuotas de ${Moneda.fmt(c.cuotaMonto)}${f ? ' · ' + (d < 0 ? `vencida hace ${-d} d` : d === 0 ? 'vence hoy' : `vence en ${d} d`) : ' · ✓ pagado'}</p></span>
+        <span class="monto" style="color:${f ? '#B54708' : 'var(--ingreso)'}">${f ? Moneda.fmt(Datos.saldoCredito(c)) : '✓'}</span>
+        <span style="flex-basis:100%;height:6px;border-radius:999px;background:var(--linea);margin-top:10px;overflow:hidden"><span style="display:block;height:100%;width:${pct}%;background:#B54708"></span></span>
+      </button>`;
+    };
+    return `
+      <div class="titulo-pagina"><button class="btn-volver" onclick="App.ir('mas')">‹</button><h1>Cuotas y créditos</h1></div>
+      ${activos.length ? `<div class="card-saldo" style="background:linear-gradient(135deg,#DC6803,#B54708);box-shadow:0 12px 30px rgba(181,71,8,.3)"><p class="etq">Te falta pagar en total</p><p class="monto">${Moneda.fmt(Datos.deudaTotalCreditos())}</p><p class="cuentas-min">${activos.length} ${activos.length === 1 ? 'compra o crédito activo' : 'compras/créditos activos'} · las cuotas se registran como gasto cuando las pagas</p></div>` : ''}
+      ${activos.length ? `<div class="lista">${activos.map(item).join('')}</div>` : estadoVacio('💳', 'Sin cuotas ni créditos', 'Registra una compra en cuotas con tarjeta o un crédito de banco/tienda y te avisamos cada cuota.')}
+      ${terminados.length ? `<div class="seccion-tit"><h2>Terminados</h2></div><div class="lista">${terminados.map(item).join('')}</div>` : ''}
+      <button class="btn" onclick="App.ir('creditoNuevo')">＋ Nueva compra en cuotas / crédito</button><div style="height:14px"></div>`;
+  });
+  registrar('creditoNuevo', (params) => {
+    const c = params.id ? Datos.credito(Number(params.id)) : null;
+    const cats = Datos.categorias('Gasto'); const ctas = Datos.cuentas(true);
+    const catDef = c ? c.categoriaId : (cats.find((x) => x.nombre === 'Cuotas y créditos') || cats[0] || {}).id;
+    return `
+      <div class="titulo-pagina"><button class="btn-volver" onclick="App.ir('creditos')">‹</button><h1>${c ? 'Editar' : 'Nueva compra en cuotas'}</h1></div>
+      <div class="campo"><label>¿Qué es?</label>
+        <select class="entrada" id="cr-tipo"><option value="Tarjeta" ${!c || c.tipo === 'Tarjeta' ? 'selected' : ''}>Compra con tarjeta / tienda en cuotas</option><option value="Credito" ${c && c.tipo === 'Credito' ? 'selected' : ''}>Crédito o préstamo de banco / financiera</option></select></div>
+      <div class="campo"><label>Descripción</label><input class="entrada" id="cr-nombre" placeholder="ej. Laptop, Refrigeradora, Crédito BCP" value="${c ? esc(c.nombre) : ''}" /></div>
+      <div class="campo"><label>Banco / tienda (opcional)</label><input class="entrada" id="cr-entidad" placeholder="ej. BCP, Interbank, Saga, Efectiva" value="${c ? esc(c.entidad || '') : ''}" /></div>
+      <div class="campo"><label>Total a pagar (S/) — con intereses, lo que dice el banco</label><input class="entrada" id="cr-total" type="text" inputmode="decimal" placeholder="ej. 3600" value="${c ? esc(c.montoTotal) : ''}" /></div>
+      <div class="campo"><label>Número de cuotas</label><input class="entrada" id="cr-num" type="number" inputmode="numeric" min="1" max="120" placeholder="ej. 12" value="${c ? c.numCuotas : ''}" /></div>
+      <div class="campo"><label>Cuota mensual (S/) — opcional, se calcula sola</label><input class="entrada" id="cr-cuota" type="text" inputmode="decimal" placeholder="total ÷ cuotas" value="${c ? esc(c.cuotaMonto) : ''}" /></div>
+      <div class="campo"><label>Precio al contado (opcional) — para ver cuánto te cuesta financiar</label><input class="entrada" id="cr-contado" type="text" inputmode="decimal" placeholder="ej. 3200" value="${c && c.precioContado ? esc(c.precioContado) : ''}" /></div>
+      <div class="campo"><label>Fecha de la primera cuota</label><input class="entrada" id="cr-fecha" type="date" value="${c ? c.primeraFecha.slice(0, 10) : hoyInput()}" /></div>
+      <div class="campo"><label>Categoría del gasto</label><select class="entrada" id="cr-cat">${cats.map((x) => `<option value="${x.id}" ${catDef === x.id ? 'selected' : ''}>${x.icono} ${esc(x.nombre)}</option>`).join('')}</select></div>
+      <div class="campo"><label>Cuenta desde donde pagas la cuota</label><select class="entrada" id="cr-cuenta">${ctas.map((x) => `<option value="${x.id}" ${c && c.cuentaId === x.id ? 'selected' : ''}>${x.icono} ${esc(x.nombre)}</option>`).join('')}</select></div>
+      <div class="campo"><label>Nota (opcional)</label><input class="entrada" id="cr-nota" placeholder="ej. TEA 45 %, sin intereses, etc." value="${c ? esc(c.nota || '') : ''}" /></div>
+      <p style="font-size:12px;color:var(--texto-tenue);margin:0 2px 12px">La compra no se registra como gasto hoy: cada cuota se registrará como gasto cuando la pagues (toca «Pagar cuota»). Así tu saldo real siempre cuadra.</p>
+      <button class="btn" onclick="App.guardarCreditoForm(${c ? c.id : 'null'})">${c ? '💾 Guardar' : '✓ Registrar'}</button><div style="height:14px"></div>`;
+  });
+  registrar('creditoDet', (params) => {
+    const c = Datos.credito(Number(params.id));
+    if (!c) return `<div class="titulo-pagina"><button class="btn-volver" onclick="App.ir('creditos')">‹</button><h1>Cuotas</h1></div>${estadoVacio('❓', 'No encontrado', '')}`;
+    const saldo = Datos.saldoCredito(c); const costo = Datos.costoFinanciamiento(c); const prox = Datos.proximaCuotaFecha(c);
+    const pct = c.cuotasPagadas / c.numCuotas * 100;
+    const filas = []; for (let k = 1; k <= c.numCuotas; k++) filas.push(k);
+    const hoy = new Date(); hoy.setHours(0, 0, 0, 0);
+    return `
+      <div class="titulo-pagina"><button class="btn-volver" onclick="App.ir('creditos')">‹</button><h1>${esc(c.nombre)}</h1><button class="btn-volver" style="margin-left:auto" onclick="App.ir('creditoNuevo',{id:${c.id}})">✏️</button></div>
+      <div class="card-saldo" style="background:linear-gradient(135deg,#DC6803,#B54708);box-shadow:0 12px 30px rgba(181,71,8,.3)">
+        <p class="etq">${prox ? 'Te falta pagar' : '¡Terminaste de pagar! 🎉'}</p><p class="monto">${Moneda.fmt(saldo)}</p>
+        <p class="cuentas-min">${c.cuotasPagadas}/${c.numCuotas} cuotas pagadas · total ${Moneda.fmt(c.montoTotal)}${c.entidad ? ' · ' + esc(c.entidad) : ''}</p>
+        <div style="height:8px;border-radius:999px;background:rgba(255,255,255,.25);margin-top:10px;overflow:hidden"><div style="height:100%;width:${pct}%;background:#fff"></div></div>
+      </div>
+      <div class="duo">
+        <div class="mini"><p class="etq">Cuota mensual</p><p class="val">${Moneda.fmt(c.cuotaMonto)}</p></div>
+        <div class="mini"><p class="etq">${costo !== null ? 'Costo de financiar' : 'Próxima cuota'}</p><p class="val" style="color:${costo !== null ? (costo > 0 ? 'var(--gasto)' : 'var(--ingreso)') : 'inherit'}">${costo !== null ? (costo > 0 ? Moneda.fmt(costo) : 'S/ 0 · sin interés') : (prox ? fechaCorta(prox) : '—')}</p></div>
+      </div>
+      ${prox ? `<button class="btn" onclick="App.pagarCuotaCredito(${c.id})">💳 Pagar cuota ${c.cuotasPagadas + 1}/${c.numCuotas} (${Moneda.fmt(Datos.montoCuota(c, c.cuotasPagadas + 1))}) · ${fechaCorta(prox)}</button>
+      <p style="font-size:12px;color:var(--texto-tenue);text-align:center;margin:8px 2px 0">Se registra como gasto en «${esc((Datos.categoria(c.categoriaId) || {}).nombre || 'Cuotas y créditos')}» desde ${esc((Datos.cuenta(c.cuentaId) || {}).nombre || 'tu cuenta')}.</p>` : ''}
+      ${c.cuotasPagadas > 0 ? `<div style="height:8px"></div><button class="btn secundario" onclick="App.deshacerCuota(${c.id})">↩️ Deshacer última cuota pagada</button>` : ''}
+      ${c.nota ? `<p style="font-size:13px;color:var(--texto-suave);margin:12px 2px 0">📝 ${esc(c.nota)}</p>` : ''}
+      <div class="seccion-tit"><h2>Cronograma</h2></div>
+      <div class="lista">${filas.map((k) => { const f = new Date(Datos.fechaCuota(c, k)); const pagada = k <= c.cuotasPagadas; const vencida = !pagada && f < hoy; const esProx = k === c.cuotasPagadas + 1;
+        return `<div class="item"><span class="ic" style="background:${pagada ? fondoSuave('var(--ingreso)') : esProx ? fondoSuave('#B54708') : 'var(--linea)'};color:${pagada ? 'var(--ingreso)' : esProx ? '#B54708' : 'var(--texto-suave)'}">${k}</span><span class="cuerpo"><p class="t">${fechaLarga(f)}</p><p class="s">${pagada ? '✓ pagada' : vencida ? '⚠️ vencida' : esProx ? 'próxima' : 'pendiente'}</p></span><span class="monto" style="color:${pagada ? 'var(--ingreso)' : 'inherit'}">${Moneda.fmt(Datos.montoCuota(c, k))}</span></div>`; }).join('')}</div>
+      <div style="height:10px"></div><button class="btn peligro" onclick="App.borrarCredito(${c.id})">🗑️ Eliminar (los gastos ya registrados se conservan)</button><div style="height:14px"></div>`;
+  });
+
+  // ============================================================
   //  PRESUPUESTOS (2 vistas)
   //  'presupuestos': tarjetas por categoría con semáforo 🟢/🟡/🔴
   //  (En control / Cerca del límite ≥80% / Excedido ≥100%).
@@ -1334,6 +1433,32 @@ const App = (() => {
       Datos.registrarPagoRecurrente(id); toast('Pago registrado ✓'); render();
     },
     borrarRecurrente(id) { if (!confirm('¿Eliminar este recurrente?')) return; Datos.eliminarRecurrente(id); toast('Recurrente eliminado'); render(); },
+
+    // ----- Cuotas y créditos -----
+    guardarCreditoForm(id) {
+      const gv = (x) => (document.getElementById(x)?.value || '').trim();
+      const nombre = gv('cr-nombre'); const total = numero(gv('cr-total')); const num = parseInt(gv('cr-num'), 10); let cuota = numero(gv('cr-cuota')); const contado = gv('cr-contado') ? numero(gv('cr-contado')) : null;
+      if (!nombre) return toast('Escribe qué compraste o qué crédito es');
+      if (!num || num < 1 || num > 120) return toast('Ingresa el número de cuotas (1 a 120)');
+      if ((!total || total <= 0) && (!cuota || cuota <= 0)) return toast('Ingresa el total a pagar o la cuota mensual');
+      const montoTotal = total > 0 ? total : Datos.r2(cuota * num);
+      if (!(cuota > 0)) cuota = Datos.r2(montoTotal / num);
+      if (Math.abs(cuota * num - montoTotal) > montoTotal * 0.05 + 1) return toast(`Revisa: ${num} cuotas de ${Moneda.fmt(cuota)} no suman ${Moneda.fmt(montoTotal)}`);
+      if (contado !== null && (isNaN(contado) || contado < 0)) return toast('El precio al contado no es válido');
+      const fecha = fechaDesdeInput(gv('cr-fecha')); if (!fecha) return toast('Elige la fecha de la primera cuota');
+      Datos.guardarCredito({ id: id || null, tipo: gv('cr-tipo') || 'Tarjeta', nombre, entidad: gv('cr-entidad'), montoTotal, numCuotas: num, cuotaMonto: cuota, precioContado: contado, primeraFecha: fecha, categoriaId: Number(gv('cr-cat')) || null, cuentaId: Number(gv('cr-cuenta')) || null, nota: gv('cr-nota') });
+      toast(id ? 'Actualizado ✓' : 'Registrado ✓ Te avisaremos cada cuota'); ir('creditos');
+    },
+    pagarCuotaCredito(id) {
+      const c = Datos.credito(id); if (!c) return;
+      const k = c.cuotasPagadas + 1; if (k > c.numCuotas) return toast('Ya pagaste todas las cuotas');
+      const cta = Datos.cuenta(c.cuentaId);
+      if (!confirm(`¿Registrar la cuota ${k}/${c.numCuotas} (${Moneda.fmt(Datos.montoCuota(c, k))}) como gasto de hoy${cta ? ' desde ' + cta.nombre : ''}?`)) return;
+      const mov = Datos.pagarCuotaCredito(id);
+      toast(mov ? (k === c.numCuotas ? '¡Última cuota pagada! 🎉' : `Cuota ${k} registrada ✓`) : 'No se pudo registrar'); render();
+    },
+    deshacerCuota(id) { if (!confirm('¿Deshacer la última cuota pagada? Se borrará ese gasto.')) return; Datos.deshacerCuotaCredito(id) ? toast('Cuota deshecha') : toast('No hay cuotas pagadas'); render(); },
+    borrarCredito(id) { if (!confirm('¿Eliminar esta compra/crédito? Los gastos de cuotas ya registradas se conservan.')) return; Datos.eliminarCredito(id); toast('Eliminado'); ir('creditos'); },
 
     // ----- Presupuestos -----
     guardarPresupuesto() {

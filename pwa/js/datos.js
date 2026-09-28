@@ -89,7 +89,7 @@ const Datos = (() => {
     if (typeof estado.proximoId !== 'number') estado.proximoId = 1000;
     // Saneo: toda colección debe ser un array (también las básicas, por si un
     // respaldo viejo o editado a mano trae algo raro → evita pantalla en blanco).
-    for (const col of ['cuentas', 'movimientos', 'prestamos', 'abonos', 'panderos', 'turnos', 'metas', 'recurrentes', 'presupuestos', 'trabajos', 'diasTrabajo', 'cobrosTrabajo']) {
+    for (const col of ['cuentas', 'movimientos', 'prestamos', 'abonos', 'panderos', 'turnos', 'metas', 'recurrentes', 'presupuestos', 'trabajos', 'diasTrabajo', 'cobrosTrabajo', 'creditos']) {
       if (!Array.isArray(estado[col])) estado[col] = [];
     }
     // Perfil del usuario (nombre y profesión, opcionales): objeto, no array
@@ -103,6 +103,11 @@ const Datos = (() => {
         estado.categorias.push({ id: estado.proximoId++, nombre: 'Pandero', tipo, icono: '🤝', color: '#6D5AE6' });
         cambiado = true;
       }
+    }
+    // Categoría «Cuotas y créditos» (gasto): cuotas de tarjeta y de créditos bancarios
+    if (!estado.categorias.some((c) => c.nombre === 'Cuotas y créditos' && c.tipo === 'Gasto')) {
+      estado.categorias.push({ id: estado.proximoId++, nombre: 'Cuotas y créditos', tipo: 'Gasto', icono: '💳', color: '#B54708' });
+      cambiado = true;
     }
     if (cambiado) guardar();
     return estado;
@@ -157,12 +162,13 @@ const Datos = (() => {
     const e = cargar();
     return categoriaTieneMovimientos(id)
       || e.recurrentes.some((r) => r.categoriaId === id)
-      || e.presupuestos.some((p) => p.categoriaId === id);
+      || e.presupuestos.some((p) => p.categoriaId === id)
+      || e.creditos.some((c) => c.categoriaId === id);
   }
   function eliminarCategoria(id) {
     const e = cargar();
     const c = categoria(id);
-    if (!c || c.nombre === 'Pandero' || categoriaEnUso(id)) return false;
+    if (!c || c.nombre === 'Pandero' || c.nombre === 'Cuotas y créditos' || categoriaEnUso(id)) return false;
     e.categorias = e.categorias.filter((x) => x.id !== id); guardar(); return true;
   }
 
@@ -194,7 +200,7 @@ const Datos = (() => {
   function cuentaTieneMovimientos(id) { return cargar().movimientos.some((m) => m.cuentaId === id); }
   function cuentaEnUso(id) {
     const e = cargar();
-    return cuentaTieneMovimientos(id) || e.recurrentes.some((r) => r.cuentaId === id) || e.trabajos.some((t) => t.cuentaId === id);
+    return cuentaTieneMovimientos(id) || e.recurrentes.some((r) => r.cuentaId === id) || e.trabajos.some((t) => t.cuentaId === id) || e.creditos.some((c) => c.cuentaId === id);
   }
   function eliminarCuenta(id) {
     const e = cargar();
@@ -528,11 +534,69 @@ const Datos = (() => {
       const d = diasHasta(r.proximaFecha);
       if (d <= dias) items.push({ tipo: 'recurrente', id: r.id, titulo: r.nombre, detalle: d < 0 ? `vencido hace ${-d} día${d === -1 ? '' : 's'}` : d === 0 ? 'vence hoy' : `vence en ${d} día${d === 1 ? '' : 's'}`, monto: r.monto, dias: d, emo: '🔁' });
     }
+    for (const c of creditos(true)) {
+      const f = proximaCuotaFecha(c); if (!f) continue;
+      const d = diasHasta(f);
+      if (d <= dias) items.push({ tipo: 'credito', id: c.id, titulo: `Cuota ${c.cuotasPagadas + 1}/${c.numCuotas} · ${c.nombre}`, detalle: d < 0 ? `vencida hace ${-d} día${d === -1 ? '' : 's'}` : d === 0 ? 'vence hoy' : `vence en ${d} día${d === 1 ? '' : 's'}`, monto: montoCuota(c, c.cuotasPagadas + 1), dias: d, emo: '💳' });
+    }
     for (const p of presupuestos()) {
       const av = avancePresupuesto(p);
       if (av.nivel !== 'Normal') { const cat = categoria(p.categoriaId); items.push({ tipo: 'presupuesto', titulo: `Presupuesto ${cat ? cat.nombre : ''}`, detalle: av.nivel === 'Excedido' ? 'excedido' : 'cerca del límite', monto: av.gastado, dias: 0, emo: av.nivel === 'Excedido' ? '🔴' : '🟡' }); }
     }
     return items.sort((a, b) => a.dias - b.dias);
+  }
+
+  // ---------- Cuotas y créditos (tarjeta en cuotas, crédito bancario, tienda) ----------
+  // Crédito: { id, nombre, entidad, tipo:'Tarjeta'|'Credito', montoTotal (TODO lo que
+  //   pagarás, con intereses), precioContado (opcional, para ver el costo del
+  //   financiamiento), numCuotas, cuotaMonto, primeraFecha (ISO), categoriaId,
+  //   cuentaId (de dónde sale el pago), cuotasPagadas, activo, nota }.
+  //
+  // MODELO ELEGIDO (decisión 15): la compra NO se registra como gasto el día que
+  // la haces; se registra un GASTO por cada CUOTA cuando la pagas (visión de
+  // flujo de caja: "es un gasto mensual"). La deuda pendiente se muestra aparte
+  // como «Deudas en cuotas». Así el saldo real de tus cuentas siempre cuadra y
+  // no se cuenta doble (ni la compra ni el pago de la tarjeta).
+  function creditos(soloActivos) { const e = cargar(); const l = soloActivos ? e.creditos.filter((c) => c.activo !== false) : e.creditos.slice(); return l.sort((a, b) => new Date(proximaCuotaFecha(a) || 0) - new Date(proximaCuotaFecha(b) || 0)); }
+  function credito(id) { return cargar().creditos.find((c) => c.id === id); }
+  function guardarCredito(c) {
+    const e = cargar();
+    let final;
+    if (c.id) { const i = e.creditos.findIndex((x) => x.id === c.id); if (i < 0) return null; final = { ...e.creditos[i], ...c }; e.creditos[i] = final; }
+    else { final = { tipo: 'Tarjeta', activo: true, cuotasPagadas: 0, ...c, id: nuevoId() }; e.creditos.push(final); }
+    final.numCuotas = Math.max(1, parseInt(final.numCuotas, 10) || 1);
+    final.montoTotal = r2(final.montoTotal);
+    final.cuotaMonto = r2(final.cuotaMonto || final.montoTotal / final.numCuotas);
+    if (final.precioContado !== undefined && final.precioContado !== null && final.precioContado !== '') final.precioContado = r2(final.precioContado); else final.precioContado = null;
+    if (!final.primeraFecha) final.primeraFecha = new Date().toISOString();
+    guardar(); return final;
+  }
+  function eliminarCredito(id) { const e = cargar(); e.creditos = e.creditos.filter((c) => c.id !== id); guardar(); }
+  // Cuota k (1-based) vence k-1 meses después de la primera fecha (respeta fin de mes)
+  function fechaCuota(c, k) { return addMeses(new Date(c.primeraFecha), k - 1).toISOString(); }
+  function proximaCuotaFecha(c) { return c.cuotasPagadas >= c.numCuotas ? null : fechaCuota(c, c.cuotasPagadas + 1); }
+  // Monto de la cuota k: la última absorbe el redondeo para que la suma sea exacta
+  function montoCuota(c, k) { return k === c.numCuotas ? r2(c.montoTotal - c.cuotaMonto * (c.numCuotas - 1)) : c.cuotaMonto; }
+  function saldoCredito(c) { let s = 0; for (let k = c.cuotasPagadas + 1; k <= c.numCuotas; k++) s += montoCuota(c, k); return r2(s); }
+  function costoFinanciamiento(c) { return c.precioContado ? r2(c.montoTotal - c.precioContado) : null; }
+  function deudaTotalCreditos() { return r2(creditos(true).reduce((s, c) => s + saldoCredito(c), 0)); }
+  // Pagar la cuota que sigue: crea el GASTO (categoría del crédito) y avanza.
+  function pagarCuotaCredito(id, fecha, cuentaId) {
+    const c = credito(id); if (!c || c.cuotasPagadas >= c.numCuotas) return null;
+    const k = c.cuotasPagadas + 1;
+    const activas = cuentas(true);
+    const cta = activas.some((x) => x.id === cuentaId) ? cuentaId : activas.some((x) => x.id === c.cuentaId) ? c.cuentaId : (activas[0] && activas[0].id);
+    const cat = categoria(c.categoriaId) ? c.categoriaId : (cargar().categorias.find((x) => x.nombre === 'Cuotas y créditos' && x.tipo === 'Gasto') || {}).id;
+    const mov = guardarMovimiento({ monto: montoCuota(c, k), tipo: 'Gasto', categoriaId: cat, cuentaId: cta, fecha: fecha || new Date().toISOString(), nota: `Cuota ${k}/${c.numCuotas} · ${c.nombre}`, creditoId: c.id, numeroCuota: k });
+    c.cuotasPagadas = k; guardar(); return mov;
+  }
+  // Deshacer la última cuota pagada (se equivocó): borra el gasto y retrocede
+  function deshacerCuotaCredito(id) {
+    const e = cargar(); const c = credito(id); if (!c || c.cuotasPagadas <= 0) return false;
+    const k = c.cuotasPagadas;
+    const mov = e.movimientos.find((m) => m.creditoId === c.id && m.numeroCuota === k);
+    if (mov) e.movimientos = e.movimientos.filter((m) => m.id !== mov.id);
+    c.cuotasPagadas = k - 1; guardar(); return true;
   }
 
   // ---------- Perfil ----------
@@ -750,6 +814,9 @@ const Datos = (() => {
     recurrentes, recurrente, guardarRecurrente, eliminarRecurrente, registrarPagoRecurrente,
     // Presupuestos
     presupuestos, presupuesto, presupuestoDeCategoria, guardarPresupuesto, eliminarPresupuesto, avancePresupuesto,
+    // Cuotas y créditos
+    creditos, credito, guardarCredito, eliminarCredito, fechaCuota, proximaCuotaFecha, montoCuota,
+    saldoCredito, costoFinanciamiento, deudaTotalCreditos, pagarCuotaCredito, deshacerCuotaCredito,
     // Perfil
     perfil, guardarPerfil, profesionTexto,
     // Trabajo
