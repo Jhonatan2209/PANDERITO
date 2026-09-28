@@ -229,6 +229,14 @@ su propia base (localStorage por origen). Dos personas en dos celulares = dos ba
 separadas automáticamente; dos personas en el MISMO celular compartirían datos (limitación
 conocida; se resuelve con cuentas en la nube en la Fase D).
 
+## 4.j — Vercel Web Analytics (2026-09-27)
+
+El usuario preguntó si la app recopila datos: no (sin servidor, todo en el celular). Se
+explicó la diferencia entre métricas anónimas de uso y datos personales (Ley 29733) y se
+activó lo mínimo: **Vercel Web Analytics** (visitas y pantallas, sin cookies). Script en
+`pwa/index.html`; el SW deja pasar `/_vercel/*` sin caché. CACHE v14. Requiere que el
+usuario pulse **Enable** en Vercel → proyecto panderito → Analytics.
+
 ## 5. Pendiente para el usuario
 
 0. **Cerrar el PR #1** en GitHub (botón *Merge pull request*); Claude no tiene

@@ -47,5 +47,10 @@
   <!-- Orden importante: primero la capa de datos (Datos/Moneda), luego la app (router + vistas) -->
   <script src="js/datos.js"></script>
   <script src="js/app.js"></script>
+  <!-- Vercel Web Analytics: solo cuenta visitas y pantallas, sin cookies ni datos
+       personales (nunca ve montos ni nombres). Requiere activar "Analytics" en el
+       panel de Vercel; en localhost el script no existe y se ignora. -->
+  <script>window.va = window.va || function () { (window.vaq = window.vaq || []).push(arguments); };</script>
+  <script defer src="/_vercel/insights/script.js"></script>
 </body>
 </html>

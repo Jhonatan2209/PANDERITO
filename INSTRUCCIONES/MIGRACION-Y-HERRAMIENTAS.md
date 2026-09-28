@@ -52,7 +52,7 @@ git config user.email "jhonatanadrianosoto@gmail.com"   # personal, vinculado a 
 | Servicio | Cuenta | Para qué | Costo |
 |---|---|---|---|
 | **GitHub** | `Jhonatan2209` | Guarda el código; fuente de verdad. Repo privado `PANDERITO` | Gratis |
-| **Vercel** | equipo `jhonatan-god` (entrar con GitHub) | Publica la PWA con HTTPS en cada push a `master`. Panel: https://vercel.com/jhonatan-god/panderito | Gratis (plan Hobby, uso personal). Una app **comercial** (taxis, empresa) requeriría plan Pro (~20 USD/mes) o tu servidor |
+| **Vercel** | equipo `jhonatan-god` (entrar con GitHub) | Publica la PWA con HTTPS en cada push a `master`. Panel: https://vercel.com/jhonatan-god/panderito. **Web Analytics** activado (2026-09-27): visitas y pantallas, sin cookies ni datos personales; se ve en Analytics del panel | Gratis (plan Hobby, uso personal). Una app **comercial** (taxis, empresa) requeriría plan Pro (~20 USD/mes) o tu servidor |
 | **Clouding.io** | tu cuenta; servidor `187.33.148.111` (Ubuntu, Apache en :80) | Reservado para el bot de Telegram y el backend compartido (Fase D) | Prepago **por horas** (~9 €/mes si el servidor existe todo el mes; apagado también cobra; archivado solo el disco). Activa la auto-recarga |
 | Telegram @BotFather | (futuro) | Crear el bot y obtener el token | Gratis |
 | Anthropic API | (futuro, opcional) | Que el bot lea fotos de yapeos/boletas con IA | **De pago** por uso; alternativa gratis: registrar por texto |
