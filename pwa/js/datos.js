@@ -23,7 +23,11 @@
    ============================================================ */
 
 const Datos = (() => {
-  const CLAVE = 'panderito.datos.v1';
+  // MODO DEMO: abrir la app con ?demo=1 usa OTRA clave de almacenamiento y la
+  // llena con datos de ejemplo realistas. Sirve para capturas, videos y probar
+  // sin tocar los datos reales del usuario (que siguen en 'panderito.datos.v1').
+  const MODO_DEMO = typeof location !== 'undefined' && /[?&]demo=1/.test(location.search);
+  const CLAVE = MODO_DEMO ? 'panderito.demo.v1' : 'panderito.datos.v1';
 
   // Semilla equivalente a SembradorDatos.cs
   const CATEGORIAS_SEMILLA = [
@@ -110,7 +114,43 @@ const Datos = (() => {
       cambiado = true;
     }
     if (cambiado) guardar();
+    if (MODO_DEMO && !estado._demoSembrado) sembrarDemo();
     return estado;
+  }
+
+  // sembrarDemo(): datos de ejemplo realistas (solo con ?demo=1). Se ejecuta una
+  // vez sobre la clave 'panderito.demo.v1'; nunca toca los datos reales.
+  function sembrarDemo() {
+    const e = estado; e._demoSembrado = true;
+    const hoy = new Date(); const d = (dias, h = 12) => { const x = new Date(hoy); x.setDate(hoy.getDate() - dias); x.setHours(h, 0, 0, 0); return x.toISOString(); };
+    const cat = (n) => (e.categorias.find((c) => c.nombre === n) || e.categorias[0]).id;
+    const cta = (n) => (e.cuentas.find((c) => c.nombre === n) || e.cuentas[0]).id;
+    e.perfil = { nombre: 'Jhonatan', profesion: 'Ingeniero/a de sistemas', profesionOtra: '' };
+    e.cuentas.forEach((c) => { c.saldoInicial = { Efectivo: 180, Yape: 420.5, Plin: 60, Banco: 2350 }[c.nombre] ?? 0; });
+    const movs = [
+      [12.5, 'Gasto', 'Menú/Comida', 'Yape', 0, 'Almuerzo menú'], [3, 'Gasto', 'Transporte', 'Efectivo', 0, 'Combi'],
+      [8, 'Gasto', 'Menú/Comida', 'Yape', 1, 'Desayuno'], [45.9, 'Gasto', 'Mercado', 'Yape', 1, 'Mercado del sábado'],
+      [89, 'Gasto', 'Servicios', 'Banco', 3, 'Internet'], [25, 'Gasto', 'Entretenimiento', 'Yape', 4, 'Cine'],
+      [15, 'Gasto', 'Salud', 'Efectivo', 6, 'Farmacia'], [120, 'Gasto', 'Otros', 'Banco', 8, 'Regalo cumpleaños'],
+      [3000, 'Ingreso', 'Sueldo', 'Banco', 10, 'Sueldo'], [150, 'Ingreso', 'Venta', 'Yape', 5, 'Venta de audífonos'],
+      [18, 'Gasto', 'Menú/Comida', 'Yape', 2, 'Pollo a la brasa'], [6, 'Gasto', 'Transporte', 'Efectivo', 2, 'Mototaxi'],
+    ];
+    for (const [monto, tipo, c, ct, dias, nota] of movs) e.movimientos.push({ id: e.proximoId++, monto, tipo, categoriaId: cat(c), cuentaId: cta(ct), fecha: d(dias), nota });
+    // Pandero de 6 con 2 rondas cobradas y pagos de la ronda actual
+    const p = { id: e.proximoId++, nombre: 'Junta de la oficina', numParticipantes: 6, cuotaMonto: 100, frecuencia: 'Mensual', fechaInicio: d(75), miTurno: 4, activo: true };
+    e.panderos.push(p);
+    ['Ana Torres', 'Luis Pérez', 'María López', 'Yo', 'Carlos Díaz', 'Rosa Quispe'].forEach((n, i) => e.turnos.push({ id: e.proximoId++, panderoId: p.id, numeroTurno: i + 1, nombreParticipante: n, dni: '', fechaCobro: fechaDelTurno(p.fechaInicio, 'Mensual', i), cobrado: i < 2, pagaron: i === 2 ? [1, 2, 4, 6] : [] }));
+    // Compra en cuotas y crédito
+    e.creditos.push({ id: e.proximoId++, tipo: 'Tarjeta', nombre: 'Laptop Lenovo', entidad: 'BCP', montoTotal: 3600, precioContado: 3200, numCuotas: 12, cuotaMonto: 300, primeraFecha: d(40), categoriaId: cat('Cuotas y créditos'), cuentaId: cta('Banco'), cuotasPagadas: 2, regularizadas: [1, 2], activo: true, nota: '' });
+    e.creditos.push({ id: e.proximoId++, tipo: 'Tarjeta', nombre: 'Celular', entidad: 'BCP', montoTotal: 1500, precioContado: null, numCuotas: 10, cuotaMonto: 150, primeraFecha: d(10), categoriaId: cat('Cuotas y créditos'), cuentaId: cta('Banco'), cuotasPagadas: 1, regularizadas: [1], activo: true, nota: '' });
+    // Trabajo, meta, pago fijo, préstamo
+    e.trabajos.push({ id: e.proximoId++, nombre: 'Biblioteca', modo: 'Mensual', monto: 3000, horasDia: 8, dias: [1, 1, 1, 1, 1, 0, 0], feriadosPagados: true, cuentaId: cta('Banco'), activo: true });
+    e.metas.push({ id: e.proximoId++, nombre: 'Viaje a Cusco', montoMeta: 1500, montoActual: 620, fechaMeta: null });
+    e.recurrentes.push({ id: e.proximoId++, nombre: 'Internet', proveedor: 'Movistar', monto: 89, categoriaId: cat('Servicios'), cuentaId: cta('Banco'), frecuencia: 'Mensual', proximaFecha: d(-5), activo: true });
+    e.prestamos.push({ id: e.proximoId++, persona: 'Pedro', monto: 200, tipo: 'PorCobrar', fecha: d(20), nota: 'Le presté para el alquiler', estado: 'Parcial' });
+    e.abonos.push({ id: e.proximoId++, prestamoId: e.prestamos[e.prestamos.length - 1].id, monto: 50, fecha: d(6) });
+    e.presupuestos.push({ id: e.proximoId++, categoriaId: cat('Menú/Comida'), montoLimite: 400, periodo: 'Mensual' });
+    guardar();
   }
 
   // nuevoIdLocal(): id aleatorio provisional usado solo al crear la semilla

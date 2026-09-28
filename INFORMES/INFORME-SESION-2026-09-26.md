@@ -269,6 +269,18 @@ inicio de ambos formularios, autocompletado de bancos/billeteras en «Nombre de 
 con tipo sugerido automáticamente, «Método de pago» renombrado a «Tipo de cuenta», y aviso
 en el editor de categorías si el nombre parece un banco (con enlace a Cuentas). CACHE v17.
 
+## 4.n — Material de difusión (2026-09-28)
+
+- Comunicado de lanzamiento en 4 versiones (`INFORMES/COMUNICADO-LANZAMIENTO-BETA.md`),
+  ideas de videos (`INFORMES/IDEAS-VIDEOS.md`) y prompt de video 8 s para Gemini/Veo
+  (`INFORMES/PROMPT-VIDEO-GEMINI.md`).
+- **Modo demo** `?demo=1` (clave aparte con datos de ejemplo) para capturas/videos. CACHE v18.
+- Dos imágenes de referencia 1080×1920 para el video, generadas con canvas en el navegador
+  (sin instalar nada): `branding/referencias/logo-panderito-vertical.jpg` y
+  `app-inicio-referencia.jpg` (pantalla abstracta sin texto salvo PANDERITO).
+- Nota: el skill browser-automation (Playwright) no tiene Chromium descargado en esta
+  laptop; si se quieren capturas reales a 3x hay que autorizar `npx playwright install chromium` (~170 MB).
+
 ## 5. Pendiente para el usuario
 
 0. **Cerrar el PR #1** en GitHub (botón *Merge pull request*); Claude no tiene

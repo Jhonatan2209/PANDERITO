@@ -77,6 +77,13 @@ requiere GitHub Pro).
 > El repositorio contiene una carpeta `ACCESOS/` con datos sensibles; publicar la raíz la
 > expondría. Mantén el repositorio **privado**.
 
+## Modo demo (capturas y videos)
+
+Abre `https://panderito.vercel.app/?demo=1` (o en local `?demo=1`): usa OTRA clave de
+almacenamiento (`panderito.demo.v1`) llena de datos de ejemplo realistas (movimientos,
+pandero con pagos, cuotas BCP, trabajo, meta, préstamo). No toca los datos reales del
+usuario. Imágenes de referencia de marca en `branding/referencias/`.
+
 ## Cómo está hecho (sin dependencias ni build)
 - **HTML + CSS + JavaScript puro** — no requiere Node ni compilación.
 - **`js/datos.js`** — capa de datos (localStorage) que replica el dominio de `Panderito.Core`
