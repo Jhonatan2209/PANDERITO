@@ -213,6 +213,22 @@ cuotas que no cuadran, caja en Inicio, pendiente, costo de financiar, pago de cu
 y saldo, enlace en Registrar). Nota: escribir «3.600» se interpreta como 3.60 (el punto es
 decimal); se recomienda 3600 o 3,600.
 
+## 4.i — v13: cuotas agrupadas por banco (2026-09-27)
+
+Corrección pedida por el usuario: en un mismo banco hay varias compras en cuotas y el
+banco cobra la SUMA en el estado de cuenta (ej. 3 compras de S/ 150 → S/ 450 al mes,
+S/ 1 350 en 3 meses). Implementado: la pantalla Cuotas y créditos agrupa por banco
+(`entidadesCredito`), muestra «Este mes pagas» (incluye cuotas vencidas), «Debes», la
+proyección de 6 meses en barras y un botón **Pagar las N cuotas de <mes>** que registra un
+gasto por cuota (`pagarCuotasMes`). Autocompletado de bancos peruanos en el formulario.
+Verificado en Node con el ejemplo exacto del usuario (450/mes, 1 350 total; tras pagar
+el mes: 0 este mes, 900 de deuda) y en navegador móvil.
+
+Pregunta del usuario sobre varios usuarios: no hay login; cada celular/navegador guarda
+su propia base (localStorage por origen). Dos personas en dos celulares = dos bases
+separadas automáticamente; dos personas en el MISMO celular compartirían datos (limitación
+conocida; se resuelve con cuentas en la nube en la Fase D).
+
 ## 5. Pendiente para el usuario
 
 0. **Cerrar el PR #1** en GitHub (botón *Merge pull request*); Claude no tiene

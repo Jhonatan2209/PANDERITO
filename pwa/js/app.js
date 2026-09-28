@@ -31,9 +31,9 @@ const App = (() => {
   // lenguaje simple ("ahora puedes…"). El Inicio muestra la tarjeta «Novedades»
   // UNA sola vez por versión (se recuerda en localStorage al tocar «Entendido»).
   // Si una versión no trae nada que contar, deja NOVEDADES vacío y no se muestra.
-  const VERSION = 'v12';
+  const VERSION = 'v13';
   const NOVEDADES = [
-    '💳 <b>Cuotas y créditos</b> (Más → Cuotas y créditos): registra compras con tarjeta en cuotas y créditos de banco o tienda. Cada cuota se registra como gasto cuando la pagas, te avisamos al vencer y ves cuánto te falta y cuánto te cuesta financiar. En Inicio aparece la caja <b>Deudas en cuotas</b>.',
+    '💳 <b>Cuotas y créditos por banco</b> (Más → Cuotas y créditos): registra cada compra en cuotas o crédito con su banco; la app agrupa por banco y te dice <b>cuánto pagas este mes en total</b> (la suma de todas las cuotas), la proyección de los próximos meses y un botón para pagar todas las cuotas del mes de una vez, como cuando pagas el estado de cuenta. En Inicio aparece la caja <b>Deudas en cuotas</b>.',
     '🤝 <b>Panderos para el grupo</b>: en cada pandero, marca quién ya pagó la cuota de la ronda y comparte la <b>situación como imagen</b> 🖼️ o texto 💬 al WhatsApp del grupo (quién cobra, quién pagó, quién falta).',
     '💼 <b>Nuevo módulo Trabajo</b> (Más → Trabajo): registra tu sueldo (mensual, por día o por hora) y tus días de trabajo; el calendario se prende y apaga con un toque y verás cuánto llevas ganado cada día. En el Inicio aparece la caja <b>Posibles ingresos</b>; cuando te paguen, «Ya me pagaron» lo convierte en ingreso real.',
     '🙋 <b>Perfil</b> (Más → Perfil): ponle tu nombre para que Panderito te salude, y tu profesión (lista o «Otro»). Opcional.',
@@ -1148,13 +1148,44 @@ const App = (() => {
         <span style="flex-basis:100%;height:6px;border-radius:999px;background:var(--linea);margin-top:10px;overflow:hidden"><span style="display:block;height:100%;width:${pct}%;background:#B54708"></span></span>
       </button>`;
     };
+    // Agrupado por banco/tarjeta: cada banco cobra en su estado de cuenta la SUMA
+    // de las cuotas del mes de todas tus compras; aquí se ve ese total, la
+    // proyección de los próximos meses y un botón para pagarlas todas juntas.
+    const hoy = new Date();
+    const bloqueBanco = (b) => {
+      const delMes = Datos.cuotasDelMes(b.nombre, hoy);
+      const totalMes = Datos.totalMesEntidad(b.nombre, hoy);
+      const vencidas = delMes.filter((x) => new Date(x.fecha) < new Date(hoy.getFullYear(), hoy.getMonth(), hoy.getDate())).length;
+      const proy = Datos.proyeccionEntidad(b.nombre, 6);
+      const maxP = Math.max(1, ...proy.map((p) => p.total));
+      const pendientes = b.creditos.filter((c) => c.cuotasPagadas < c.numCuotas);
+      return `
+      <div class="card" style="padding:16px">
+        <div style="display:flex;justify-content:space-between;align-items:center;gap:8px">
+          <b style="font-size:17px">🏦 ${esc(b.nombre)}</b>
+          <span style="font-size:12px;color:var(--texto-tenue)">${pendientes.length} ${pendientes.length === 1 ? 'compra' : 'compras'} · debes ${Moneda.fmt(Datos.deudaEntidad(b.nombre))}</span>
+        </div>
+        <div class="duo" style="margin:12px 0 10px">
+          <div class="mini" style="padding:12px"><p class="etq">Este mes pagas</p><p class="val" style="color:#B54708">${Moneda.fmt(totalMes)}</p><p style="font-size:11px;color:var(--texto-tenue);margin:2px 0 0">${delMes.length} cuota${delMes.length === 1 ? '' : 's'}${vencidas ? ` · ⚠️ ${vencidas} vencida${vencidas === 1 ? '' : 's'}` : ''}</p></div>
+          <div class="mini" style="padding:12px"><p class="etq">Próximos meses</p>
+            <div class="barras-mes" style="height:44px;margin-top:4px">${proy.map((p) => `<div class="col" title="${p.etiqueta}: ${Moneda.fmt(p.total)}"><div class="b" style="height:${Math.round(p.total / maxP * 100)}%;background:#B54708"></div><span class="et" style="font-size:9px">${esc(capitalizar(p.etiqueta))}</span></div>`).join('')}</div>
+          </div>
+        </div>
+        <p style="font-size:12px;color:var(--texto-tenue);margin:0 0 10px">${proy.slice(0, 4).map((p) => `${capitalizar(p.etiqueta)} ${Moneda.fmt(p.total)}`).join(' · ')}</p>
+        ${delMes.length ? `<button class="btn" style="margin-bottom:10px" onclick="App.pagarMesBanco('${esc(b.nombre).replace(/'/g, '\\\'')}')">💳 Pagar las ${delMes.length} cuota${delMes.length === 1 ? '' : 's'} de ${nombreMes(hoy).split(' ')[0]} (${Moneda.fmt(totalMes)})</button>` : `<p style="font-size:12px;color:var(--ingreso);margin:0 0 10px">✓ Nada pendiente este mes</p>`}
+        <div class="lista">${pendientes.map(item).join('')}</div>
+      </div>`;
+    };
+    const bancos = Datos.entidadesCredito().filter((b) => b.creditos.some((c) => c.cuotasPagadas < c.numCuotas));
     return `
       <div class="titulo-pagina"><button class="btn-volver" onclick="App.ir('mas')">‹</button><h1>Cuotas y créditos</h1></div>
-      ${activos.length ? `<div class="card-saldo" style="background:linear-gradient(135deg,#DC6803,#B54708);box-shadow:0 12px 30px rgba(181,71,8,.3)"><p class="etq">Te falta pagar en total</p><p class="monto">${Moneda.fmt(Datos.deudaTotalCreditos())}</p><p class="cuentas-min">${activos.length} ${activos.length === 1 ? 'compra o crédito activo' : 'compras/créditos activos'} · las cuotas se registran como gasto cuando las pagas</p></div>` : ''}
-      ${activos.length ? `<div class="lista">${activos.map(item).join('')}</div>` : estadoVacio('💳', 'Sin cuotas ni créditos', 'Registra una compra en cuotas con tarjeta o un crédito de banco/tienda y te avisamos cada cuota.')}
+      ${activos.length ? `<div class="card-saldo" style="background:linear-gradient(135deg,#DC6803,#B54708);box-shadow:0 12px 30px rgba(181,71,8,.3)"><p class="etq">Te falta pagar en total</p><p class="monto">${Moneda.fmt(Datos.deudaTotalCreditos())}</p><p class="cuentas-min">Este mes: ${Moneda.fmt(bancos.reduce((s, b) => s + Datos.totalMesEntidad(b.nombre, hoy), 0))} en ${bancos.length} ${bancos.length === 1 ? 'banco' : 'bancos'} · cada cuota es un gasto cuando la pagas</p></div>` : ''}
+      ${bancos.length ? bancos.map(bloqueBanco).join('') : estadoVacio('💳', 'Sin cuotas ni créditos', 'Registra una compra en cuotas con tarjeta o un crédito de banco/tienda y te avisamos cada cuota.')}
       ${terminados.length ? `<div class="seccion-tit"><h2>Terminados</h2></div><div class="lista">${terminados.map(item).join('')}</div>` : ''}
       <button class="btn" onclick="App.ir('creditoNuevo')">＋ Nueva compra en cuotas / crédito</button><div style="height:14px"></div>`;
   });
+  // Bancos y tiendas comunes en el Perú para el autocompletado del formulario
+  const BANCOS_PE = ['BCP', 'Interbank', 'BBVA', 'Scotiabank', 'Banco de la Nación', 'Banco Falabella', 'Banco Ripley', 'Oh! (Financiera Oh)', 'Cencosud Scotiabank', 'Banco Pichincha', 'Mibanco', 'Banbif', 'Caja Huancayo', 'Caja Arequipa', 'Caja Piura', 'Compartamos', 'Efectiva', 'Crediscotia', 'Diners Club'];
   registrar('creditoNuevo', (params) => {
     const c = params.id ? Datos.credito(Number(params.id)) : null;
     const cats = Datos.categorias('Gasto'); const ctas = Datos.cuentas(true);
@@ -1164,7 +1195,9 @@ const App = (() => {
       <div class="campo"><label>¿Qué es?</label>
         <select class="entrada" id="cr-tipo"><option value="Tarjeta" ${!c || c.tipo === 'Tarjeta' ? 'selected' : ''}>Compra con tarjeta / tienda en cuotas</option><option value="Credito" ${c && c.tipo === 'Credito' ? 'selected' : ''}>Crédito o préstamo de banco / financiera</option></select></div>
       <div class="campo"><label>Descripción</label><input class="entrada" id="cr-nombre" placeholder="ej. Laptop, Refrigeradora, Crédito BCP" value="${c ? esc(c.nombre) : ''}" /></div>
-      <div class="campo"><label>Banco / tienda (opcional)</label><input class="entrada" id="cr-entidad" placeholder="ej. BCP, Interbank, Saga, Efectiva" value="${c ? esc(c.entidad || '') : ''}" /></div>
+      <div class="campo"><label>Banco / tarjeta</label><input class="entrada" id="cr-entidad" list="cr-bancos" placeholder="ej. BCP, Interbank, Falabella" value="${c ? esc(c.entidad || '') : ''}" />
+        <datalist id="cr-bancos">${[...new Set([...Datos.entidadesCredito().map((b) => b.nombre).filter((n) => n !== 'Sin banco'), ...BANCOS_PE])].map((n) => `<option value="${esc(n)}"></option>`).join('')}</datalist>
+        <p style="font-size:12px;color:var(--texto-tenue);margin:6px 2px 0">Las compras del mismo banco se agrupan: verás cuánto pagas cada mes en total.</p></div>
       <div class="campo"><label>Total a pagar (S/) — con intereses, lo que dice el banco</label><input class="entrada" id="cr-total" type="text" inputmode="decimal" placeholder="ej. 3600" value="${c ? esc(c.montoTotal) : ''}" /></div>
       <div class="campo"><label>Número de cuotas</label><input class="entrada" id="cr-num" type="number" inputmode="numeric" min="1" max="120" placeholder="ej. 12" value="${c ? c.numCuotas : ''}" /></div>
       <div class="campo"><label>Cuota mensual (S/) — opcional, se calcula sola</label><input class="entrada" id="cr-cuota" type="text" inputmode="decimal" placeholder="total ÷ cuotas" value="${c ? esc(c.cuotaMonto) : ''}" /></div>
@@ -1456,6 +1489,14 @@ const App = (() => {
       if (!confirm(`¿Registrar la cuota ${k}/${c.numCuotas} (${Moneda.fmt(Datos.montoCuota(c, k))}) como gasto de hoy${cta ? ' desde ' + cta.nombre : ''}?`)) return;
       const mov = Datos.pagarCuotaCredito(id);
       toast(mov ? (k === c.numCuotas ? '¡Última cuota pagada! 🎉' : `Cuota ${k} registrada ✓`) : 'No se pudo registrar'); render();
+    },
+    pagarMesBanco(entidad) {
+      const lista = Datos.cuotasDelMes(entidad, new Date()); if (!lista.length) return toast('Nada pendiente este mes');
+      const total = Datos.totalMesEntidad(entidad, new Date());
+      const detalle = lista.map((x) => `• ${x.credito.nombre} (cuota ${x.k}/${x.credito.numCuotas}): ${Moneda.fmt(x.monto)}`).join('\n');
+      if (!confirm(`¿Registrar el pago a ${entidad} de ${Moneda.fmt(total)}?\n\n${detalle}\n\nSe creará un gasto por cada cuota, hoy, desde la cuenta de cada compra.`)) return;
+      const r = Datos.pagarCuotasMes(entidad, new Date());
+      toast(r.cuotas ? `${r.cuotas} cuota${r.cuotas === 1 ? '' : 's'} pagada${r.cuotas === 1 ? '' : 's'}: ${Moneda.fmt(r.total)} ✓` : 'No se registró nada'); render();
     },
     deshacerCuota(id) { if (!confirm('¿Deshacer la última cuota pagada? Se borrará ese gasto.')) return; Datos.deshacerCuotaCredito(id) ? toast('Cuota deshecha') : toast('No hay cuotas pagadas'); render(); },
     borrarCredito(id) { if (!confirm('¿Eliminar esta compra/crédito? Los gastos de cuotas ya registradas se conservan.')) return; Datos.eliminarCredito(id); toast('Eliminado'); ir('creditos'); },

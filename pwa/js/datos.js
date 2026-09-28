@@ -590,6 +590,64 @@ const Datos = (() => {
     const mov = guardarMovimiento({ monto: montoCuota(c, k), tipo: 'Gasto', categoriaId: cat, cuentaId: cta, fecha: fecha || new Date().toISOString(), nota: `Cuota ${k}/${c.numCuotas} · ${c.nombre}`, creditoId: c.id, numeroCuota: k });
     c.cuotasPagadas = k; guardar(); return mov;
   }
+  // ----- Por banco / tarjeta -----
+  // En un mismo banco puede haber varias compras en cuotas; el banco cobra
+  // en el estado de cuenta la SUMA de las cuotas del mes. Estas funciones
+  // agrupan por `entidad` (banco o tienda) para ver "este mes pagas X",
+  // la proyección de los próximos meses y pagar todas las cuotas del mes de una vez.
+  const nombreEntidad = (c) => (String(c.entidad || '').trim() || 'Sin banco');
+  function entidadesCredito() {
+    const set = new Map();
+    for (const c of creditos(true)) { const n = nombreEntidad(c); if (!set.has(n)) set.set(n, []); set.get(n).push(c); }
+    return [...set.entries()].map(([nombre, lista]) => ({ nombre, creditos: lista }));
+  }
+  const finDeMes = (ref) => new Date(ref.getFullYear(), ref.getMonth() + 1, 0, 23, 59, 59);
+  // Cuotas que TOCA pagar hasta fin del mes de `ref` (incluye las vencidas de meses
+  // anteriores que aún no se pagaron), en orden por crédito y número de cuota.
+  function cuotasDelMes(entidad, ref = new Date()) {
+    const tope = finDeMes(ref); const salida = [];
+    for (const c of creditos(true)) {
+      if (nombreEntidad(c) !== entidad) continue;
+      for (let k = c.cuotasPagadas + 1; k <= c.numCuotas; k++) {
+        const f = new Date(fechaCuota(c, k)); if (f > tope) break;
+        salida.push({ credito: c, k, monto: montoCuota(c, k), fecha: f.toISOString() });
+      }
+    }
+    return salida;
+  }
+  function totalMesEntidad(entidad, ref = new Date()) { return r2(cuotasDelMes(entidad, ref).reduce((s, x) => s + x.monto, 0)); }
+  function deudaEntidad(entidad) { return r2(creditos(true).filter((c) => nombreEntidad(c) === entidad).reduce((s, c) => s + saldoCredito(c), 0)); }
+  // Proyección: cuánto tocará pagar en cada uno de los próximos n meses
+  // (el mes actual incluye lo vencido; los siguientes, solo lo programado).
+  function proyeccionEntidad(entidad, n = 6) {
+    const hoy = new Date(); const salida = [];
+    for (let i = 0; i < n; i++) {
+      const ref = new Date(hoy.getFullYear(), hoy.getMonth() + i, 1);
+      let total = 0, cuotas = 0;
+      if (i === 0) { const l = cuotasDelMes(entidad, ref); total = l.reduce((s, x) => s + x.monto, 0); cuotas = l.length; }
+      else {
+        for (const c of creditos(true)) {
+          if (nombreEntidad(c) !== entidad) continue;
+          for (let k = c.cuotasPagadas + 1; k <= c.numCuotas; k++) {
+            const f = new Date(fechaCuota(c, k));
+            if (f.getFullYear() === ref.getFullYear() && f.getMonth() === ref.getMonth()) { total += montoCuota(c, k); cuotas++; }
+          }
+        }
+      }
+      salida.push({ ref, etiqueta: ref.toLocaleDateString('es-PE', { month: 'short' }), total: r2(total), cuotas });
+    }
+    return salida;
+  }
+  // Pagar TODAS las cuotas del mes de un banco (como cuando pagas el estado de
+  // cuenta): crea un gasto por cuota (para poder deshacer una a una) y devuelve
+  // cuántas y cuánto. `cuentaId` opcional: si no, la de cada crédito.
+  function pagarCuotasMes(entidad, ref, cuentaId) {
+    const lista = cuotasDelMes(entidad, ref || new Date());
+    let total = 0, n = 0;
+    for (const x of lista) { const mov = pagarCuotaCredito(x.credito.id, null, cuentaId); if (mov) { total += mov.monto; n++; } }
+    return { cuotas: n, total: r2(total) };
+  }
+
   // Deshacer la última cuota pagada (se equivocó): borra el gasto y retrocede
   function deshacerCuotaCredito(id) {
     const e = cargar(); const c = credito(id); if (!c || c.cuotasPagadas <= 0) return false;
@@ -817,6 +875,7 @@ const Datos = (() => {
     // Cuotas y créditos
     creditos, credito, guardarCredito, eliminarCredito, fechaCuota, proximaCuotaFecha, montoCuota,
     saldoCredito, costoFinanciamiento, deudaTotalCreditos, pagarCuotaCredito, deshacerCuotaCredito,
+    entidadesCredito, cuotasDelMes, totalMesEntidad, deudaEntidad, proyeccionEntidad, pagarCuotasMes,
     // Perfil
     perfil, guardarPerfil, profesionTexto,
     // Trabajo

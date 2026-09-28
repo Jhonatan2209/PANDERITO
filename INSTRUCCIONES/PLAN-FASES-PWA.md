@@ -18,8 +18,9 @@ sin librerías). No avanzar de fase sin cerrar la anterior.
 
 - [x] Compartir por WhatsApp (v7): resumen con formato de gastos/ingresos de hoy, semana o mes
       desde Movimientos (Web Share API; en PC abre WhatsApp Web). PDF descartado por peso.
-- [x] Cuotas y créditos (v12): compras con tarjeta en cuotas y créditos de banco/tienda;
-      gasto por cuota al pagarla, cronograma, avisos, costo de financiar. Decisión 15.
+- [x] Cuotas y créditos (v12–v13): compras con tarjeta en cuotas y créditos de banco/tienda;
+      gasto por cuota al pagarla, cronograma, avisos, costo de financiar; agrupado por banco con
+      total del mes, proyección y pago de todas las cuotas del mes. Decisión 15.
 - [x] Panderos para el grupo (v10): pagos de la cuota por ronda (quién pagó/quién falta) y
       compartir la situación como IMAGEN (canvas, sin librerías) o texto al WhatsApp del grupo.
 - [x] Perfil opcional (v8): nombre para el saludo + profesión (lista/«Otro»).
