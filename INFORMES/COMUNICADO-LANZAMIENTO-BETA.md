@@ -84,6 +84,38 @@ Si les sirve, pásenla. Y si no, también díganme, así la mejoro.
 
 ---
 
+## Versión "streamer" (cercana, con ejemplos, para grupos de amigos)
+
+Hola mi gentita 👋
+
+Les cuento algo rápido. Hace unos meses me pasaba que llegaba el 20 del mes y no sabía en qué se me había ido la plata. Yapeaba por aquí, pagaba el menú por allá, la cuota del pandero, la cuota de la laptop… y al final del mes: "¿y mi sueldo?" 😅
+
+Así que me puse a hacer una app pa' eso y ya la uso todos los días. Se llama **Panderito** 🐷 y hoy se las comparto pa' que la prueben conmigo.
+
+📲 https://panderito.vercel.app
+
+¿Cómo la uso yo? Les doy ejemplos reales:
+
+🍽️ Almuerzo 12 soles por Yape → lo anoto en 5 segundos y ya sé cuánto llevo gastado en comida este mes (spoiler: más de lo que pensaba).
+
+🤝 Mi pandero de la oficina → puse los turnos y marco quién ya pagó cada ronda. Cuando alguien pregunta "¿quién falta?", le mando la imagen al grupo y listo, cero discusiones.
+
+💳 Mi laptop en 12 cuotas del BCP → la app me dice cuánto me toca pagar este mes en total y cuánto me falta. Ya no me sorprende el estado de cuenta.
+
+💼 Mi chamba → puse mi sueldo y mis días de trabajo, y cada día me muestra cuánto llevo ganado del mes. Es raro pero motiva.
+
+💸 "Oye, ¿te debo o me debes?" → ahí está anotado, con fecha 👀
+
+Es gratis, no te pide crear cuenta ni contraseña, y todo se guarda solo en tu celular: nadie ve tus montos, ni yo.
+
+Pa' instalarla: la abres en Chrome, tocas los tres puntitos ⋮ y **Instalar app**. Queda como cualquier app y funciona sin internet.
+
+Lo que les pido: úsenla unos días con sus gastos de verdad y díganme qué falla, qué no se entiende o qué le falta. Todo lo que me digan lo voy arreglando y la app se actualiza sola. Escríbanme a [TU CONTACTO].
+
+A mí me ordenó la plata. Ojalá a ustedes también 🙌
+
+---
+
 ## Notas para publicar
 
 - Poner un contacto concreto en `[TU CONTACTO]` (WhatsApp, Telegram o correo). Sin eso el feedback no llega.
