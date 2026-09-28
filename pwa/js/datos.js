@@ -569,6 +569,12 @@ const Datos = (() => {
     final.cuotaMonto = r2(final.cuotaMonto || final.montoTotal / final.numCuotas);
     if (final.precioContado !== undefined && final.precioContado !== null && final.precioContado !== '') final.precioContado = r2(final.precioContado); else final.precioContado = null;
     if (!final.primeraFecha) final.primeraFecha = new Date().toISOString();
+    // Cuotas ya pagadas ANTES de registrar el crédito: se anotan como regularizadas (sin gasto)
+    if (c.yaPagadas !== undefined) {
+      const ya = Math.min(final.numCuotas, Math.max(0, parseInt(c.yaPagadas, 10) || 0));
+      final.cuotasPagadas = ya; final.regularizadas = []; for (let k = 1; k <= ya; k++) final.regularizadas.push(k);
+      delete final.yaPagadas;
+    }
     guardar(); return final;
   }
   function eliminarCredito(id) { const e = cargar(); e.creditos = e.creditos.filter((c) => c.id !== id); guardar(); }
@@ -648,12 +654,31 @@ const Datos = (() => {
     return { cuotas: n, total: r2(total) };
   }
 
+  // REGULARIZAR: marcar una cuota como pagada SIN crear gasto. Para cuotas que ya
+  // pagaste antes de usar la app (ese dinero ya no está en tu saldo inicial) o
+  // que registraste por otro lado. Queda anotada en c.regularizadas para
+  // distinguirla en el cronograma ("pagada antes de la app").
+  function regularizarCuotaCredito(id) {
+    const c = credito(id); if (!c || c.cuotasPagadas >= c.numCuotas) return null;
+    const k = c.cuotasPagadas + 1;
+    if (!Array.isArray(c.regularizadas)) c.regularizadas = [];
+    c.regularizadas.push(k); c.cuotasPagadas = k; guardar(); return k;
+  }
+  function regularizarCuotasMes(entidad, ref) {
+    const lista = cuotasDelMes(entidad, ref || new Date()); let n = 0;
+    for (const x of lista) if (regularizarCuotaCredito(x.credito.id)) n++;
+    return n;
+  }
+  // "Este mes te toca" en todos los bancos: descuento FUTURO, no afecta el saldo hasta pagar
+  function totalCuotasMes(ref = new Date()) { return r2(entidadesCredito().reduce((s, b) => s + totalMesEntidad(b.nombre, ref), 0)); }
+
   // Deshacer la última cuota pagada (se equivocó): borra el gasto y retrocede
   function deshacerCuotaCredito(id) {
     const e = cargar(); const c = credito(id); if (!c || c.cuotasPagadas <= 0) return false;
     const k = c.cuotasPagadas;
     const mov = e.movimientos.find((m) => m.creditoId === c.id && m.numeroCuota === k);
     if (mov) e.movimientos = e.movimientos.filter((m) => m.id !== mov.id);
+    if (Array.isArray(c.regularizadas)) c.regularizadas = c.regularizadas.filter((x) => x !== k);
     c.cuotasPagadas = k - 1; guardar(); return true;
   }
 
@@ -876,6 +901,7 @@ const Datos = (() => {
     creditos, credito, guardarCredito, eliminarCredito, fechaCuota, proximaCuotaFecha, montoCuota,
     saldoCredito, costoFinanciamiento, deudaTotalCreditos, pagarCuotaCredito, deshacerCuotaCredito,
     entidadesCredito, cuotasDelMes, totalMesEntidad, deudaEntidad, proyeccionEntidad, pagarCuotasMes,
+    regularizarCuotaCredito, regularizarCuotasMes, totalCuotasMes,
     // Perfil
     perfil, guardarPerfil, profesionTexto,
     // Trabajo

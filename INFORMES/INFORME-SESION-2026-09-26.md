@@ -237,6 +237,21 @@ activó lo mínimo: **Vercel Web Analytics** (visitas y pantallas, sin cookies).
 `pwa/index.html`; el SW deja pasar `/_vercel/*` sin caché. CACHE v14. Requiere que el
 usuario pulse **Enable** en Vercel → proyecto panderito → Analytics.
 
+## 4.k — v15: regularizar cuotas ya pagadas (2026-09-27)
+
+Caso real del usuario: registró un crédito que venía pagando desde el 22/08; las cuotas de
+agosto y setiembre ya salieron de su bolsillo antes del saldo inicial, así que marcarlas
+como «pagadas» NO debe descontar el saldo. Implementado:
+- Al registrar: campo «¿Cuántas cuotas ya pagaste antes?» → quedan como historial
+  (`regularizadas`), sin gasto.
+- En cada crédito: botón «Regularizar: ya la pagué antes (solo registro)». Por banco:
+  «Ya las pagué antes: solo regularizar». Deshacer respeta ambos casos.
+- Cronograma distingue «✓ pagada antes de la app (sin gasto)».
+- Inicio: la caja Deudas en cuotas muestra «Este mes te toca S/ X» como descuento FUTURO
+  (no baja el saldo hasta pagar). Decisión 15 ampliada.
+Verificado en Node con el caso (saldo 15 000 intacto tras registrar 2 pagadas; pagar sí
+descuenta 100; deshacer restaura; recorte si «ya pagadas» > cuotas).
+
 ## 5. Pendiente para el usuario
 
 0. **Cerrar el PR #1** en GitHub (botón *Merge pull request*); Claude no tiene
