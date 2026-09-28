@@ -373,3 +373,14 @@ select.entrada { -webkit-appearance: none; appearance: none; background-image: l
 .cal-leyenda .sw { width: 12px; height: 12px; border-radius: 4px; display: inline-block; }
 .cal-leyenda .sw.on { background: var(--ingreso); } .cal-leyenda .sw.falta { background: var(--gasto); }
 .cal-leyenda .sw.extra { background: var(--primary); } .cal-leyenda .sw.off { background: var(--linea); }
+
+/* ---------- Editor de categorías: grillas de íconos y colores ---------- */
+.grilla-iconos { display: grid; grid-template-columns: repeat(8, minmax(0, 1fr)); gap: 6px; }
+.icono-op {
+  aspect-ratio: 1; min-width: 0; padding: 0; border-radius: 10px; font-size: 20px;
+  background: var(--linea); display: grid; place-items: center;
+}
+.icono-op.activo { background: var(--primary); box-shadow: 0 0 0 2px var(--primary); }
+.grilla-colores { display: grid; grid-template-columns: repeat(8, minmax(0, 1fr)); gap: 8px; }
+.color-op { aspect-ratio: 1; min-width: 0; padding: 0; border-radius: 50%; border: 3px solid transparent; }
+.color-op.activo { border-color: var(--texto); transform: scale(1.12); }

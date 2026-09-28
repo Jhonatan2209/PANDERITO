@@ -147,14 +147,22 @@ const Datos = (() => {
   function categoria(id) { return cargar().categorias.find((c) => c.id === id); }
   function guardarCategoria(cat) {
     const e = cargar();
+    if (cat.nombre !== undefined) cat.nombre = String(cat.nombre).trim().slice(0, 30);
     if (cat.id) {
       const i = e.categorias.findIndex((c) => c.id === cat.id);
-      if (i >= 0) e.categorias[i] = { ...e.categorias[i], ...cat };
+      if (i >= 0) { e.categorias[i] = { ...e.categorias[i], ...cat }; cat = e.categorias[i]; }
     } else {
       cat.id = nuevoId(); e.categorias.push(cat);
     }
     guardar(); return cat;
   }
+  // Nombre repetido dentro del mismo tipo (sin distinguir mayúsculas), ignorando la propia al editar
+  function existeCategoriaConNombre(nombre, tipo, exceptoId) {
+    const n = String(nombre || '').trim().toLowerCase();
+    return cargar().categorias.some((c) => c.id !== exceptoId && c.tipo === tipo && String(c.nombre).trim().toLowerCase() === n);
+  }
+  // Categorías del sistema: se pueden renombrar/cambiar ícono pero no borrar ni cambiar de tipo
+  function categoriaEsDelSistema(c) { return !!c && (c.nombre === 'Pandero' || c.nombre === 'Cuotas y créditos'); }
   function categoriaTieneMovimientos(id) { return cargar().movimientos.some((m) => m.categoriaId === id); }
   // Una categoría está "en uso" si la referencian movimientos, pagos fijos o
   // presupuestos. Las categorías «Pandero» son del sistema y no se borran.
@@ -878,7 +886,7 @@ const Datos = (() => {
   // API pública del módulo: SOLO estas funciones son visibles desde app.js.
   return {
     cargar, guardar, siguienteFecha, fechaDelTurno, TIPOS_CUENTA,
-    categorias, categoria, guardarCategoria, eliminarCategoria, categoriaTieneMovimientos, categoriaEnUso,
+    categorias, categoria, guardarCategoria, eliminarCategoria, categoriaTieneMovimientos, categoriaEnUso, existeCategoriaConNombre, categoriaEsDelSistema,
     cuentas, cuenta, guardarCuenta, eliminarCuenta, cuentaTieneMovimientos, cuentaEnUso, existeCuentaConNombre, saldoCuenta, saldoTotal,
     movimientos, movimiento, guardarMovimiento, eliminarMovimiento,
     resumenMes, gastoPorCategoria, serieMeses,

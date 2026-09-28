@@ -23,6 +23,7 @@ sin librerías). No avanzar de fase sin cerrar la anterior.
       total del mes, proyección y pago de todas las cuotas del mes. Decisión 15.
 - [x] Panderos para el grupo (v10): pagos de la cuota por ronda (quién pagó/quién falta) y
       compartir la situación como IMAGEN (canvas, sin librerías) o texto al WhatsApp del grupo.
+- [x] Categorías propias (v16): crear/editar con ícono y color.
 - [x] Perfil opcional (v8): nombre para el saludo + profesión (lista/«Otro»).
 - [x] **Módulo Trabajo** (v9, 2026-09-27): trabajos con pago mensual/día/hora, patrón semanal,
       calendario táctil (falta/día extra), feriados Perú, caja «Posibles ingresos» en Inicio y

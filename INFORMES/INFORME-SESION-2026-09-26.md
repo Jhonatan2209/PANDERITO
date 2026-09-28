@@ -252,6 +252,15 @@ como «pagadas» NO debe descontar el saldo. Implementado:
 Verificado en Node con el caso (saldo 15 000 intacto tras registrar 2 pagadas; pagar sí
 descuenta 100; deshacer restaura; recorte si «ya pagadas» > cuotas).
 
+## 4.l — v16: crear y editar categorías (2026-09-27)
+
+Faltaba (hallazgo 20 de la auditoría): Categorías solo listaba/borraba. Implementado
+`categoriaEdit`: nombre, tipo Gasto/Ingreso (bloqueado si ya tiene movimientos o es del
+sistema), ícono de una grilla de 50 emojis o emoji propio, color de una paleta de 16, vista
+previa en vivo, nombre único por tipo, eliminar solo si no está en uso. Las categorías del
+sistema (Pandero, Cuotas y créditos) se pueden retocar pero no borrar. Botón «＋ Nueva
+categoría» y toque en cualquier categoría para editarla. Verificado en navegador.
+
 ## 5. Pendiente para el usuario
 
 0. **Cerrar el PR #1** en GitHub (botón *Merge pull request*); Claude no tiene

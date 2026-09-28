@@ -31,8 +31,9 @@ const App = (() => {
   // lenguaje simple ("ahora puedes…"). El Inicio muestra la tarjeta «Novedades»
   // UNA sola vez por versión (se recuerda en localStorage al tocar «Entendido»).
   // Si una versión no trae nada que contar, deja NOVEDADES vacío y no se muestra.
-  const VERSION = 'v15';
+  const VERSION = 'v16';
   const NOVEDADES = [
+    '🏷️ <b>Categorías propias</b> (Más → Categorías → ＋ Nueva): crea las que te falten (Mascotas, Gimnasio, Regalos…) eligiendo ícono de una grilla de 50 emojis (o pega el tuyo) y color; toca cualquier categoría para editarla.',
     '📋 <b>Regularizar cuotas</b>: si una compra en cuotas ya venía de antes, indica cuántas cuotas ya pagaste al registrarla (o usa «Regularizar» en cada cuota o por banco). Quedan como historial y <b>no descuentan tu saldo</b>; solo las que pagues desde ahora son gastos. En Inicio ves «Este mes te toca» como descuento futuro.',
     '💳 <b>Cuotas y créditos por banco</b> (Más → Cuotas y créditos): registra cada compra en cuotas o crédito con su banco; la app agrupa por banco y te dice <b>cuánto pagas este mes en total</b> (la suma de todas las cuotas), la proyección de los próximos meses y un botón para pagar todas las cuotas del mes de una vez, como cuando pagas el estado de cuenta. En Inicio aparece la caja <b>Deudas en cuotas</b>.',
     '🤝 <b>Panderos para el grupo</b>: en cada pandero, marca quién ya pagó la cuota de la ronda y comparte la <b>situación como imagen</b> 🖼️ o texto 💬 al WhatsApp del grupo (quién cobra, quién pagó, quién falta).',
@@ -150,7 +151,7 @@ const App = (() => {
   function marcarTab(ruta) {
     const mapa = {
       inicio: 'inicio', movimientos: 'movimientos', registrar: 'registrar', reportes: 'reportes',
-      mas: 'mas', cuentas: 'mas', cuentaEdit: 'mas', categorias: 'mas', ajustes: 'mas', perfil: 'mas', detalle: 'movimientos',
+      mas: 'mas', cuentas: 'mas', cuentaEdit: 'mas', categorias: 'mas', categoriaEdit: 'mas', ajustes: 'mas', perfil: 'mas', detalle: 'movimientos',
       prestamos: 'mas', prestamoNuevo: 'mas', prestamoDet: 'mas',
       panderos: 'mas', panderoNuevo: 'mas', panderoDet: 'mas',
       trabajo: 'mas', trabajoNuevo: 'mas', trabajoDet: 'mas',
@@ -631,16 +632,56 @@ const App = (() => {
     const gastos = Datos.categorias('Gasto');
     const ingresos = Datos.categorias('Ingreso');
     const bloque = (arr) => `<div class="lista">${arr.map((c) => `
-      <div class="item">
-        <span class="ic" style="background:${c.color}22;color:${c.color}">${c.icono}</span>
-        <span class="cuerpo"><p class="t">${esc(c.nombre)}</p><p class="s">${Datos.categoriaTieneMovimientos(c.id) ? 'En uso' : 'Sin movimientos'}</p></span>
-        ${Datos.categoriaTieneMovimientos(c.id) ? '' : `<button class="btn-volver" onclick="App.borrarCategoria(${c.id})">🗑️</button>`}
-      </div>`).join('')}</div>`;
+      <button class="item" onclick="App.ir('categoriaEdit',{id:${c.id}})">
+        <span class="ic" style="background:${fondoSuave(c.color)};color:${c.color}">${c.icono}</span>
+        <span class="cuerpo"><p class="t">${esc(c.nombre)}</p><p class="s">${Datos.categoriaEsDelSistema(c) ? 'Del sistema' : Datos.categoriaEnUso(c.id) ? 'En uso' : 'Sin movimientos'} · toca para editar</p></span>
+        <span class="fl">›</span>
+      </button>`).join('')}</div>`;
     return `
       <div class="titulo-pagina"><button class="btn-volver" onclick="App.ir('mas')">‹</button><h1>Categorías</h1></div>
-      <div class="seccion-tit"><h2>Gastos</h2></div>${bloque(gastos)}
-      <div class="seccion-tit"><h2>Ingresos</h2></div>${bloque(ingresos)}
-    `;
+      <button class="btn" onclick="App.ir('categoriaEdit')">＋ Nueva categoría</button>
+      <div class="seccion-tit"><h2>Gastos (${gastos.length})</h2></div>${bloque(gastos)}
+      <div class="seccion-tit"><h2>Ingresos (${ingresos.length})</h2></div>${bloque(ingresos)}
+      <div style="height:14px"></div>`;
+  });
+
+  // ---------- Editor de categoría (crear / editar) ----------
+  // Nombre, tipo (Gasto/Ingreso), ícono a elegir de una grilla de emojis (o
+  // escribir cualquier emoji) y color de una paleta. Las categorías del
+  // sistema (Pandero, Cuotas y créditos) se pueden retocar pero no borrar.
+  const ICONOS_CAT = ['🍽️', '🍔', '☕', '🛒', '🏪', '🚌', '🚕', '⛽', '🏠', '💡', '💧', '📶', '📱', '💊', '🏥', '🎬', '🎮', '🎵', '👕', '👟', '💇', '🎓', '📚', '🐶', '🎁', '✈️', '🏖️', '⚽', '💪', '🧾', '💳', '🏦', '🤝', '💼', '💰', '🏷️', '🛠️', '🚗', '🏍️', '👶', '🙏', '🎉', '💅', '🧹', '📦', '🌱', '🐔', '🐄', '🚜', '🛵'];
+  const COLORES_CAT = ['#F97316', '#EF4444', '#EC4899', '#8B5CF6', '#6D5AE6', '#3B82F6', '#0EA5E9', '#14B8A6', '#10B981', '#22C55E', '#84CC16', '#EAB308', '#F59E0B', '#B54708', '#6B7280', '#1E40AF'];
+  registrar('categoriaEdit', (params) => {
+    const c = params.id ? Datos.categoria(Number(params.id)) : null;
+    const tipo = c ? c.tipo : (params.tipo || 'Gasto');
+    const icono = c ? c.icono : '🏷️';
+    const color = c ? c.color : '#6D5AE6';
+    const sistema = Datos.categoriaEsDelSistema(c);
+    const enUso = c ? Datos.categoriaEnUso(c.id) : false;
+    return `
+      <div class="titulo-pagina"><button class="btn-volver" onclick="App.ir('categorias')">‹</button><h1>${c ? 'Editar categoría' : 'Nueva categoría'}</h1></div>
+      <div class="card" style="display:flex;align-items:center;gap:14px">
+        <span class="ic" id="cat-previa" style="width:56px;height:56px;border-radius:16px;display:grid;place-items:center;font-size:28px;background:${fondoSuave(color)};color:${color}">${icono}</span>
+        <div><b id="cat-previa-nombre">${c ? esc(c.nombre) : 'Vista previa'}</b><p style="margin:2px 0 0;font-size:12px;color:var(--texto-tenue)">Así se verá en la app</p></div>
+      </div>
+      <div class="campo"><label>Nombre</label><input class="entrada" id="cat-nombre" placeholder="ej. Mascotas, Gimnasio, Regalos" maxlength="30" value="${c ? esc(c.nombre) : ''}" oninput="document.getElementById('cat-previa-nombre').textContent=this.value||'Vista previa'" /></div>
+      <div class="campo"><label>Tipo</label>
+        <div class="toggle-tipo">
+          <button type="button" id="cat-tipo-gasto" class="${tipo === 'Gasto' ? 'sel-gasto' : ''}" ${sistema || enUso ? 'disabled' : ''} onclick="App.setTipoCat('Gasto')">Gasto</button>
+          <button type="button" id="cat-tipo-ingreso" class="${tipo === 'Ingreso' ? 'sel-ingreso' : ''}" ${sistema || enUso ? 'disabled' : ''} onclick="App.setTipoCat('Ingreso')">Ingreso</button>
+        </div>
+        <input type="hidden" id="cat-tipo" value="${tipo}" />
+        ${enUso && !sistema ? '<p style="font-size:12px;color:var(--texto-tenue);margin:6px 2px 0">El tipo no se cambia porque ya tiene movimientos.</p>' : ''}</div>
+      <div class="campo"><label>Ícono (toca uno o escribe tu propio emoji)</label>
+        <div class="grilla-iconos" id="cat-iconos">${ICONOS_CAT.map((i) => `<button type="button" class="icono-op ${i === icono ? 'activo' : ''}" onclick="App.setIconoCat('${i}')">${i}</button>`).join('')}</div>
+        <input class="entrada" id="cat-icono" style="margin-top:8px" maxlength="4" placeholder="o pega aquí un emoji" value="${esc(icono)}" oninput="App.setIconoCat(this.value, true)" /></div>
+      <div class="campo"><label>Color</label>
+        <div class="grilla-colores" id="cat-colores">${COLORES_CAT.map((h) => `<button type="button" class="color-op ${h === color ? 'activo' : ''}" style="background:${h}" onclick="App.setColorCat('${h}')" aria-label="${h}"></button>`).join('')}</div>
+        <input type="hidden" id="cat-color" value="${esc(color)}" /></div>
+      <button class="btn" onclick="App.guardarCategoriaForm(${c ? c.id : 'null'})">${c ? '💾 Guardar' : '✓ Crear categoría'}</button>
+      ${c && !sistema && !enUso ? `<div style="height:10px"></div><button class="btn peligro" onclick="App.borrarCategoria(${c.id})">🗑️ Eliminar categoría</button>` : ''}
+      ${c && (sistema || enUso) ? `<p style="text-align:center;color:var(--texto-tenue);font-size:13px;margin-top:12px">${sistema ? 'Es una categoría del sistema: puedes cambiar nombre, ícono y color, pero no eliminarla.' : 'Tiene movimientos, pagos fijos, presupuestos o cuotas: no se puede eliminar.'}</p>` : ''}
+      <div style="height:14px"></div>`;
   });
 
   // ============================================================
@@ -1322,8 +1363,38 @@ const App = (() => {
     },
     borrarCategoria(id) {
       if (!confirm('¿Eliminar esta categoría?')) return;
-      if (Datos.eliminarCategoria(id)) { toast('Categoría eliminada'); render(); }
-      else toast('No se puede: está en uso (movimientos, pagos fijos o presupuestos)');
+      if (Datos.eliminarCategoria(id)) { toast('Categoría eliminada'); ir('categorias'); }
+      else toast('No se puede: está en uso (movimientos, pagos fijos, presupuestos o cuotas)');
+    },
+    // Editor de categoría: los controles actualizan la vista previa sin re-renderizar
+    setTipoCat(t) {
+      const h = document.getElementById('cat-tipo'); if (h) h.value = t;
+      document.getElementById('cat-tipo-gasto')?.classList.toggle('sel-gasto', t === 'Gasto');
+      document.getElementById('cat-tipo-ingreso')?.classList.toggle('sel-ingreso', t === 'Ingreso');
+    },
+    setIconoCat(i, escrito) {
+      const v = String(i || '').trim(); if (!v) return;
+      const inp = document.getElementById('cat-icono'); if (inp && !escrito) inp.value = v;
+      const p = document.getElementById('cat-previa'); if (p) p.textContent = v;
+      document.querySelectorAll('#cat-iconos .icono-op').forEach((b) => b.classList.toggle('activo', b.textContent === v));
+    },
+    setColorCat(h) {
+      const c = document.getElementById('cat-color'); if (c) c.value = h;
+      const p = document.getElementById('cat-previa'); if (p) { p.style.background = fondoSuave(h); p.style.color = h; }
+      document.querySelectorAll('#cat-colores .color-op').forEach((b) => b.classList.toggle('activo', b.getAttribute('aria-label') === h));
+    },
+    guardarCategoriaForm(id) {
+      const gv = (x) => (document.getElementById(x)?.value || '').trim();
+      const nombre = gv('cat-nombre'); const tipo = gv('cat-tipo') === 'Ingreso' ? 'Ingreso' : 'Gasto';
+      const icono = gv('cat-icono') || '🏷️'; const color = /^#[0-9A-Fa-f]{6}$/.test(gv('cat-color')) ? gv('cat-color') : '#6D5AE6';
+      if (!nombre) return toast('Escribe un nombre');
+      if (Datos.existeCategoriaConNombre(nombre, tipo, id || null)) return toast(`Ya existe una categoría de ${tipo.toLowerCase()} con ese nombre`);
+      const previa = id ? Datos.categoria(id) : null;
+      const datos = { id: id || null, nombre, icono, color };
+      // El tipo solo se define al crear o si aún no está en uso (evita descuadrar reportes)
+      if (!previa || (!Datos.categoriaEsDelSistema(previa) && !Datos.categoriaEnUso(previa.id))) datos.tipo = tipo;
+      Datos.guardarCategoria(datos);
+      toast(id ? 'Categoría actualizada ✓' : `Categoría «${nombre}» creada ✓`); ir('categorias');
     },
     // ----- Préstamos -----
     guardarPrestamo() {
