@@ -24,7 +24,7 @@ Una app sencilla para anotar lo que gastas y lo que ganas, pero pensada en cómo
 
 **Qué no es**
 
-No es un banco ni se conecta a tu banco. No lee tus mensajes. No hay registro ni contraseña. Es básica a propósito: anotar rápido y ver claro. Sé que es simple, pero a mí me ordenó los gastos más que cualquier Excel, y por eso la comparto.
+No es un banco ni se conecta a tu banco. No lee tus mensajes. No hay registro ni contraseña. Por ahora trabaja solo en soles y está pensada para Perú; más adelante quiero sumar otras monedas y países. Es básica a propósito: anotar rápido y ver claro. Sé que es simple, pero a mí me ordenó los gastos más que cualquier Excel, y por eso la comparto.
 
 **Sobre tus datos (esto es importante)**
 
@@ -60,7 +60,7 @@ Hola, hice una app de finanzas personales para Perú y busco gente que la pruebe
 
 Gastos e ingresos por cuenta (efectivo, Yape, banco), **panderos** con turnos y quién pagó, **cuotas de tarjeta y créditos** agrupados por banco, sueldo convertido en "cuánto llevo ganado este mes", préstamos, metas y presupuestos. Compartes resúmenes por WhatsApp.
 
-Gratis, sin registro y todo se guarda solo en tu celular (yo no veo nada). Se instala desde Chrome: menú ⋮ → Instalar app. Funciona sin internet.
+Gratis, sin registro y todo se guarda solo en tu celular (yo no veo nada). Por ahora solo en soles; luego vendrán más monedas. Se instala desde Chrome: menú ⋮ → Instalar app. Funciona sin internet.
 
 Es básica, pero a mí me ordenó la plata. Si la usas unos días y algo falla o te falta, escríbeme a [TU CONTACTO]. Más adelante va a Play Store.
 

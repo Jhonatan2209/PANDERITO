@@ -82,6 +82,9 @@ solo en el celular y ningún bot puede escribir ahí.
 - [ ] **WhatsApp**: la API oficial cobra por mensaje; no es gratis. Alternativa
       gratis: enlaces `wa.me` para compartir resúmenes. Decidir cuando llegue la fase.
 
+- [ ] **Multimoneda** (pedido 2026-09-28): elegir moneda por cuenta (S/, US$…) y símbolo/formato;
+      hoy todo es S/ (`Moneda.fmt`). Requiere tipo de cambio manual para el saldo total.
+
 ## Fase E — App de taxis seguros (Huánuco)
 
 Plan aparte, se redacta al cerrar la Fase A (ver estimación de costos en
