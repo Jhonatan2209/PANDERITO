@@ -100,6 +100,14 @@
    verificadas en navegador; CACHE v5; plan por fases en
    `INSTRUCCIONES/PLAN-FASES-PWA.md`; PR #2 abierto con las correcciones.
 
+### Lanzamiento beta (2026-09-28)
+- La app pasó de v6 a **v17** en la sesión del 27–28/09: Trabajo, pandero compartible,
+  Cuotas y créditos por banco (con regularización), Perfil, categorías propias,
+  novedades por versión, Analytics. Detalle en `INFORME-SESION-2026-09-26.md` §4.a–4.m.
+- El usuario va a publicar la app en comunidades (grupos de Claude) para que la prueben:
+  texto listo en `INFORMES/COMUNICADO-LANZAMIENTO-BETA.md`. Esperar feedback de testers
+  y priorizar lo que reporten antes de la Fase B.
+
 ## 6. Pendientes / ideas para próximas sesiones
 
 - [x] Vercel conectado → https://panderito.vercel.app (2026-09-27).
