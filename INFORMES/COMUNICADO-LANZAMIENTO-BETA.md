@@ -66,6 +66,24 @@ Es básica, pero a mí me ordenó la plata. Si la usas unos días y algo falla o
 
 ---
 
+## Versión chacotera (grupos de amigos, 17–25 años)
+
+Causa, hice una app pa' que sepas en qué se te va la plata 🐷💸 y necesito que la prueben.
+
+Se llama **Panderito** 👉 https://panderito.vercel.app
+
+Anotas lo que gastas (Yape, efectivo, lo que sea) y te dice al toque cuánto te queda. Tiene panderos con turnos (pa' que nadie se haga el loco con la cuota 👀), cuotas de tarjeta, préstamos ("me debes 20 lucas desde marzo" 🧾), metas de ahorro y hasta te calcula cuánto llevas ganado del mes en tu chamba.
+
+Gratis, sin registrarte, sin que nadie vea tus cosas: todo se queda en tu celular.
+
+Se instala en 10 segundos: ábrela en Chrome → los tres puntitos ⋮ → **Instalar app**. Y funciona sin internet.
+
+Pruébenla unos días con sus gastos reales y me dicen qué está mal, qué falta o qué está feo, sin roche 😂. Escríbanme a [TU CONTACTO].
+
+Si les sirve, pásenla. Y si no, también díganme, así la mejoro.
+
+---
+
 ## Notas para publicar
 
 - Poner un contacto concreto en `[TU CONTACTO]` (WhatsApp, Telegram o correo). Sin eso el feedback no llega.
