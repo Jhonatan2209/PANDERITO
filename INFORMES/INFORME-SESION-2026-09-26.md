@@ -261,6 +261,14 @@ previa en vivo, nombre único por tipo, eliminar solo si no está en uso. Las ca
 sistema (Pandero, Cuotas y créditos) se pueden retocar pero no borrar. Botón «＋ Nueva
 categoría» y toque en cualquier categoría para editarla. Verificado en navegador.
 
+## 4.m — v17: cuentas vs. categorías, aclaración en la UI (2026-09-27)
+
+El usuario creó «Banco Nación» como categoría y no la encontraba al crear una cuenta ni en
+Trabajo (que listan CUENTAS). Se aclaró el concepto y se mejoró la app: explicación al
+inicio de ambos formularios, autocompletado de bancos/billeteras en «Nombre de la cuenta»
+con tipo sugerido automáticamente, «Método de pago» renombrado a «Tipo de cuenta», y aviso
+en el editor de categorías si el nombre parece un banco (con enlace a Cuentas). CACHE v17.
+
 ## 5. Pendiente para el usuario
 
 0. **Cerrar el PR #1** en GitHub (botón *Merge pull request*); Claude no tiene

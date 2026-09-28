@@ -610,8 +610,10 @@ const App = (() => {
     const conMov = editando ? Datos.cuentaTieneMovimientos(editando.id) : false;
     return `
       <div class="titulo-pagina"><button class="btn-volver" onclick="App.ir('cuentas')">‹</button><h1>${editando ? 'Editar cuenta' : 'Nueva cuenta'}</h1></div>
-      <div class="campo"><label>Nombre</label><input class="entrada" id="c-nombre" placeholder="ej. BCP, Ahorros, Yape mamá" value="${editando ? esc(editando.nombre) : ''}" /></div>
-      <div class="campo"><label>Método de pago</label>
+      <p style="font-size:13px;color:var(--texto-suave);margin:0 2px 12px">Una <b>cuenta</b> es un lugar donde guardas dinero: efectivo, una billetera o un banco. (Las <b>categorías</b> son otra cosa: en qué gastas, p. ej. Comida.)</p>
+      <div class="campo"><label>Nombre de la cuenta</label><input class="entrada" id="c-nombre" list="c-bancos" placeholder="ej. Banco de la Nación, BCP, Yape mamá" value="${editando ? esc(editando.nombre) : ''}" oninput="App.sugerirTipoCuenta(this.value)" />
+        <datalist id="c-bancos">${['Banco de la Nación', 'BCP', 'Interbank', 'BBVA', 'Scotiabank', 'Banco Pichincha', 'Banbif', 'Mibanco', 'Caja Huancayo', 'Caja Arequipa', 'Caja Piura', 'Yape', 'Plin', 'Efectivo', 'Ahorros'].map((n) => `<option value="${n}"></option>`).join('')}</datalist></div>
+      <div class="campo"><label>Tipo de cuenta</label>
         <select class="entrada" id="c-tipo">${Datos.TIPOS_CUENTA.map((t) => `<option value="${t.id}" ${tipoActual === t.id ? 'selected' : ''}>${t.icono} ${esc(t.etq)}</option>`).join('')}</select></div>
       <div class="campo"><label>Saldo inicial (S/) — lo que ya tienes ahí</label>
         <input class="entrada" id="c-saldo" type="text" inputmode="decimal" placeholder="0.00" value="${editando ? esc(editando.saldoInicial) : ''}" />
@@ -664,7 +666,9 @@ const App = (() => {
         <span class="ic" id="cat-previa" style="width:56px;height:56px;border-radius:16px;display:grid;place-items:center;font-size:28px;background:${fondoSuave(color)};color:${color}">${icono}</span>
         <div><b id="cat-previa-nombre">${c ? esc(c.nombre) : 'Vista previa'}</b><p style="margin:2px 0 0;font-size:12px;color:var(--texto-tenue)">Así se verá en la app</p></div>
       </div>
-      <div class="campo"><label>Nombre</label><input class="entrada" id="cat-nombre" placeholder="ej. Mascotas, Gimnasio, Regalos" maxlength="30" value="${c ? esc(c.nombre) : ''}" oninput="document.getElementById('cat-previa-nombre').textContent=this.value||'Vista previa'" /></div>
+      <p style="font-size:13px;color:var(--texto-suave);margin:0 2px 12px">Una <b>categoría</b> dice <i>en qué</i> gastas o <i>de dónde</i> viene un ingreso (Comida, Transporte, Sueldo). Si quieres registrar un banco o billetera donde guardas dinero, eso es una <a href="#cuentaEdit" style="color:var(--primary);font-weight:600">Cuenta →</a></p>
+      <div class="campo"><label>Nombre</label><input class="entrada" id="cat-nombre" placeholder="ej. Mascotas, Gimnasio, Regalos" maxlength="30" value="${c ? esc(c.nombre) : ''}" oninput="document.getElementById('cat-previa-nombre').textContent=this.value||'Vista previa';App.avisarSiEsBanco(this.value)" />
+        <p id="cat-aviso-banco" style="display:none;font-size:12px;color:var(--pendiente);margin:6px 2px 0">⚠️ Eso parece un banco o billetera. Los bancos van en <a href="#cuentaEdit" style="color:var(--primary);font-weight:600">Cuentas</a>, no en categorías.</p></div>
       <div class="campo"><label>Tipo</label>
         <div class="toggle-tipo">
           <button type="button" id="cat-tipo-gasto" class="${tipo === 'Gasto' ? 'sel-gasto' : ''}" ${sistema || enUso ? 'disabled' : ''} onclick="App.setTipoCat('Gasto')">Gasto</button>
@@ -1365,6 +1369,19 @@ const App = (() => {
       if (!confirm('¿Eliminar esta categoría?')) return;
       if (Datos.eliminarCategoria(id)) { toast('Categoría eliminada'); ir('categorias'); }
       else toast('No se puede: está en uso (movimientos, pagos fijos, presupuestos o cuotas)');
+    },
+    // Cuentas: si el nombre parece banco/billetera, preselecciona el tipo adecuado
+    sugerirTipoCuenta(v) {
+      const s = String(v || '').toLowerCase(); const sel = document.getElementById('c-tipo'); if (!sel) return;
+      if (/yape/.test(s)) sel.value = 'Yape'; else if (/plin/.test(s)) sel.value = 'Plin';
+      else if (/efectivo|cash|billetera f|casa/.test(s)) sel.value = 'Efectivo';
+      else if (/tarjeta|cr[eé]dito|visa|master/.test(s)) sel.value = 'Tarjeta';
+      else if (/banco|bcp|interbank|bbva|scotia|naci[oó]n|caja|mibanco|banbif|pichincha|ahorro|cuenta/.test(s)) sel.value = 'Banco';
+    },
+    // Categorías: avisa si el nombre parece un banco (error de concepto frecuente)
+    avisarSiEsBanco(v) {
+      const s = String(v || '').toLowerCase(); const p = document.getElementById('cat-aviso-banco'); if (!p) return;
+      p.style.display = /banco|bcp|interbank|bbva|scotia|naci[oó]n|yape|plin|caja |mibanco|banbif|pichincha|tarjeta/.test(s) ? '' : 'none';
     },
     // Editor de categoría: los controles actualizan la vista previa sin re-renderizar
     setTipoCat(t) {
